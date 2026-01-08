@@ -26,6 +26,9 @@ int i = 0;
 // Note the return type: void*
 void* incrementingThreadFunction(){
     // TODO: increment i 1_000_000 times
+    for (int j = 0; j < 1000000; j++) {
+        i++;
+    }
     return NULL;
 }
 
