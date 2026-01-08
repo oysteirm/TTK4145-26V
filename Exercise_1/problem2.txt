@@ -1,0 +1,4 @@
+Both programs has two threads. Where the first one increments variable i one million time and the second one decrement i one million times.
+
+Both threads works in parallell the output of variable i will be different for each time.
+Three operation: read, calculate, write back. Race condition will decide when these happens will be.
