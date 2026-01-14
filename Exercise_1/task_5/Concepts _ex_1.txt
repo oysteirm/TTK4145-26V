@@ -1,0 +1,38 @@
+Concepts Ex 1
+
+
+What is the difference between concurrency and parallelism?
+Paralllelism means that multiple tasks executing on different CPU-s at the same time
+while concurrency is that multiple tasks are in progress at the same time conseptually, but not necessarily executing at same time
+ex. seems like things are done at sime time, while we actually just are swapping back and forth quick
+
+What is the difference between a race condition and a data race?
+
+Race condition is that timing or ordering of instructions determine behaviour
+Data race is when two different threads uses the same memory location concurrently, a specific race condition
+
+Very roughly - what does a scheduler do, and how does it do it?
+Scheduler decides which thread/process runs on which CPU core and at what time.
+Done by:maintaining runnable threads.  selecting based on scheduling policy (ex priority based)...
+
+Engineering
+
+Why would we use multiple threads? What kinds of problems do threads solve?
+For programs requiring things to happend at the same time. Solves parallell problems
+
+
+Some languages support "fibers" (sometimes called "green threads") or "coroutines"? What are they, and why would we rather use them over threads?
+Fibers or green threads are lightweight, user-space managed threads that are scheduled by the language runtime instead of the operating system.
+Coroutines are functions that can suspend and resume execution, allowing cooperative multitasking.
+Can be preferred over OS threads because:
+They are cheaper to create and switch
+They scale better to large numbers (millions)
+They avoid some synchronization overhead
+They allow deterministic scheduling in the runtime
+They are ideal for highly concurrent I/O-bound workloads.
+
+Does creating concurrent programs make the programmer's life easier? Harder? Maybe both?
+Both, more things to think about, but can solve more complex problems
+
+What do you think is best - shared variables or message passing?
+Think message passing is the best. Maybe a bit more to implement, but avoids shared mutable state, and reduces the risk of data races
