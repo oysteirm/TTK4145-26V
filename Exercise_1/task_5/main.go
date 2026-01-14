@@ -1,4 +1,4 @@
-package task_5
+//package task_5
 
 package main
 
@@ -6,7 +6,7 @@ import "fmt"
 import "time"
 
 
-func producer(buffer<-chan int){
+func producer(buffer chan<- int){
 
     for i := 0; i < 10; i++ {
         time.Sleep(100 * time.Millisecond)
@@ -35,8 +35,8 @@ func main(){
     // TODO: make a bounded buffer
     buffer:= make(chan int, 5)
     
-    go consumer()
-    go producer()
+    go consumer(buffer)
+    go producer(buffer)
     
     select {}
 }
