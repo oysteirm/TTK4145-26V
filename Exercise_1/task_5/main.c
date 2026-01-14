@@ -13,8 +13,7 @@ struct BoundedBuffer {
     pthread_mutex_t     mtx;
     sem_t               numElements;
     sem_t               capacity;
-    
-    
+
 };
 
 struct BoundedBuffer* buf_new(int size){

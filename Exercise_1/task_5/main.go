@@ -18,7 +18,7 @@ func producer(buffer chan<- int){
 
 }
 
-func consumer(buffer<-chan int){
+func consumer(buffer <-chan int){
 
     time.Sleep(1 * time.Second)
     for {
