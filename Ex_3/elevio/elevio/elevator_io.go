@@ -1,7 +1,5 @@
 package elevio
 
-package elevio
-
 import "time"
 import "sync"
 import "net"
