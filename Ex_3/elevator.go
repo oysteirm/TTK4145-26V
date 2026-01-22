@@ -10,7 +10,7 @@ N_FLOORS := 4
 N_BUTTONS := 3
 
 type ElevatorBehaviour int
-type Requests [][]int
+type Requests [][]bool
 type Command interface{}
 
 const (
@@ -40,7 +40,7 @@ type SetMotorDirection struct {
 }
 
 type SetRequest struct {
-	RequestValue int //must be changed to a Request type later
+	RequestValue bool //must be changed to a Request type later
     Floor int
     Button elevio.ButtonType
 }
@@ -50,9 +50,9 @@ type SetElevatorBehavior struct {
 }
 
 func Elevator_Server(commands chan Command) {
-	requests_temp := make([][]int, N_FLOORS)
+	requests_temp := make([][]bool, N_FLOORS)
     for i := range requests_temp {
-        requests_temp[i] = make([]int, N_BUTTONS)
+        requests_temp[i] = make([]bool, N_BUTTONS)
     }
 
 	elevator_state := ElevatorState{
