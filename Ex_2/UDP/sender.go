@@ -40,8 +40,7 @@ func recv_msg(recv_socket *net.UDPConn) {
 		n, from,_ := recv_socket.ReadFromUDP(buffer)
 		fmt.Printf("Received bytes from %s: %s\n", from.String(), string(buffer[:n]))
 	}
-
-	}
+}
 
 func main() {
 	server_IP := "10.100.23.11"
