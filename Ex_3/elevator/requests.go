@@ -11,10 +11,8 @@ type DirnBehaviourPair struct {
 // requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState e_state)
 
 
-
 func requests_choose_direction(e_state ElevatorState) DirnBehaviourPair {
 	switch e_state.Dirn {
-
 	case MD_Up:
 		if requests_above(e_state) {
 			return DirnBehaviourPair{MD_Up, EB_Moving}
