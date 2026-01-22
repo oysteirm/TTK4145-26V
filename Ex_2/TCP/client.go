@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-func sendFixed(conn net.Conn, s string){
+func send_fixed(conn net.Conn, s string){
 	buffer := make([]byte, 1024)
 	copy(buffer,[]byte(s))
 	conn.Write(buffer)
@@ -29,8 +29,8 @@ func main (){
 	io.ReadFull(conn,buffer)
 	fmt.Println("WELCOME:",string(buffer))
 
-	sendFixed(conn, "Hello server")
-	sendFixed(conn, "Thnx for us gr 15")
+	send_fixed(conn, "Hello server")
+	send_fixed(conn, "Thnx for us gr 15")
 
 	io.ReadFull(conn, buffer)
 	fmt.Println("RECV:",string(buffer))
