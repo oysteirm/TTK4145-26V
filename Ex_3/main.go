@@ -8,12 +8,12 @@ func main(){
     num_floors := 4
     num_elevators := 1
 
-    e Elevator = elevator_uninitialized()
-
     elevio.Init("localhost:15657", numFloors)
-    
-    var d elevio.MotorDirection = elevio.MD_Up
-    //elevio.SetMotorDirection(d)
+
+    commands := make(chan elevator.Command)
+
+	// Start elevator state server
+	go elevator.Elevator_Server(commands)
     
     drv_buttons := make(chan elevio.ButtonEvent)
     drv_floors  := make(chan int)
@@ -24,27 +24,43 @@ func main(){
     go elevio.PollFloorSensor(drv_floors)
     go elevio.PollObstructionSwitch(drv_obstr)
     go elevio.PollStopButton(drv_stop)
+
+    // Init FSM (handle between floors)
+	fsm.OnInitBetweenFloors(commands)
+
+	// Door timer
+	doorTimer := time.NewTimer(0)
+	doorTimer.Stop()
     
     
     for {
-        select {
-        case btn := <- drv_buttons:
-            fsm_on_request_button_press(&e, btn)
-            
-        case floor := <- drv_floors:
-            fsm_on_floor_arrival(&e, floor)
-            
-        /*    ????
-        case obstr := <- drv_obstr:
-            fsm_
-        */    
-        case stop := <- drv_stop:
-            fmt.Printf("%+v\n", a)
-            for f := 0; f < numFloors; f++ {
-                for b := elevio.ButtonType(0); b < 3; b++ {
-                    elevio.SetButtonLamp(b, f, false)
-                }
-            }
-        }
-    }    
-}
+		select {
+
+		// Button pressed
+		case btn := <-drvButtons:
+			fsm.OnRequestButtonPress(commands, btn.Floor, btn.Button)
+
+		// Floor arrival
+		case floor := <-drvFloors:
+			fsm.OnFloorArrival(commands, floor)
+
+		// Door timeout
+		case <-doorTimer.C:
+			fsm.OnDoorTimeout(commands)
+
+		// Stop button
+		case stop := <-drvStop:
+			if stop {
+				elevio.SetStopLamp(true)
+			} else {
+				elevio.SetStopLamp(false)
+			}
+
+		// Obstruction
+		case obstructed := <-drvObstr:
+			if obstructed {
+				doorTimer.Stop()
+			}
+		}
+	}    
+} 

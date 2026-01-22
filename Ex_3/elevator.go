@@ -2,17 +2,21 @@ package elevator
 
 import (
 	"fmt"
+	"project/elevio/elevio"
 	"project/fsm"
 )
+
+N_FLOORS := 4
+N_BUTTONS := 3
 
 type ElevatorBehaviour int
 type Requests [][]int
 type Command interface{}
 
 const (
-    EB_Idle ElevatorBehaviour = iota
-    EB_DoorOpen
-    EB_Moving
+    EB_Idle ElevatorBehaviour = 0
+    EB_DoorOpen               = 1  
+    EB_Moving                 = 2
 )
 
 type ElevatorState struct {
@@ -35,8 +39,10 @@ type SetMotorDirection struct {
 	MotorDirection MotorDirection
 }
 
-type SetRequests struct {
-	Requests Requests
+type SetRequest struct {
+	RequestValue int //must be changed to a Request type later
+    Floor int
+    Button elevio.ButtonType
 }
 
 type SetElevatorBehavior struct {
@@ -66,8 +72,8 @@ func Elevator_Server(commands chan Command) {
 			elevator_state.floor = c.Floor
 		case SetMotorDirection:
 			elevator_state.motor_direction = c.MotorDirection
-		case SetRequests:
-			elevator_state.requests = c.Requests
+		case SetRequest:
+			elevator_state.requests[c.Floor][c.Button] = c.RequestValue
 		case SetElevatorBehavior:
 			elevator_state.behaviour = c.Behaviour
 		}
@@ -120,15 +126,15 @@ func elevator_button_to_string(b Button) string {
 }
 
 
-func elevator_print(es Elevator) {
+func elevator_print(e_state ElevatorState) {
     fmt.Println("  +--------------------+")
     fmt.Printf(
         "  |floor = %-2d          |\n"+
             "  |dirn  = %-12s|\n"+
             "  |behav = %-12s|\n",
-        es.Floor,
-        elevator_dirn_to_string(es.Dirn),
-        elevator_behaviour_to_string(es.Behaviour),
+        e_state.Floor,
+        elevator_dirn_to_string(e_state.MotorDirection),
+        elevator_behaviour_to_string(e_state.ElevatorBehaviour),
     )
     fmt.Println("  +--------------------+")
     fmt.Println("  |  | up  | dn  | cab |")
@@ -142,7 +148,7 @@ func elevator_print(es Elevator) {
 
                 fmt.Print("|     ")
             } else {
-                if es.Requests[f][btn] {
+                if e_state.Requests[f][btn] {
                     fmt.Print("|  #  ")
                 } else {
                     fmt.Print("|  -  ")
@@ -154,18 +160,3 @@ func elevator_print(es Elevator) {
 
     fmt.Println("  +--------------------+")
 }
-
-//intialze a elevator
-func elevator_uninitialized(void) Elevator {
-    elevator_hardware_init();
-    return (Elevator){ //must be rewritten
-        .floor = -1,
-        .dirn = D_Stop,
-        .behaviour = EB_Idle,
-        .config = {
-        .doorOpenDuration_s = 3.0,
-        },
-    };
-}
-
-
