@@ -73,17 +73,7 @@ func SetDoorOpenLamp(value bool) {
 func SetStopLamp(value bool) {
 	write([4]byte{5, toByte(value), 0, 0})
 }
-Lost connection to Elevator Server") }
-	Dri
-	var out [4]byte
-	_, err = _conn.Read(out[:])
-	if err != nil { panic("Lost connection to Elevator Server") }
-	
-	return out
-}
 
-func write(in [4]byte) {
-	_mtx.Lock()
 
 
 func PollButtons(receiver chan<- ButtonEvent) {
@@ -175,7 +165,7 @@ func read(in [4]byte) [4]byte {
 	
 	_, err := _conn.Write(in[:])
 	if err != nil { panic("Lost connection to Elevator Server") }
-	Dri
+	
 	var out [4]byte
 	_, err = _conn.Read(out[:])
 	if err != nil { panic("Lost connection to Elevator Server") }
