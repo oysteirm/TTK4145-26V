@@ -1,6 +1,6 @@
 package main
 
-import "Driver-go/elevio"
+import "elevator"
 import "fmt"
 
 func main(){
@@ -8,25 +8,25 @@ func main(){
     num_floors := 4
     num_elevators := 1
 
-    elevio.Init("localhost:15657", numFloors)
+    elevator.Init("localhost:15657", numFloors)
 
     commands := make(chan elevator.Command)
 
 	// Start elevator state server
 	go elevator.Elevator_Server(commands)
     
-    drv_buttons := make(chan elevio.ButtonEvent)
+    drv_buttons := make(chan elevator.ButtonEvent)
     drv_floors  := make(chan int)
     drv_obstr   := make(chan bool)
     drv_stop    := make(chan bool)    
     
-    go elevio.PollButtons(drv_buttons)
-    go elevio.PollFloorSensor(drv_floors)
-    go elevio.PollObstructionSwitch(drv_obstr)
-    go elevio.PollStopButton(drv_stop)
+    go elevator.PollButtons(drv_buttons)
+    go elevator.PollFloorSensor(drv_floors)
+    go elevator.PollObstructionSwitch(drv_obstr)
+    go elevator.PollStopButton(drv_stop)
 
     // Init FSM (handle between floors)
-	fsm.OnInitBetweenFloors(commands)
+	elevator.OnInitBetweenFloors(commands)
 
 	// Door timer
 	doorTimer := time.NewTimer(0)
@@ -38,22 +38,22 @@ func main(){
 
 		// Button pressed
 		case btn := <-drvButtons:
-			fsm.OnRequestButtonPress(commands, btn.Floor, btn.Button)
+			elevator.OnRequestButtonPress(commands, btn.Floor, btn.Button)
 
 		// Floor arrival
 		case floor := <-drvFloors:
-			fsm.OnFloorArrival(commands, floor)
+			elevator.OnFloorArrival(commands, floor)
 
 		// Door timeout
 		case <-doorTimer.C:
-			fsm.OnDoorTimeout(commands)
+			elevator.OnDoorTimeout(commands)
 
 		// Stop button
 		case stop := <-drvStop:
 			if stop {
-				elevio.SetStopLamp(true)
+				elevator.SetStopLamp(true)
 			} else {
-				elevio.SetStopLamp(false)
+				elevator.SetStopLamp(false)
 			}
 
 		// Obstruction

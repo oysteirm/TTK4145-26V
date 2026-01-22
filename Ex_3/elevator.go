@@ -31,6 +31,10 @@ type GetState struct {
 	Reply chan ElevatorState
 }
 
+type SetState struct {
+    ElevatorState ElevatorState
+}
+
 type SetFloor struct {
 	Floor int
 }
@@ -42,7 +46,7 @@ type SetMotorDirection struct {
 type SetRequest struct {
 	RequestValue bool //must be changed to a Request type later
     Floor int
-    Button elevio.ButtonType
+    Button ButtonType
 }
 
 type SetElevatorBehavior struct {
@@ -55,7 +59,7 @@ func Elevator_Server(commands chan Command) {
         requests_temp[i] = make([]bool, N_BUTTONS)
     }
 
-	elevator_state := ElevatorState{
+	e_state := ElevatorState{
 		floor: -1,		
 		motor_direction: MD_Stop,
 		requests: requests_temp,
@@ -67,15 +71,21 @@ func Elevator_Server(commands chan Command) {
 		switch c := cmd.(type) {
 
 		case GetState:
-			c.Reply <- elevator_state
+			c.Reply <- e_state
+        case SetState:
+            e_state.Floor = c.ElevatorState.Floor
+            e_state.MotorDirection = c.ElevatorState.MotorDirection
+            e_state.Requests = c.ElevatorState.Requests
+            e_state.ElevatorBehaviour = c.ElevatorState.ElevatorBehaviour
+            e_state.DoorOpenDuration = c.ElevatorState.DoorOpenDuration
 		case SetFloor:
-			elevator_state.floor = c.Floor
+			e_state.floor = c.Floor
 		case SetMotorDirection:
-			elevator_state.motor_direction = c.MotorDirection
+			e_state.motor_direction = c.MotorDirection
 		case SetRequest:
-			elevator_state.requests[c.Floor][c.Button] = c.RequestValue
+			e_state.requests[c.Floor][c.Button] = c.RequestValue
 		case SetElevatorBehavior:
-			elevator_state.behaviour = c.Behaviour
+			e_state.behaviour = c.Behaviour
 		}
 	}
 }
