@@ -1,8 +1,7 @@
-package ex3
+package elevator
 
 import (
-	".../elevio"
-	".../elevator"
+	
 )
 
 // behavour-strukt, for retning og tilstand
