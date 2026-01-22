@@ -2,8 +2,6 @@ package elevator
 
 import (
 	"fmt"
-	"project/elevio/elevio"
-	"project/fsm"
 )
 
 N_FLOORS := 4

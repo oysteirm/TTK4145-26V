@@ -3,51 +3,51 @@ package elevator
 //import ()
 
 // behavour-strukt, for retning og tilstand
-type DirnBehaviourPair struct {
-	Dirn              MotorDirection
+type MotorDirectionBehaviourPair struct {
+	MotorDirection              MotorDirection
 	ElevatorBehaviour ElevatorBehaviour
 }
 
 // requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState e_state)
 
 
-func requests_choose_direction(e_state ElevatorState) DirnBehaviourPair {
-	switch e_state.Dirn {
+func requests_choose_direction(e_state ElevatorState) MotorDirectionBehaviourPair {
+	switch e_state.MotorDirection {
 	case MD_Up:
 		if requests_above(e_state) {
-			return DirnBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
 		} else if requests_here(e_state) {
-			return DirnBehaviourPair{MD_Down, EB_DoorOpen}
+			return MotorDirectionBehaviourPair{MD_Down, EB_DoorOpen}
 		} else if requests_below(e_state) {
-			return DirnBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
 		} else {
-			return DirnBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
 		}
 
 	case MD_Down:
 		if requests_below(e_state) {
-			return DirnBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
 		} else if requests_here(e_state) {
-			return DirnBehaviourPair{MD_Up, EB_DoorOpen}
+			return MotorDirectionBehaviourPair{MD_Up, EB_DoorOpen}
 		} else if requests_above(e_state) {
-			return DirnBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
 		} else {
-			return DirnBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
 		}
 
 	case MD_Stop:
 		if requests_here(e_state) {
-			return DirnBehaviourPair{MD_Stop, EB_DoorOpen}
+			return MotorDirectionBehaviourPair{MD_Stop, EB_DoorOpen}
 		} else if requests_above(e_state) {
-			return DirnBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
 		} else if requests_below(e_state) {
-			return DirnBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
 		} else {
-			return DirnBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
 		}
 
 	default:
-		return DirnBehaviourPair{MD_Stop, EB_Idle}
+		return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
 	}
 }
 
@@ -57,7 +57,7 @@ func requests_should_stop(e_state ElevatorState) bool {
 		return false
 	}
 
-	switch e_state.Dirn {
+	switch e_state.MotorDirection {
 	case MD_Down:
 		return e_state.Requests[e_state.Floor][BT_HallDown] ||
 			e_state.Requests[e_state.Floor][BT_Cab] ||
@@ -77,9 +77,9 @@ func requests_should_stop(e_state ElevatorState) bool {
 
 func requests_should_clear_immediately(e_state ElevatorState, btnFloor int, btnType ButtonType) bool {
 	return e_state.Floor == btnFloor &&
-		((e_state.Dirn == MD_Up && btnType == BT_HallUp) ||
-			(e_state.Dirn == MD_Down && btnType == BT_HallDown) ||
-			e_state.Dirn == MD_Stop ||
+		((e_state.MotorDirection == MD_Up && btnType == BT_HallUp) ||
+			(e_state.MotorDirection == MD_Down && btnType == BT_HallDown) ||
+			e_state.MotorDirection == MD_Stop ||
 			btnType == BT_Cab)
 }
 
@@ -91,7 +91,7 @@ func requests_clear_at_current_floor(e_state ElevatorState) ElevatorState {
 
 	e_state.Requests[e_state.Floor][BT_Cab] = false
 
-	switch e_state.Dirn {
+	switch e_state.MotorDirection {
 	case MD_Up:
 		if !requests_above(e_state) && !e_state.Requests[e_state.Floor][BT_HallUp] {
 			e_state.Requests[e_state.Floor][BT_HallDown] = false
