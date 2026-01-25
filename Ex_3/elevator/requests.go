@@ -4,8 +4,8 @@ package elevator
 
 // behavour-strukt, for retning og tilstand
 type MotorDirectionBehaviourPair_t struct {
-	MotorDirection    MotorDirection
-	ElevatorBehaviour ElevatorBehaviour
+	MotorDirection    MotorDirection_t
+	ElevatorBehaviour ElevatorBehaviour_t
 }
 
 // requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState e_state)
