@@ -2,18 +2,35 @@ package elevator
 
 import "time"
 
-var timer_end_time time.Time
-var timer_active bool
+func DoorTimer(
+	start <-chan time.Duration,
+	stop  <-chan struct{},
+	timeout chan<- struct{},
+) {
+	var timer *time.Timer
 
-func timer_start(duration time.Duration) {
-	timer_end_time = time.Now().Add(duration)
-	timer_active = true
-}
+	for {
+		select {
+		case d := <-start:
+			if timer != nil {
+				timer.Stop()
+			}
+			timer = time.NewTimer(d)
 
-func timer_stop() {
-	timer_active = false
-}
+		case <-stop:
+			if timer != nil {
+				timer.Stop()
+				timer = nil
+			}
 
-func timer_timedOut() bool {
-	return timer_active && time.Now().After(timer_end_time)
+		case <-func() <-chan time.Time {
+			if timer != nil {
+				return timer.C
+			}
+			return nil
+		}():
+			timer = nil
+			timeout <- struct{}{}
+		}
+	}
 }

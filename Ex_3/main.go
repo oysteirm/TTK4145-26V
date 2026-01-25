@@ -31,8 +31,12 @@ func main(){
 	elevator.OnInitBetweenFloors(commands)
 
 	// Door timer
-	doorTimer := time.NewTimer(0)
-	doorTimer.Stop()
+	doorTimerStart := make(chan time.Duration)
+	doorTimerStop  := make(chan struct{})
+	doorTimeout    := make(chan struct{})
+
+	go elevator.DoorTimer(doorTimerStart, doorTimerStop, doorTimeout)
+
     
     
     for {
@@ -40,15 +44,15 @@ func main(){
 
 		// Button pressed
 		case btn := <-drv_buttons:
-			elevator.OnRequestButtonPress(commands, btn.Floor, btn.Button)
+			elevator.OnRequestButtonPress(commands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			elevator.OnFloorArrival(commands, floor)
+			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, floor)
 
 		// Door timeout
-		case <-doorTimer.C:
-			elevator.OnDoorTimeout(commands)
+		case <-doorTimeout:
+			elevator.OnDoorTimeout(commands, doorTimerStart, doorTimerStop)
 
 		// Stop button
 		case stop := <-drv_stop:
@@ -61,7 +65,10 @@ func main(){
 		// Obstruction
 		case obstructed := <-drv_obstr:
 			if obstructed {
-				doorTimer.Stop()
+				doorTimerStop <- struct{}{}
+			} else {
+				var e_state elevator.ElevatorState_t = elevator.GetState(commands)
+				doorTimerStart <- e_state.DoorOpenDuration
 			}
 		}
 	}    

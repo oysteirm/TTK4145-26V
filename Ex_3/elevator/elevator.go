@@ -63,7 +63,7 @@ func Elevator_Server(commands chan Command_t) {
 		MotorDirection: MD_Stop,
 		Requests: requests_temp,
 		ElevatorBehaviour: EB_Idle,
-		DoorOpenDuration: 3,
+		DoorOpenDuration: 3 * time.Second,
 	}
 
 	for cmd := range commands {
