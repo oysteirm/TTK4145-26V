@@ -2,10 +2,11 @@ package elevator
 
 import (
 	"fmt"
+    "time"
 )
 
-N_FLOORS := 4
-N_BUTTONS := 3
+var N_FLOORS int = 4
+var N_BUTTONS ButtonType_t = 3
 
 type ElevatorBehaviour_t int
 type Requests_t [][]bool
@@ -22,7 +23,7 @@ type ElevatorState_t struct {
     MotorDirection     MotorDirection_t
     Requests           Requests_t
     ElevatorBehaviour  ElevatorBehaviour_t
-    DoorOpenDuration   float64
+    DoorOpenDuration   time.Duration
 }
 
 type GetState_t struct {
@@ -47,8 +48,8 @@ type SetRequest_t struct {
     Button ButtonType_t
 }
 
-type SetElevatorBehavior_t struct {
-	Behaviour ElevatorBehaviour_t
+type SetElevatorBehaviour_t struct {
+	ElevatorBehaviour ElevatorBehaviour_t
 }
 
 func Elevator_Server(commands chan Command_t) {
@@ -58,11 +59,11 @@ func Elevator_Server(commands chan Command_t) {
     }
 
 	e_state := ElevatorState_t{
-		floor: -1,		
-		motor_direction: MD_Stop,
-		requests: requests_temp,
-		behaviour: EB_Idle,
-		door_open_duration: 3,
+		Floor: -1,		
+		MotorDirection: MD_Stop,
+		Requests: requests_temp,
+		ElevatorBehaviour: EB_Idle,
+		DoorOpenDuration: 3,
 	}
 
 	for cmd := range commands {
@@ -77,13 +78,13 @@ func Elevator_Server(commands chan Command_t) {
             e_state.ElevatorBehaviour = c.ElevatorState.ElevatorBehaviour
             e_state.DoorOpenDuration = c.ElevatorState.DoorOpenDuration
 		case SetFloor_t:
-			e_state.floor = c.Floor
+			e_state.Floor = c.Floor
 		case SetMotorDirection_t:
-			e_state.motor_direction = c.MotorDirection
+			e_state.MotorDirection = c.MotorDirection
 		case SetRequest_t:
-			e_state.requests[c.Floor][c.Button] = c.RequestValue
-		case SetElevatorBehavior_t:
-			e_state.behaviour = c.Behaviour
+			e_state.Requests[c.Floor][c.Button] = c.RequestValue
+		case SetElevatorBehaviour_t:
+			e_state.ElevatorBehaviour = c.ElevatorBehaviour
 		}
 	}
 }
@@ -109,11 +110,11 @@ func elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
 
 func elevator_dirn_to_string(d MotorDirection_t) string {
     switch d {
-    case D_Up:
+    case MD_Up:
         return "D_Up"
-    case D_Down:
+    case MD_Down:
         return "D_Down"
-    case D_Stop:
+    case MD_Stop:
         return "D_Stop"
     default:
         return "D_UNDEFINED"
@@ -122,11 +123,11 @@ func elevator_dirn_to_string(d MotorDirection_t) string {
 
 func elevator_button_to_string(b ButtonType_t) string {
     switch b {
-    case B_HallUp:
+    case BT_HallUp:
         return "B_HallUp"
-    case B_HallDown:
+    case BT_HallDown:
         return "B_HallDown"
-    case B_Cab:
+    case BT_Cab:
         return "B_Cab"
     default:
         return "B_UNDEFINED"
@@ -150,9 +151,9 @@ func elevator_print(e_state ElevatorState_t) {
     for f := N_FLOORS - 1; f >= 0; f-- {
         fmt.Printf("  | %d", f)
 
-        for btn := 0; btn < N_BUTTONS; btn++ {
-            if (f == N_FLOORS-1 && btn == B_HallUp) ||
-                (f == 0 && btn == B_HallDown) {
+        for btn := ButtonType_t(0) ; btn < N_BUTTONS; btn++ {
+            if (f == N_FLOORS-1 && btn == BT_HallUp) ||
+                (f == 0 && btn == BT_HallDown) {
 
                 fmt.Print("|     ")
             } else {
