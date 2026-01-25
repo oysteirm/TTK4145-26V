@@ -122,7 +122,7 @@ func requests_above(e_state ElevatorState_t) bool {
 	}
 
 	for f := e_state.Floor + 1; f < len(e_state.Requests); f++ {
-		for btn := ButtonType(0); btn < 3; btn++ {
+		for btn := ButtonType_t(0); btn < 3; btn++ {
 			if e_state.Requests[f][btn] {
 				return true
 			}
