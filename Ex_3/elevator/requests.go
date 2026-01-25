@@ -3,55 +3,55 @@ package elevator
 //import ()
 
 // behavour-strukt, for retning og tilstand
-type MotorDirectionBehaviourPair struct {
-	MotorDirection              MotorDirection
+type MotorDirectionBehaviourPair_t struct {
+	MotorDirection    MotorDirection
 	ElevatorBehaviour ElevatorBehaviour
 }
 
 // requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState e_state)
 
 
-func requests_choose_direction(e_state ElevatorState) MotorDirectionBehaviourPair {
+func requests_choose_direction(e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
 	switch e_state.MotorDirection {
 	case MD_Up:
 		if requests_above(e_state) {
-			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Up, EB_Moving}
 		} else if requests_here(e_state) {
-			return MotorDirectionBehaviourPair{MD_Down, EB_DoorOpen}
+			return MotorDirectionBehaviourPair_t{MD_Down, EB_DoorOpen}
 		} else if requests_below(e_state) {
-			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Down, EB_Moving}
 		} else {
-			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair_t{MD_Stop, EB_Idle}
 		}
 
 	case MD_Down:
 		if requests_below(e_state) {
-			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Down, EB_Moving}
 		} else if requests_here(e_state) {
-			return MotorDirectionBehaviourPair{MD_Up, EB_DoorOpen}
+			return MotorDirectionBehaviourPair_t{MD_Up, EB_DoorOpen}
 		} else if requests_above(e_state) {
-			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Up, EB_Moving}
 		} else {
-			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair_t{MD_Stop, EB_Idle}
 		}
 
 	case MD_Stop:
 		if requests_here(e_state) {
-			return MotorDirectionBehaviourPair{MD_Stop, EB_DoorOpen}
+			return MotorDirectionBehaviourPair_t{MD_Stop, EB_DoorOpen}
 		} else if requests_above(e_state) {
-			return MotorDirectionBehaviourPair{MD_Up, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Up, EB_Moving}
 		} else if requests_below(e_state) {
-			return MotorDirectionBehaviourPair{MD_Down, EB_Moving}
+			return MotorDirectionBehaviourPair_t{MD_Down, EB_Moving}
 		} else {
-			return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
+			return MotorDirectionBehaviourPair_t{MD_Stop, EB_Idle}
 		}
 
 	default:
-		return MotorDirectionBehaviourPair{MD_Stop, EB_Idle}
+		return MotorDirectionBehaviourPair_t{MD_Stop, EB_Idle}
 	}
 }
 
-func requests_should_stop(e_state ElevatorState) bool {
+func requests_should_stop(e_state ElevatorState_t) bool {
 	// Requests [][]bool:
 	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
 		return false
@@ -75,7 +75,7 @@ func requests_should_stop(e_state ElevatorState) bool {
 	}
 }
 
-func requests_should_clear_immediately(e_state ElevatorState, btnFloor int, btnType ButtonType) bool {
+func requests_should_clear_immediately(e_state ElevatorState_t, btnFloor int, btnType ButtonType_t) bool {
 	return e_state.Floor == btnFloor &&
 		((e_state.MotorDirection == MD_Up && btnType == BT_HallUp) ||
 			(e_state.MotorDirection == MD_Down && btnType == BT_HallDown) ||
@@ -84,7 +84,7 @@ func requests_should_clear_immediately(e_state ElevatorState, btnFloor int, btnT
 }
 
 //lager en SetState i elevator, så benytter ikke commands her!
-func requests_clear_at_current_floor(e_state ElevatorState) ElevatorState {
+func requests_clear_at_current_floor(e_state ElevatorState_t) ElevatorState_t {
 	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
 		return e_state
 	}
@@ -116,7 +116,7 @@ func requests_clear_at_current_floor(e_state ElevatorState) ElevatorState {
 
 // --- “static” helpers ---
 
-func requests_above(e_state ElevatorState) bool {
+func requests_above(e_state ElevatorState_t) bool {
 	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
 		return false
 	}
@@ -131,13 +131,13 @@ func requests_above(e_state ElevatorState) bool {
 	return false
 }
 
-func requests_below(e_state ElevatorState) bool {
+func requests_below(e_state ElevatorState_t) bool {
 	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
 		return false
 	}
 
 	for f := 0; f < e_state.Floor; f++ {
-		for btn := ButtonType(0); btn < 3; btn++ {
+		for btn := ButtonType_t(0); btn < 3; btn++ {
 			if e_state.Requests[f][btn] {
 				return true
 			}
@@ -146,12 +146,12 @@ func requests_below(e_state ElevatorState) bool {
 	return false
 }
 
-func requests_here(e_state ElevatorState) bool {
+func requests_here(e_state ElevatorState_t) bool {
 	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
 		return false
 	}
 
-	for btn := ButtonType(0); btn < 3; btn++ {
+	for btn := ButtonType_t(0); btn < 3; btn++ {
 		if e_state.Requests[e_state.Floor][btn] {
 			return true
 		}
