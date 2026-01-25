@@ -2,49 +2,53 @@ package main
 
 import (
 	"project/elevator"
+	//"fmt"
+	"time"
 )
 
-func main() {
+func main(){
 
-	//var N_ELEVATORS int = 1
+    //var N_ELEVATORS int = 1
 
-	elevator.Init("localhost:15657", elevator.N_FLOORS)
+    elevator.Init("localhost:15657", elevator.N_FLOORS)
 
-	commands := make(chan elevator.Command_t)
+    commands := make(chan elevator.Command_t)
 
 	// Start elevator state server
 	go elevator.Elevator_Server(commands)
+    
+    drv_buttons := make(chan elevator.ButtonEvent_t)
+    drv_floors  := make(chan int)
+    drv_obstr   := make(chan bool)
+    drv_stop    := make(chan bool)    
+    
+    go elevator.PollButtons(drv_buttons)
+    go elevator.PollFloorSensor(drv_floors)
+    go elevator.PollObstructionSwitch(drv_obstr)
+    go elevator.PollStopButton(drv_stop)
 
-	drv_buttons := make(chan elevator.ButtonEvent_t)
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	drv_stop := make(chan bool)
-
-	go elevator.PollButtons(drv_buttons)
-	go elevator.PollFloorSensor(drv_floors)
-	go elevator.PollObstructionSwitch(drv_obstr)
-	go elevator.PollStopButton(drv_stop)
-
-	// Init FSM (handle between floors)
+    // Init FSM (handle between floors)
 	elevator.OnInitBetweenFloors(commands)
 
-	// Initialize timers (server-like)
-	doorTimer := elevator.InitTimers()
-
-	for {
+	// Door timer
+	doorTimer := time.NewTimer(0)
+	doorTimer.Stop()
+    
+    
+    for {
 		select {
 
 		// Button pressed
 		case btn := <-drv_buttons:
-			doorTimer = elevator.OnRequestButtonPress(commands, btn.Floor, btn.Button, doorTimer)
+			elevator.OnRequestButtonPress(commands, btn.Floor, btn.Button)
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			doorTimer = elevator.OnFloorArrival(commands, floor, doorTimer)
+			elevator.OnFloorArrival(commands, floor)
 
-		// Door timeout - event-driven
+		// Door timeout
 		case <-doorTimer.C:
-			doorTimer = elevator.OnDoorTimeout(commands, doorTimer)
+			elevator.OnDoorTimeout(commands)
 
 		// Stop button
 		case stop := <-drv_stop:
@@ -57,8 +61,8 @@ func main() {
 		// Obstruction
 		case obstructed := <-drv_obstr:
 			if obstructed {
-				doorTimer = elevator.StopTimer(doorTimer)
+				doorTimer.Stop()
 			}
 		}
-	}
-}
+	}    
+} 

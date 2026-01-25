@@ -2,28 +2,18 @@ package elevator
 
 import "time"
 
-// InitTimers creates and initializes all timers for the elevator system
-// Drains initial channels to ensure clean state
-func InitTimers() *time.Timer {
-	doorTimer := time.NewTimer(0 * time.Second)
-	<-doorTimer.C // Drain channel
-	return doorTimer
+var timer_end_time time.Time
+var timer_active bool
+
+func timer_start(duration time.Duration) {
+	timer_end_time = time.Now().Add(duration)
+	timer_active = true
 }
 
-// StartTimer safely starts a timer with the given duration
-// Drains any pending signal before creating new timer
-func StartTimer(timer *time.Timer, duration time.Duration) *time.Timer {
-	if !timer.Stop() {
-		<-timer.C
-	}
-	return time.NewTimer(duration)
+func timer_stop() {
+	timer_active = false
 }
 
-// StopTimer safely stops a timer
-// Drains any pending signal
-func StopTimer(timer *time.Timer) *time.Timer {
-	if !timer.Stop() {
-		<-timer.C
-	}
-	return timer
+func timer_timedOut() bool {
+	return timer_active && time.Now().After(timer_end_time)
 }

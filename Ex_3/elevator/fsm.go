@@ -2,135 +2,128 @@ package elevator
 
 import (
 	"fmt"
-	"time"
 )
 
-// turns on all button lights
-func set_all_lights(e_state ElevatorState_t) {
-	for floor := 0; floor < N_FLOORS; floor++ {
-		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++ {
-			SetButtonLamp(btn, floor, e_state.Requests[floor][btn])
+//turns on all button lights
+func set_all_lights(e_state ElevatorState_t){ 
+	for floor := 0; floor < N_FLOORS; floor++{
+		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++{
+            SetButtonLamp(btn, floor, e_state.Requests[floor][btn])
 		}
 	}
 }
 
-// elevator moves down on init between floors
-func OnInitBetweenFloors(commands chan Command_t) {
+//elevator moves down on init between floors
+func OnInitBetweenFloors(commands chan Command_t){
 	SetMotorDirection(MD_Down)
-	commands <- SetMotorDirection_t{MotorDirection: MD_Down}
-	commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_Moving}
+    commands <- SetMotorDirection_t{MotorDirection: MD_Down}
+    commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_Moving}
 }
 
-// what to do if there is a button press
-func OnRequestButtonPress(commands chan Command_t, btn_floor int, btn_type ButtonType_t, doorTimer *time.Timer) *time.Timer {
-	var e_state ElevatorState_t = GetState(commands)
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress", btn_floor, elevator_button_to_string(btn_type))
+
+//what to do if there is a button press
+func OnRequestButtonPress(commands chan Command_t, btn_floor int, btn_type ButtonType_t){
+    var e_state ElevatorState_t = GetState(commands)
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, elevator_button_to_string(btn_type))
 	elevator_print(e_state)
 
-	switch e_state.ElevatorBehaviour {
-	case EB_DoorOpen:
-		if requests_should_clear_immediately(e_state, btn_floor, btn_type) {
-			doorTimer = StartTimer(doorTimer, time.Duration(e_state.DoorOpenDuration*1e9))
-		} else {
-			commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
-			e_state = GetState(commands)
-		}
-		break
+	switch(e_state.ElevatorBehaviour){
+    case EB_DoorOpen:
+        if(requests_should_clear_immediately(e_state, btn_floor, btn_type)){
+            timer_start(e_state.DoorOpenDuration);
+        } else {
+            commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+        }
+        break;
 
-	case EB_Moving:
-		commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
-		e_state = GetState(commands)
-		break
+    case EB_Moving:
+        commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+        break;
+        
+    case EB_Idle:    
+        commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+        var pair MotorDirectionBehaviourPair_t = requests_choose_direction(e_state);
+        commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
+        commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
+        switch(pair.ElevatorBehaviour){
+        case EB_DoorOpen:
+            SetDoorOpenLamp(true)
+            timer_start(e_state.DoorOpenDuration);
+            e_state = requests_clear_at_current_floor(e_state);
+            commands <- SetState_t{ElevatorState: e_state}
 
-	case EB_Idle:
-		commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
-		e_state = GetState(commands)
-		var pair MotorDirectionBehaviourPair_t = requests_choose_direction(e_state)
-		commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
-		commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
-		switch pair.ElevatorBehaviour {
-		case EB_DoorOpen:
-			SetDoorOpenLamp(true)
-			doorTimer = StartTimer(doorTimer, time.Duration(e_state.DoorOpenDuration*1e9))
-			e_state = requests_clear_at_current_floor(e_state)
-			commands <- SetState_t{ElevatorState: e_state}
-
-		case EB_Moving:
-			SetMotorDirection((e_state.MotorDirection))
-			break
-
-		case EB_Idle:
-			break
-		}
-		break
-	}
-
-	e_state = GetState(commands)
-	set_all_lights(e_state)
-
-	fmt.Printf("\nNew state:\n")
-	elevator_print(e_state)
-	return doorTimer
+        case EB_Moving:
+            SetMotorDirection((e_state.MotorDirection))
+            break;
+            
+        case EB_Idle:
+            break;
+        }
+        break;
+    }
+    
+    set_all_lights(e_state);
+    
+    fmt.Printf("\nNew state:\n");
+    elevator_print(e_state);
 }
 
-// what to do if we arrive at a floor
-func OnFloorArrival(commands chan Command_t, newFloor int, doorTimer *time.Timer) *time.Timer {
-	// Update floor
-	commands <- SetFloor_t{Floor: newFloor}
 
-	var e_state ElevatorState_t = GetState(commands)
+//what to do if we arrive at a floor
+func OnFloorArrival(commands chan Command_t, newFloor int) {
+    // Update floor
+    commands <- SetFloor_t{Floor: newFloor}
 
-	SetFloorIndicator(newFloor)
+    var e_state ElevatorState_t = GetState(commands)
 
-	if e_state.ElevatorBehaviour == EB_Moving {
-		if requests_should_stop(e_state) {
+    SetFloorIndicator(newFloor)
 
-			SetMotorDirection(MD_Stop)
-			SetDoorOpenLamp(true)
+    if e_state.ElevatorBehaviour == EB_Moving {
+        if requests_should_stop(e_state) {
 
-			e_state = requests_clear_at_current_floor(e_state)
-			commands <- SetState_t{ElevatorState: e_state}
+            SetMotorDirection(MD_Stop)
+            SetDoorOpenLamp(true)
 
-			commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
+            e_state := requests_clear_at_current_floor(e_state) 
+            commands <- SetState_t{ElevatorState: e_state}
 
-			e_state = GetState(commands)
-			doorTimer = StartTimer(doorTimer, time.Duration(e_state.DoorOpenDuration*1e9))
-		}
-	}
-	return doorTimer
+            commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
+
+            timer_start(e_state.DoorOpenDuration)
+        }
+    }
 }
 
-// what to do if the door timer runs out
-func OnDoorTimeout(commands chan Command_t, doorTimer *time.Timer) *time.Timer {
-	var e_state ElevatorState_t = GetState(commands)
 
-	switch e_state.ElevatorBehaviour {
-	case EB_DoorOpen:
-		var pair MotorDirectionBehaviourPair_t = requests_choose_direction(e_state)
-		commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
-		commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
-		e_state = GetState(commands)
+//what to do if the door timer runs out
+func OnDoorTimeout(commands chan Command_t){
+    var e_state ElevatorState_t = GetState(commands)
 
-		switch pair.ElevatorBehaviour {
-		case EB_DoorOpen:
-			doorTimer = StartTimer(doorTimer, time.Duration(e_state.DoorOpenDuration*1e9))
-			e_state = requests_clear_at_current_floor(e_state)
-			commands <- SetState_t{ElevatorState: e_state}
-			set_all_lights(e_state)
-			break
-		case EB_Moving:
-		case EB_Idle:
-			SetDoorOpenLamp(false)
-			SetMotorDirection(e_state.MotorDirection)
-			break
-		}
-
-		break
-	default:
-		break
-	}
-
-	fmt.Printf("\nNew state:\n")
-	elevator_print(e_state)
-	return doorTimer
+    switch(e_state.ElevatorBehaviour){
+    case EB_DoorOpen:;
+        var pair MotorDirectionBehaviourPair_t = requests_choose_direction(e_state);
+        commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
+        commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
+    
+        switch(pair.ElevatorBehaviour){
+        case EB_DoorOpen:
+            timer_start(e_state.DoorOpenDuration);
+            e_state = requests_clear_at_current_floor(e_state);
+            commands <- SetState_t{ElevatorState: e_state}
+            set_all_lights(e_state);
+            break;
+        case EB_Moving:
+        case EB_Idle:
+            SetDoorOpenLamp(false)
+            SetMotorDirection(e_state.MotorDirection);
+            break;
+        }
+        
+        break;
+    default:
+        break;
+    }
+    
+    fmt.Printf("\nNew state:\n");
+    elevator_print(e_state);
 }
