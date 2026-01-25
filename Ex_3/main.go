@@ -68,6 +68,7 @@ func main(){
 				doorTimerStop <- struct{}{}
 			} else {
 				var e_state elevator.ElevatorState_t = elevator.GetState(commands)
+				doorTimerStop <- struct{}{}
 				doorTimerStart <- e_state.DoorOpenDuration
 			}
 		}

@@ -85,10 +85,7 @@ func requests_should_clear_immediately(e_state ElevatorState_t, btnFloor int, bt
 
 //lager en SetState i elevator, så benytter ikke commands her!
 func requests_clear_at_current_floor(e_state ElevatorState_t) ElevatorState_t {
-	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
-		return e_state
-	}
-
+	
 	e_state.Requests[e_state.Floor][BT_Cab] = false
 
 	switch e_state.MotorDirection {
@@ -117,12 +114,8 @@ func requests_clear_at_current_floor(e_state ElevatorState_t) ElevatorState_t {
 // --- “static” helpers ---
 
 func requests_above(e_state ElevatorState_t) bool {
-	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
-		return false
-	}
-
-	for f := e_state.Floor + 1; f < len(e_state.Requests); f++ {
-		for btn := ButtonType_t(0); btn < 3; btn++ {
+	for f := e_state.Floor + 1; f < N_FLOORS; f++ {
+		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++ {
 			if e_state.Requests[f][btn] {
 				return true
 			}
@@ -132,12 +125,8 @@ func requests_above(e_state ElevatorState_t) bool {
 }
 
 func requests_below(e_state ElevatorState_t) bool {
-	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
-		return false
-	}
-
 	for f := 0; f < e_state.Floor; f++ {
-		for btn := ButtonType_t(0); btn < 3; btn++ {
+		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++ {
 			if e_state.Requests[f][btn] {
 				return true
 			}
@@ -147,11 +136,7 @@ func requests_below(e_state ElevatorState_t) bool {
 }
 
 func requests_here(e_state ElevatorState_t) bool {
-	if e_state.Floor < 0 || e_state.Floor >= len(e_state.Requests) {
-		return false
-	}
-
-	for btn := ButtonType_t(0); btn < 3; btn++ {
+	for btn := ButtonType_t(0); btn < N_BUTTONS; btn++ {
 		if e_state.Requests[e_state.Floor][btn] {
 			return true
 		}

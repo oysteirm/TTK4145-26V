@@ -33,6 +33,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
         if(requests_should_clear_immediately(e_state, btn_floor, btn_type)){
             doorTimerStop <- struct{}{} 
             doorTimerStart <- e_state.DoorOpenDuration
+            SetDoorOpenLamp(true)
         } else {
             commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
         }
@@ -90,13 +91,16 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
 
             e_state = requests_clear_at_current_floor(e_state) 
             commands <- SetState_t{ElevatorState: e_state}
-
+            commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
             commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
 
             doorTimerStop <- struct{}{}
             doorTimerStart <- e_state.DoorOpenDuration
         }
     }
+    e_state = GetState(commands)
+    fmt.Printf("\nNew state:\n");
+    elevator_print(e_state);
 }
 
 
@@ -109,8 +113,8 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
         var pair MotorDirectionBehaviourPair_t = requests_choose_direction(e_state);
         commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
         commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
-    
-        switch(pair.ElevatorBehaviour){
+        e_state = GetState(commands)
+        switch(e_state.ElevatorBehaviour){
         case EB_DoorOpen:
             doorTimerStop <- struct{}{}
             doorTimerStart <- e_state.DoorOpenDuration
@@ -118,10 +122,10 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
             commands <- SetState_t{ElevatorState: e_state}
             set_all_lights(e_state);
             break;
-        case EB_Moving:
-        case EB_Idle:
+        case EB_Moving, EB_Idle:
             SetDoorOpenLamp(false)
             SetMotorDirection(pair.MotorDirection);
+            set_all_lights(e_state);
             break;
         }
         
