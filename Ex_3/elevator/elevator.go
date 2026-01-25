@@ -7,57 +7,57 @@ import (
 N_FLOORS := 4
 N_BUTTONS := 3
 
-type ElevatorBehaviour int
-type Requests [][]bool
-type Command interface{}
+type ElevatorBehaviour_t int
+type Requests_t [][]bool
+type Command_t interface{}
 
 const (
-    EB_Idle ElevatorBehaviour = 0
+    EB_Idle ElevatorBehaviour_t = 0
     EB_DoorOpen               = 1  
     EB_Moving                 = 2
 )
 
-type ElevatorState struct {
+type ElevatorState_t struct {
     Floor              int
-    MotorDirection     MotorDirection
-    Requests           Requests
-    ElevatorBehaviour  ElevatorBehaviour
+    MotorDirection     MotorDirection_t
+    Requests           Requests_t
+    ElevatorBehaviour  ElevatorBehaviour_t
     DoorOpenDuration   float64
 }
 
-type GetState struct {
-	Reply chan ElevatorState
+type GetState_t struct {
+	Reply chan ElevatorState_t
 }
 
-type SetState struct {
-    ElevatorState ElevatorState
+type SetState_t struct {
+    ElevatorState ElevatorState_t
 }
 
-type SetFloor struct {
+type SetFloor_t struct {
 	Floor int
 }
 
-type SetMotorDirection struct {
-	MotorDirection MotorDirection
+type SetMotorDirection_t struct {
+	MotorDirection MotorDirection_t
 }
 
-type SetRequest struct {
+type SetRequest_t struct {
 	RequestValue bool //must be changed to a Request type later
     Floor int
-    Button ButtonType
+    Button ButtonType_t
 }
 
-type SetElevatorBehavior struct {
-	Behaviour ElevatorBehaviour
+type SetElevatorBehavior_t struct {
+	Behaviour ElevatorBehaviour_t
 }
 
-func Elevator_Server(commands chan Command) {
+func Elevator_Server(commands chan Command_t) {
 	requests_temp := make([][]bool, N_FLOORS)
     for i := range requests_temp {
         requests_temp[i] = make([]bool, N_BUTTONS)
     }
 
-	e_state := ElevatorState{
+	e_state := ElevatorState_t{
 		floor: -1,		
 		motor_direction: MD_Stop,
 		requests: requests_temp,
@@ -68,33 +68,33 @@ func Elevator_Server(commands chan Command) {
 	for cmd := range commands {
 		switch c := cmd.(type) {
 
-		case GetState:
+		case GetState_t:
 			c.Reply <- e_state
-        case SetState:
+        case SetState_t:
             e_state.Floor = c.ElevatorState.Floor
             e_state.MotorDirection = c.ElevatorState.MotorDirection
             e_state.Requests = c.ElevatorState.Requests
             e_state.ElevatorBehaviour = c.ElevatorState.ElevatorBehaviour
             e_state.DoorOpenDuration = c.ElevatorState.DoorOpenDuration
-		case SetFloor:
+		case SetFloor_t:
 			e_state.floor = c.Floor
-		case SetMotorDirection:
+		case SetMotorDirection_t:
 			e_state.motor_direction = c.MotorDirection
-		case SetRequest:
+		case SetRequest_t:
 			e_state.requests[c.Floor][c.Button] = c.RequestValue
-		case SetElevatorBehavior:
+		case SetElevatorBehavior_t:
 			e_state.behaviour = c.Behaviour
 		}
 	}
 }
 
-func GetState(commands chan Command) ElevatorState {
-    reply := make(chan ElevatorState)
-    commands <- GetState{Reply: reply}
+func GetState(commands chan Command_t) ElevatorState_t {
+    reply := make(chan ElevatorState_t)
+    commands <- GetState_t{Reply: reply}
     return <-reply
 }
 
-func elevator_behaviour_to_string(eb ElevatorBehaviour) string {
+func elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
     switch eb {
     case EB_Idle:
         return "EB_Idle"
@@ -107,7 +107,7 @@ func elevator_behaviour_to_string(eb ElevatorBehaviour) string {
     }
 }
 
-func elevator_dirn_to_string(d Dirn) string {
+func elevator_dirn_to_string(d MotorDirection_t) string {
     switch d {
     case D_Up:
         return "D_Up"
@@ -120,7 +120,7 @@ func elevator_dirn_to_string(d Dirn) string {
     }
 }
 
-func elevator_button_to_string(b Button) string {
+func elevator_button_to_string(b ButtonType_t) string {
     switch b {
     case B_HallUp:
         return "B_HallUp"
@@ -134,7 +134,7 @@ func elevator_button_to_string(b Button) string {
 }
 
 
-func elevator_print(e_state ElevatorState) {
+func elevator_print(e_state ElevatorState_t) {
     fmt.Println("  +--------------------+")
     fmt.Printf(
         "  |floor = %-2d          |\n"+
