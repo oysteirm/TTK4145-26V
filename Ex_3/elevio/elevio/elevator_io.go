@@ -1,4 +1,4 @@
-package elevio
+package main
 
 import "time"
 import "sync"
