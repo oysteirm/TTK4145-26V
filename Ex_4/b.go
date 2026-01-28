@@ -7,16 +7,8 @@ import (
 	"time"
 )
 
-// func recv_msg(recv_socket *net.UDPConn) {
-// 	buffer :=make([]byte, 1024)
-// 	for {
-// 		n, from, _ := recv_socket.ReadFromUDP(buffer)
-// 		fmt.Printf("Received bytes from %s: %s\n", from.String(), string(buffer[:n]))
-// 	}
-// }
-
 func main() {
-	exec.Command("gnome-terminal", "--", "go", "run", "main.go").Run()
+	exec.Command("gnome-terminal", "--", "go", "run", "a.go").Run()
 
 	time.Sleep(1 * time.Second)
 
