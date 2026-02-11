@@ -248,7 +248,7 @@ void executionLogger(){
     
     while(true){
         writef("%04d : " , t);
-        foreach(id,\n ref state; executionStates){
+        foreach(id, ref state; executionStates){
             auto grid = (t % 5 == 0) ? Grid.horizontal : Grid.none;
             writef("%c%c%c", cast(OriginalType!ExecutionState)state, grid, grid);
             if(state == ExecutionState.done){
