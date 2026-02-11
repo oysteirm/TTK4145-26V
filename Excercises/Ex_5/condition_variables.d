@@ -1,3 +1,4 @@
+module Excercises.Ex_5.condition_variables;
 
 import std.algorithm, std.concurrency, std.format, std.range, std.stdio, std.traits;
 import core.thread, core.sync.mutex, core.sync.condition;
@@ -42,12 +43,12 @@ class Resource(T) {
     
     T allocate(int id, int priority){
         mtx.lock();
-        int place_in_queue = queue;
-        while(queue < 0){
+        queue.insert(id, priority);
+
+        while(id != queue.front()){
             cond.wait();
         }
         mtx.unlock();
-
 
         return value;
     }
@@ -55,7 +56,9 @@ class Resource(T) {
     void deallocate(T v){
         value = v;
         mtx.lock();
-
+        queue.popFront();
+        cond.notifyAll();
+        mtx.unlock();
     }
 }
 
@@ -245,7 +248,7 @@ void executionLogger(){
     
     while(true){
         writef("%04d : " , t);
-        foreach(id, ref state; executionStates){
+        foreach(id,\n ref state; executionStates){
             auto grid = (t % 5 == 0) ? Grid.horizontal : Grid.none;
             writef("%c%c%c", cast(OriginalType!ExecutionState)state, grid, grid);
             if(state == ExecutionState.done){
