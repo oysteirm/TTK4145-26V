@@ -30,6 +30,14 @@ import (
 -----------------------------------
 */
 
+const (
+	CC_Uninit Cyclic_Counter_t 	= -1
+	CC_No 						= 0
+	CC_Unconfirmed 				= 1
+	CC_Confirmed 				= 2
+	CC_Done 					= 3
+)
+
 var N_ELEVATORS int = 3
 
 type Cyclic_Counter_t int
@@ -40,7 +48,7 @@ type Request_Cyclic_Counter_t struct{
 	barrier Elev_Alive_List_t
 }
 
-type Requests_Cyclic_Counters_t [][]Request_Cyclic_Counter_t
+type Requests_Data_t [][]Request_Cyclic_Counter_t
 
 type Elevator_Data_t struct {
 	Id int
@@ -52,5 +60,12 @@ type Elevator_Data_t struct {
 }
 
 type System_Data_t struct {
-	Elevator_Data_t
+	Elevator_Data []Elevator_Data_t
+	Requests_Data []Requests_Data_t
 }
+
+func Message_Sync_Server(){}
+
+func Update_CC(){}
+func Check_Barrier(){}
+

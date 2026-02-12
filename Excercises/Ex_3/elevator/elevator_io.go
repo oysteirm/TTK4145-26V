@@ -17,7 +17,7 @@ var _conn           net.Conn
 type MotorDirection_t int
 
 const (
-	MD_Up   MotorDirection_t = 1
+	MD_Up 	MotorDirection_t = 1
 	MD_Down                = -1
 	MD_Stop                = 0
 )
