@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Network-go/network/conn"
+	"Network_Driver/conn"
 	"fmt"
 	"net"
 	"sort"
@@ -34,7 +34,7 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 	}
 }
 
-func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
+func receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 
 	var buf [1024]byte
 	var p PeerUpdate
@@ -82,6 +82,19 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 			sort.Strings(p.Peers)
 			sort.Strings(p.Lost)
 			peerUpdateCh <- p
+		}
+	}
+}
+
+func Reciever(port int, recipients []chan PeerUpdate) {
+	peersReceiver := make(chan PeerUpdate)
+
+	go receiver(port, peersReceiver)
+	for peerUpdateMsg := range peersReceiver {
+		for _, recipient := range recipients {
+			go func(recipient chan PeerUpdate, msg PeerUpdate) { // To make forwarding non-blocking
+				recipient <- msg
+			}(recipient, peerUpdateMsg)
 		}
 	}
 }
