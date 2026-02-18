@@ -1,5 +1,9 @@
 package requestassigner
 
+//Example terminal_input to test compiled hall_request_assigner
+//./tools/hall_request_assigner/hall_request_assigner -i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
+
+
 
 import (
 	"encoding/json"
@@ -35,7 +39,7 @@ func Assign_Orders(Elevator_System RA_Elevator_States_and_Requests) RA_Output {
 	}
 
 	output, err := exec.Command(
-		"./tools/hall_request_assigner",
+		"./tools/hall_request_assigner/hall_request_assigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
