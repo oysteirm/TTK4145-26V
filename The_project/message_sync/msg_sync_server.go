@@ -87,7 +87,7 @@ func Message_Sync_Server(
 	from_network_data <-chan System_Data_t, //channel for recieving new system data
 	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
 	from_fsm_data <-chan Elevator_Data_t //channel for recieving elevator data from fsm
-	peersReciever chan peers.PeerUpdate,
+	peersReciever <-chan peers.PeerUpdate,
 	local_id int,
 	){
 	var system_data System_Data_t
@@ -105,7 +105,6 @@ func Message_Sync_Server(
 	go bcast.Transmitter(bcastPort, networkTransmitter)
 
 	drv_buttons := make(chan elevator.ButtonEvent_t)
-
 	go elevator.PollButtons(drv_buttons)
 	
 
