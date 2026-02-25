@@ -1,7 +1,7 @@
 package message_sync
 
 import (
-	"../elevator"
+	"TTK4145-26V/elevator"
 	"fmt"
 	"time"
 )

@@ -1,14 +1,14 @@
 package requestassigner
 //import something to use System_Data_t??
+import (
+	"TTK4145-26V/message_sync"
+)
 
-func CC_To_Bool(CC Cyclic_Counter_t)bool{
-	if CC == CC_Uninit || CC == CC_No || CC = CC_Unconfirmed {
-		return false
-	}
-	if CC == CC_Confirmed || CC == CC_Done {
+func CC_To_Bool(cc message_sync.Cyclic_Counter_t) bool {
+	switch cc {
+	case message_sync.CC_Confirmed, message_sync.CC_Done:
 		return true
-	}
-	else {
-		return nil
+	default:
+		return false
 	}
 }

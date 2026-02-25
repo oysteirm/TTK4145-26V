@@ -3,9 +3,9 @@ package message_sync
 import (
 	"fmt"
 	"time"
-	"../elevator"
-	"Network_Driver/bcast"
-	"Network_Driver/peers"
+	"TTK4145-26V/elevator"
+	"TTK4145-26V/Network_Driver/bcast"
+	"TTK4145-26V/Network_Driver/peers"
 )
 /* map over data that is being syncronized
 -----------------------------------
@@ -38,27 +38,27 @@ type Cyclic_Counter_t int
 
 //Data type structs that include the data and a barrier
 type Request_Cyclic_Counter_t struct{
-	value Cyclic_Counter_t
+	Value Cyclic_Counter_t
 	barrier Elev_List_t
 }
 type Is_Alive_Data_t struct{
-	value bool
+	Value bool
 	barrier Elev_List_t
 }
 type Is_Able_Data_t struct{
-	value bool
+	Value bool
 	barrier Elev_List_t
 }
 type Floor_Data_t struct{
-	value int
+	Value int
 	barrier Elev_List_t
 }
 type Elevator_Behaviour_Data_t struct{
-	value elevator.Elevator_Behaviour_t
+	Value elevator.ElevatorBehaviour_t
 	barrier Elev_List_t
 }
 type Motor_Direction_Data_t struct{
-	value elevator.Motor_Direction_t
+	Value elevator.MotorDirection_t
 	barrier Elev_List_t
 }
 
@@ -126,7 +126,7 @@ func Message_Sync_Server(
 			
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
+				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
 
 			}
 		case //broadcast timer timeout
