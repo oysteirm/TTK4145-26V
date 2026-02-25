@@ -4,7 +4,6 @@ package requestassigner
 //./tools/hall_request_assigner/hall_request_assigner -i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
 
 
-
 import (
 	"encoding/json"
 	"fmt"
@@ -32,12 +31,14 @@ type RA_Output map[string][][]bool
 
 func Assign_Orders(Elevator_System RA_Elevator_States_and_Requests) RA_Output {
 
+	//ENCODING SYSTEM
 	input, err := json.Marshal(Elevator_System)
 	if err != nil {
 		fmt.Println("Marshal error in Assign_Orders:", err)
 		return nil
 	}
 
+	//EXECUTING COMPILED "hall_request_assigner", fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
 		"./tools/hall_request_assigner/hall_request_assigner",
 		"--includeCab",
@@ -48,6 +49,7 @@ func Assign_Orders(Elevator_System RA_Elevator_States_and_Requests) RA_Output {
 		return nil
 	}
 
+	//DECODING STRING
 	var result RA_Output
 	err = json.Unmarshal(output, &result)
 	if err != nil {
