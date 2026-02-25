@@ -62,6 +62,7 @@ type Motor_Direction_Data_t struct{
 
 type Elevator_Data_t struct {
 	Id int
+	Msg_counter uint64
 	Is_Alive Is_Alive_Data_t
 	Is_Able Is_Able_Data_t
 	Floor Floor_Data_t
@@ -83,15 +84,18 @@ type Get_System_Data_t struct{
 func Message_Sync_Server(
 	from_network_data <-chan System_Data_t, //channel for recieving new system data
 	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
-	from_fsm_data <-chan System_Data_t
+	from_fsm_data <-chan Elevator_Data_t //channel for recieving elevator data from fsm
+	local_id int,
 	){
 	var system_data System_Data_t
 	var confirmed_system_data System_Data_t
+	system_data, confirmed_system_data = Init_System_Data(local_id)
+	var is_confirmed_data_updated bool = false
+
 
 	drv_buttons := make(chan elevator.ButtonEvent_t)
 
 	go elevator.PollButtons(drv_buttons)
-	//go "recieve from network"
 
 	for {
 		select{
@@ -99,16 +103,23 @@ func Message_Sync_Server(
 			reg.Reply = system_data
 
 		case fresh_data := <- from_network_data:
-			system_data = On_Recieved_Fresh_Data(system_data, confirmed_system_data, fresh_data)
+			system_data, confirmed_system_data, is_confirmed_data_updated = On_Recieved_Fresh_Data(system_data, confirmed_system_data, fresh_data)
+
+			if is_confirmed_data_updated{
+				//send confirmed_data til HSA
+			}
+			//use confirmed_data to light the correct lights
 
 		case fresh_data := <- from_fsm_data:
-			system_data.Elevator_Data[fresh_data.Id] = fresh_data.Elevator_Data[fresh_data.Id]
+			system_data.Elevator_Data[local_id] = fresh_data
 			
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
 				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
 
 			}
+		case //broadcast timer timeout
+			system_data.Elevator_Data[local_id].Msg_counter ++
 
 
 		}
