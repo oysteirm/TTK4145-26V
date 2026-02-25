@@ -1,9 +1,11 @@
 package message_sync
 
 import (
-	"../elevator"
 	"fmt"
 	"time"
+	"../elevator"
+	"Network_Driver/bcast"
+	"Network_Driver/peers"
 )
 /* map over data that is being syncronized
 -----------------------------------
@@ -84,14 +86,23 @@ func Message_Sync_Server(
 	from_network_data <-chan System_Data_t, //channel for recieving new system data
 	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
 	from_fsm_data <-chan System_Data_t
+	peersReciever chan peers.PeerUpdate
 	){
 	var system_data System_Data_t
 	var confirmed_system_data System_Data_t
+	// Network variables
+	var activePeers []string
+	networkReciever := make(chan StateMsg)
+	networkTransmitter := make(chan StateMsg)
+	
+	// Go routines from Network_Driver
+	go bcast.Receiver(bcastPort, networkReciever)
+	go bcast.Transmitter(bcastPort, networkTransmitter)
 
 	drv_buttons := make(chan elevator.ButtonEvent_t)
 
 	go elevator.PollButtons(drv_buttons)
-	//go "recieve from network"
+	
 
 	for {
 		select{
@@ -112,6 +123,8 @@ func Message_Sync_Server(
 
 
 		}
+		case peersUpdate := <-peersReciever:
+			activePeers = peersUpdate.Peers
 	}
 
 }
