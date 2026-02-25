@@ -28,13 +28,10 @@ func Update_CC(old_CC Request_Cyclic_Counter_t, new_CC Request_Cyclic_Counter_t,
 }
 
 
-
-
-func Update_Hall_Request_Data(old_data [][2]Request_Cyclic_Counter_t, new_data [][2]Request_Cyclic_Counter_t) [][2]Request_Cyclic_Counter_t {
-
+func Update_Hall_Request_Data(old_data [][2]Request_Cyclic_Counter_t, new_data [][2]Request_Cyclic_Counter_t, id int) [][2]Request_Cyclic_Counter_t {
 	for floor := 0; floor < elevator.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++{
-			Update_CC(old_data[floor][btn], new_data[floor][btn])
+			Update_CC(old_data[floor][btn], new_data[floor][btn], id)
 		}
 	}
 }

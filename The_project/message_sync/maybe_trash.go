@@ -11,7 +11,7 @@ func On_Recieved_Fresh_Data(system_data System_Data_t, confirmed_system_data Sys
 			updated_system_data.Elevator_Data[i] = Update_Single_Elevator_Barriers(system_data.Elevator_Data[i], fresh_data.Elevator_Data[i], system_data.Id)
 		}
 	}
-	system_data.Hall_Request_Data = Update_Hall_Request_Data(system_data.Hall_Request_Data, fresh_data.Hall_Request_Data)
+	system_data.Hall_Request_Data = Update_Hall_Request_Data(system_data.Hall_Request_Data, fresh_data.Hall_Request_Data, system_data.Id)
 
 	updated_confirmed_system_data = Update_Confirmed_System_Data(system_data, confirmed_system_data)
 

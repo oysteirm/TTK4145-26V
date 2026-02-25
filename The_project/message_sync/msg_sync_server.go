@@ -8,15 +8,15 @@ import (
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
-[ 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[4]],
-	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[4]], 
-	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[4]]	]
+[ 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
+	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]], 
+	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
 
 Hall Requests:
-Hall_Request_Data[N_FLOORS][2]
+Hall_Request_Data[N_FLOORS][N_HALL_CALLS]
 
-Every piece of data have a list with the elevators that also agree with the iformation. 
-If this list == elevator_network_list then we send this data to the HSA
+Every piece of data have a list with the elevators who agree with the information. 
+If this list == elevator_network_list then we send this data have reached consensus and is put in confirmed data which is sent to HSA
 -----------------------------------
 */
 
@@ -29,7 +29,7 @@ const (
 )
 
 var N_ELEVATORS int = 3
-var elevator_network_list Elev_List_t = [0, 0, 0]
+var elevator_network_list Elev_List_t = [0 0 0]
 
 type Elev_List_t []bool
 type Cyclic_Counter_t int
