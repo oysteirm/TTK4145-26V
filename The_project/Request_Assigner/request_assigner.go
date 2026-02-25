@@ -4,6 +4,10 @@ package requestassigner
 //./tools/hall_request_assigner/hall_request_assigner -i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
 
 
+
+//import something to use System_Data_t from msg_synd_server.go
+
+
 import (
 	"encoding/json"
 	"fmt"
@@ -19,7 +23,7 @@ type RA_Local_Elevator_State struct {
 //REMEMBER TO MOVE N_CAB_CALLS, ex into elevator_io
 const N_HALL_CALLS = 2
 
-type RA_Elevator_States_and_Requests  struct {
+type RA_System_Data  struct {
     HallRequests    [][N_HALL_CALLS]bool                   `json:"hallRequests"`
     States          map[string]RA_Local_Elevator_State     `json:"states"`
 }
@@ -29,7 +33,7 @@ type RA_Output map[string][][]bool
 
 
 
-func Assign_Orders(Elevator_System RA_Elevator_States_and_Requests) RA_Output {
+func Assign_Orders(Elevator_System RA_System_Data) RA_Output {
 
 	//ENCODING SYSTEM
 	input, err := json.Marshal(Elevator_System)
@@ -59,3 +63,5 @@ func Assign_Orders(Elevator_System RA_Elevator_States_and_Requests) RA_Output {
 
 	return result
 }
+
+
