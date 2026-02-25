@@ -3,9 +3,12 @@ package message_sync
 import (
 	"fmt"
 	"time"
-	"../elevator"
-	"Network_Driver/bcast"
-	"Network_Driver/peers"
+	"the_project/elevator"
+	"the_project/Network_Driver/peers"
+	"the_project/Network_Driver/bcast"
+	"the_project/Network_Driver/conn"
+	//"the_project/Network_Driver/bcast"
+	//"the_project/Network_Driver/peers"
 )
 /* map over data that is being syncronized
 -----------------------------------
@@ -31,34 +34,33 @@ const (
 )
 
 var N_ELEVATORS int = 3
-var elevator_network_list Elev_List_t = [0 0 0]
 
 type Elev_List_t []bool
 type Cyclic_Counter_t int
 
 //Data type structs that include the data and a barrier
 type Request_Cyclic_Counter_t struct{
-	value Cyclic_Counter_t
+	Value Cyclic_Counter_t
 	barrier Elev_List_t
 }
 type Is_Alive_Data_t struct{
-	value bool
+	Value bool
 	barrier Elev_List_t
 }
 type Is_Able_Data_t struct{
-	value bool
+	Value bool
 	barrier Elev_List_t
 }
 type Floor_Data_t struct{
-	value int
+	Value int
 	barrier Elev_List_t
 }
 type Elevator_Behaviour_Data_t struct{
-	value elevator.Elevator_Behaviour_t
+	Value elevator.Elevator_Behaviour_t
 	barrier Elev_List_t
 }
 type Motor_Direction_Data_t struct{
-	value elevator.Motor_Direction_t
+	Value elevator.Motor_Direction_t
 	barrier Elev_List_t
 }
 
@@ -86,9 +88,10 @@ type Get_System_Data_t struct{
 func Message_Sync_Server(
 	from_network_data <-chan System_Data_t, //channel for recieving new system data
 	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
-	from_fsm_data <-chan Elevator_Data_t //channel for recieving elevator data from fsm
+	from_fsm_data <-chan Elevator_Data_t, //channel for recieving elevator data from fsm
 	peersReciever <-chan peers.PeerUpdate,
 	local_id int,
+	timer <-chan int,
 	){
 	var system_data System_Data_t
 	var confirmed_system_data System_Data_t
@@ -120,24 +123,28 @@ func Message_Sync_Server(
 				//send confirmed_data til HSA
 			}
 			//use confirmed_data to light the correct lights
+			Light_Cab_Lights(confirmed_system_data.Elevator_Data[local_id].Cab_Requests)
+			Light_Hall_Lights(confirmed_system_data.Hall_Request_Data)
 
 		case fresh_data := <- from_fsm_data:
-			system_data.Elevator_Data[local_id] = fresh_data
+			system_data.Elevator_Data[local_id] = Update_Single_Elevator_Data(system_data.Elevator_Data[local_id], fresh_data, local_id)
 			
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
-
+				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)}
+				system_data.Elevator_Data[local_id].Cab_Requests[btn.Floor] = Update_CC(system_data.Elevator_Data[local_id].Cab_Requests[btn.Floor], tmp_cab_request, local_id)
+			} else {
+				var tmp_hall_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)}
+				system_data.Hall_Request_Data[btn.Floor][btn.Button] = Update_CC(system_data.Hall_Request_Data[btn.Floor][btn.Button], tmp_hall_request, local_id)
 			}
-		case //broadcast timer timeout
-			system_data.Elevator_Data[local_id].Msg_counter ++
 
+		case t := <-timer: //broadcast timer timeout
+			system_data.Elevator_Data[local_id].Msg_counter++
 
-		}
 		case peersUpdate := <-peersReciever:
 			activePeers = peersUpdate.Peers
+		}
 	}
-
 }
 
 
