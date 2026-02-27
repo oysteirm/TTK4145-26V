@@ -63,7 +63,7 @@ type Motor_Direction_Data_t struct{
 	Value elevator.Motor_Direction_t
 	barrier Elev_List_t
 }
-
+//Datatype for elevator states with barriers
 type Elevator_Data_t struct {
 	Id int
 	Msg_counter uint64
@@ -74,7 +74,7 @@ type Elevator_Data_t struct {
 	Motor_Direction Motor_Direction_Data_t
 	Cab_Requests []Request_Cyclic_Counter_t
 }
-
+//Datatype for multi elevator states and hall requests
 type System_Data_t struct {
 	Id int
 	Elevator_Data []Elevator_Data_t
@@ -122,13 +122,14 @@ func Message_Sync_Server(
 			if is_confirmed_data_updated{
 				//send confirmed_data til HSA
 			}
-			//use confirmed_data to light the correct lights
+			//use confirmed_data for light contract
 			Light_Cab_Lights(confirmed_system_data.Elevator_Data[local_id].Cab_Requests)
 			Light_Hall_Lights(confirmed_system_data.Hall_Request_Data)
 
 		case fresh_data := <- from_fsm_data:
 			system_data.Elevator_Data[local_id] = Update_Single_Elevator_Data(system_data.Elevator_Data[local_id], fresh_data, local_id)
 			
+		//buttonpress tries to change the CC to unconfirmed
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
 				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)}
@@ -138,7 +139,8 @@ func Message_Sync_Server(
 				system_data.Hall_Request_Data[btn.Floor][btn.Button] = Update_CC(system_data.Hall_Request_Data[btn.Floor][btn.Button], tmp_hall_request, local_id)
 			}
 
-		case t := <-timer: //broadcast timer timeout
+		//broadcast timer timeout
+		case t := <-timer: 
 			system_data.Elevator_Data[local_id].Msg_counter++
 
 		case peersUpdate := <-peersReciever:
