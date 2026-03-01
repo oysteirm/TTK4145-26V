@@ -70,6 +70,11 @@ func On_Recieved_Fresh_Data(system_data System_Data_t, confirmed_system_data Sys
 
 	for i := 0; i < N_ELEVATORS; i++{
 		//if the new data have newer information about a elevator, we accept it
+		
+		//ONLY CAB CALLS NEED TO BE UPDATED FROM OTHER ELEVS TO ENSURE NO LOST CAB CALLS
+		//THIS CAN MAYBE BE DONE WITH THE CC AND THEREFORE NOT NEED OG MSD_COUNTER?
+		//THE ELEV ITSELF KNOWS THE SATE IT IS IN THE BEST
+
 		if fresh_data.Elevator_Data[i].Msg_counter > system_data.Elevator_Data[i].Msg_counter {
 			updated_system_data.Elevator_Data[i] = Update_Single_Elevator_Data(system_data.Elevator_Data[i], fresh_data.Elevator_Data[i], system_data.Id)
 		}
