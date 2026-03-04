@@ -4,286 +4,286 @@ import (
 	"the_project/elevator"
 )
 
-func Init_System_Data(local_id int) (System_Data_t, System_Data_t){
+func InitSystemData(local_id int) (SystemData_t, SystemData_t) {
 
-    var tmp_Cab_Requests []Request_Cyclic_Counter_t = make([]Request_Cyclic_Counter_t, elevator.N_FLOORS)
+	var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevator.N_FLOORS)
 
-    for floor := 0; floor < elevator.N_FLOORS; floor++ {
-        tmp_Cab_Requests[floor] = Request_Cyclic_Counter_t{
-            Value:   CC_Uninit,
-            barrier: make(Elev_List_t, N_ELEVATORS),
-        }
-    }
+	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		tmpCabRequests[floor] = RequestCyclicCounter_t{
+			Value:   CC_Uninit,
+			Barrier: make(ElevList_t, N_ELEVATORS),
+		}
+	}
 
-    var tmp_Hall_Request_Data [][2]Request_Cyclic_Counter_t = make([][2]Request_Cyclic_Counter_t, elevator.N_FLOORS)
+	var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, elevator.N_FLOORS)
 
-    for floor := 0; floor < elevator.N_FLOORS; floor++ {
-        for btn := 0; btn < 2; btn++ {
-            tmp_Hall_Request_Data[floor][btn] = Request_Cyclic_Counter_t{
-                Value:   CC_Uninit,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            }
-        }
-    }
-	
-	var tmp_Elevator_Data []Elevator_Data_t = make([]Elevator_Data_t, N_ELEVATORS)
+	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		for btn := 0; btn < 2; btn++ {
+			tmpHallRequestData[floor][btn] = RequestCyclicCounter_t{
+				Value:   CC_Uninit,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			}
+		}
+	}
 
-    for i := 0; i < N_ELEVATORS; i++ {
-        tmp_Elevator_Data[i] = Elevator_Data_t{
-            Id:          i,
-            //Msg_counter: 0,
-            Is_Alive: Is_Alive_Data_t{
-                Value:   false,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            },
-            Is_Able: Is_Able_Data_t{
-                Value:   false,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            },
-            Floor: Floor_Data_t{
-                Value:   -1,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            },
-            Elevator_Behaviour: Elevator_Behaviour_Data_t{
-                Value:   elevator.EB_Idle,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            },
-            Motor_Direction: Motor_Direction_Data_t{
-                Value:   elevator.MD_Stop,
-                barrier: make(Elev_List_t, N_ELEVATORS),
-            },
-            Cab_Requests: Deep_Copy_Cab_Requests(tmp_Cab_Requests),
-        }
-    }
+	var tmpElevatorData []ElevatorData_t = make([]ElevatorData_t, N_ELEVATORS)
 
-	var system_data System_Data_t = System_Data_t{Id: local_id, Elevator_Data: tmp_Elevator_Data, Hall_Request_Data: tmp_Hall_Request_Data}
+	for i := 0; i < N_ELEVATORS; i++ {
+		tmpElevatorData[i] = ElevatorData_t{
+			Id: i,
+			//Msg_counter: 0,
+			Is_Alive: IsAliveData_t{
+				Value:   false,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			},
+			IsFunctional: IsFunctionalData_t{
+				Value:   false,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			},
+			Floor: FloorData_t{
+				Value:   -1,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			},
+			Elevator_Behaviour: ElevatorBehaviourData_t{
+				Value:   elevator.EB_Idle,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			},
+			Motor_Direction: MotorDirectionData_t{
+				Value:   elevator.MD_Stop,
+				Barrier: make(ElevList_t, N_ELEVATORS),
+			},
+			Cab_Requests: DeepCopyCabRequests(tmpCabRequests),
+		}
+	}
 
-	return system_data, Deep_Copy_System_Data(system_data)
+	var systemData SystemData_t = SystemData_t{Id: local_id, ElevatorData: tmpElevatorData, HallRequestData: tmpHallRequestData}
+
+	return systemData, DeepCopySystemData(systemData)
 }
 
-func On_Recieved_Fresh_Data(system_data System_Data_t, confirmed_system_data System_Data_t, fresh_data System_Data_t) (System_Data_t, System_Data_t, bool){
-	var updated_system_data System_Data_t = Deep_Copy_System_Data(system_data)
-	var updated_confirmed_system_data System_Data_t = Deep_Copy_System_Data(confirmed_system_data)
-	var is_confirmed_data_updated bool = false
+func OnReceivedFreshData(systemData SystemData_t, confirmedSystemData SystemData_t, freshData SystemData_t) (SystemData_t, SystemData_t, bool) {
+	var updatedSystemData SystemData_t = DeepCopySystemData(systemData)
+	var updatedConfirmedSystemData SystemData_t = DeepCopySystemData(confirmedSystemData)
+	var isConfirmedDataUpdated bool = false
 
-	for i := 0; i < N_ELEVATORS; i++{
+	for i := 0; i < N_ELEVATORS; i++ {
 		//if the new data have newer information about a elevator, we accept it
 
-		if system_data.Elevator_Data[i].Id == fresh_data.Id {
-			updated_system_data.Elevator_Data[i] = Update_Elevator_Data_About_Self(system_data.Elevator_Data[i], fresh_data.Elevator_Data[i], system_data.Id)
+		if systemData.Elevator_Data[i].Id == freshData.Id {
+			updatedSystemData.Elevator_Data[i] = UpdateElevatorDataAboutSelf(systemData.Elevator_Data[i], freshData.Elevator_Data[i], systemData.Id)
 		} else {
-			updated_system_data.Elevator_Data[i] = Update_Elevator_Data_About_Other(system_data.Elevator_Data[i], fresh_data.Elevator_Data[i], system_data.Id)
+			updatedSystemData.Elevator_Data[i] = UpdateElevatorDataAboutOther(systemData.Elevator_Data[i], freshData.Elevator_Data[i], systemData.Id)
 		}
 	}
-	//update hall requests with the cyclic counter 
-	updated_system_data.Hall_Request_Data = Update_Hall_Request_Data(system_data.Hall_Request_Data, fresh_data.Hall_Request_Data, system_data.Id)
+	//update hall requests with the cyclic counter
+	updatedSystemData.Hall_Request_Data = UpdateHallRequestData(systemData.Hall_Request_Data, freshData.Hall_Request_Data, systemData.Id)
 
 	//update the confirmed data that have recieved consensus
-	updated_confirmed_system_data, is_confirmed_data_updated = Update_Confirmed_System_Data(system_data, confirmed_system_data)
-	
-	return updated_system_data, updated_confirmed_system_data, is_confirmed_data_updated
+	updatedConfirmedSystemData, isConfirmedDataUpdated = UpdateConfirmedSystemData(systemData, confirmedSystemData)
+
+	return updatedSystemData, updatedConfirmedSystemData, isConfirmedDataUpdated
 }
 
-func Update_Hall_Request_Data(old_data [][2]Request_Cyclic_Counter_t, new_data [][2]Request_Cyclic_Counter_t, id int) [][2]Request_Cyclic_Counter_t {
-	var updated_hall_requests [][2]Request_Cyclic_Counter_t = Deep_Copy_Hall_Requests(old_data)
-	
+func UpdateHallRequestData(oldData [][2]RequestCyclicCounter_t, newData [][2]RequestCyclicCounter_t, id int) [][2]RequestCyclicCounter_t {
+	var updatedHallRequests [][2]RequestCyclicCounter_t = DeepCopyHallRequests(oldData)
+
 	for floor := 0; floor < elevator.N_FLOORS; floor++ {
-		for btn := 0; btn < 2; btn++{
-			updated_hall_requests[floor][btn] = Update_CC(old_data[floor][btn], new_data[floor][btn], id)
+		for btn := 0; btn < 2; btn++ {
+			updatedHallRequests[floor][btn] = UpdateCC(oldData[floor][btn], newData[floor][btn], id)
 		}
 	}
-	return updated_hall_requests
+	return updatedHallRequests
 }
 
-//We trust info an elevator tells about itself. 
-func Update_Elevator_Data_About_Self(old_data Elevator_Data_t, new_data Elevator_Data_t, id int) Elevator_Data_t{ 
-	var updated_data Elevator_Data_t = Deep_Copy_Single_Elevator_Data(old_data)
+// We trust info an elevator tells about itself.
+func UpdateElevatorDataAboutSelf(oldData ElevatorData_t, newData ElevatorData_t, id int) ElevatorData_t {
+	var updatedData ElevatorData_t = DeepCopySingleElevatorData(oldData)
 
-	if old_data.Is_Alive.Value == new_data.Is_Alive.Value {
-		 updated_data.Is_Alive.barrier = Bool_Union(old_data.Is_Alive.barrier, new_data.Is_Alive.barrier)
+	if oldData.Is_Alive.Value == newData.Is_Alive.Value {
+		updatedData.Is_Alive.Barrier = BoolUnion(oldData.Is_Alive.Barrier, newData.Is_Alive.Barrier)
 	} else {
-		updated_data.Is_Alive = new_data.Is_Alive
-		updated_data.Is_Alive.Barrier[id] = true
+		updatedData.Is_Alive = newData.Is_Alive
+		updatedData.Is_Alive.Barrier[id] = true
 	}
 
-	if old_data.Is_Able.Value == new_data.Is_Able.Value {
-		 updated_data.Is_Able.barrier = Bool_Union(old_data.Is_Able.barrier, new_data.Is_Able.barrier)
+	if oldData.Is_Functional.Value == newData.Is_Functional.Value {
+		updatedData.Is_Functional.Barrier = BoolUnion(oldData.Is_Functional.Barrier, newData.Is_Functional.Barrier)
 	} else {
-		updated_data.Is_Able = new_data.Is_Able
-		updated_data.Is_Able.Barrier[id] = true
+		updatedData.Is_Functional = newData.Is_Functional
+		updatedData.Is_Functional.Barrier[id] = true
 	}
 
-	if old_data.Floor.Value == new_data.Floor.Value {
-		 updated_data.Floor.barrier = Bool_Union(old_data.Floor.barrier, new_data.Floor.barrier)
+	if oldData.Floor.Value == newData.Floor.Value {
+		updatedData.Floor.Barrier = BoolUnion(oldData.Floor.Barrier, newData.Floor.Barrier)
 	} else {
-		updated_data.Floor = new_data.Floor
-		updated_data.Floor.Barrier[id] = true
+		updatedData.Floor = newData.Floor
+		updatedData.Floor.Barrier[id] = true
 	}
 
-	if old_data.Elevator_Behaviour.Value == new_data.Elevator_Behaviour.Value {
-		 updated_data.Elevator_Behaviour.barrier = Bool_Union(old_data.Elevator_Behaviour.barrier, new_data.Elevator_Behaviour.barrier)
+	if oldData.Elevator_Behaviour.Value == newData.Elevator_Behaviour.Value {
+		updatedData.Elevator_Behaviour.Barrier = BoolUnion(oldData.Elevator_Behaviour.Barrier, newData.Elevator_Behaviour.Barrier)
 	} else {
-		updated_data.Elevator_Behaviour = new_data.Elevator_Behaviour
-		updated_data.Elevator_Behaviour.Barrier[id] = true
+		updatedData.Elevator_Behaviour = newData.Elevator_Behaviour
+		updatedData.Elevator_Behaviour.Barrier[id] = true
 	}
 
-	if old_data.Motor_Direction.Value == new_data.Motor_Direction.Value {
-		 updated_data.Motor_Direction.barrier = Bool_Union(old_data.Motor_Direction.barrier, new_data.Motor_Direction.barrier)
+	if oldData.Motor_Direction.Value == newData.Motor_Direction.Value {
+		updatedData.Motor_Direction.Barrier = BoolUnion(oldData.Motor_Direction.Barrier, newData.Motor_Direction.Barrier)
 	} else {
-		updated_data.Motor_Direction = new_data.Motor_Direction
-		updated_data.Motor_Direction.barrier[id] = true
+		updatedData.Motor_Direction = newData.Motor_Direction
+		updatedData.Motor_Direction.Barrier[id] = true
 	}
 
-	for i := 0; i < N_ELEVATORS; i++{
-		updated_data.Cab_Requests[i] = Update_CC(old_data.Cab_Requests[i], new_data.Cab_Requests[i], id)
-	}
-
-	return updated_data
-}
-
-//Only update cabcalls CC or update barriers
-func Update_Elevator_Data_About_Other(old_data Elevator_Data_t, new_data Elevator_Data_t, id int) Elevator_Data_t {
-	var updated_data Elevator_Data_t = Deep_Copy_Single_Elevator_Data(old_data)
-
-	if old_data.Is_Alive.Value == new_data.Is_Alive.Value {
-		 updated_data.Is_Alive.barrier = Bool_Union(old_data.Is_Alive.barrier, new_data.Is_Alive.barrier)
-	} 
-
-	if old_data.Is_Able.Value == new_data.Is_Able.Value {
-		 updated_data.Is_Able.barrier = Bool_Union(old_data.Is_Able.barrier, new_data.Is_Able.barrier)
-	} 
-
-	if old_data.Floor.Value == new_data.Floor.Value {
-		 updated_data.Floor.barrier = Bool_Union(old_data.Floor.barrier, new_data.Floor.barrier)
-	} 
-
-	if old_data.Elevator_Behaviour.Value == new_data.Elevator_Behaviour.Value {
-		 updated_data.Elevator_Behaviour.barrier = Bool_Union(old_data.Elevator_Behaviour.barrier, new_data.Elevator_Behaviour.barrier)
-	} 
-
-	if old_data.Motor_Direction.Value == new_data.Motor_Direction.Value {
-		 updated_data.Motor_Direction.barrier = Bool_Union(old_data.Motor_Direction.barrier, new_data.Motor_Direction.barrier)
-	} 
-	
-	for i := 0; i < N_ELEVATORS; i++{
-		updated_data.Cab_Requests[i] = Update_CC(old_data.Cab_Requests[i], new_data.Cab_Requests[i], id)
-	}
-
-	return updated_data 
-}
-
-func Update_Confirmed_System_Data(unconfirmed_data System_Data_t, confirmed_data System_Data_t) (System_Data_t, bool){
-	var is_updated bool = false
-	
 	for i := 0; i < N_ELEVATORS; i++ {
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Alive.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Is_Alive.Value = unconfirmed_data.Elevator_Data[i].Is_Alive.Value
-			is_updated = true
+		updatedData.Cab_Requests[i] = UpdateCC(oldData.Cab_Requests[i], newData.Cab_Requests[i], id)
+	}
+
+	return updatedData
+}
+
+// Only update cabcalls CC or update Barriers
+func UpdateElevatorDataAboutOther(oldData ElevatorData_t, newData ElevatorData_t, id int) ElevatorData_t {
+	var updatedData ElevatorData_t = DeepCopySingleElevatorData(oldData)
+
+	if oldData.Is_Alive.Value == newData.Is_Alive.Value {
+		updatedData.Is_Alive.Barrier = BoolUnion(oldData.Is_Alive.Barrier, newData.Is_Alive.Barrier)
+	}
+
+	if oldData.Is_Functional.Value == newData.Is_Functional.Value {
+		updatedData.Is_Functional.Barrier = BoolUnion(oldData.Is_Functional.Barrier, newData.Is_Functional.Barrier)
+	}
+
+	if oldData.Floor.Value == newData.Floor.Value {
+		updatedData.Floor.Barrier = BoolUnion(oldData.Floor.Barrier, newData.Floor.Barrier)
+	}
+
+	if oldData.Elevator_Behaviour.Value == newData.Elevator_Behaviour.Value {
+		updatedData.Elevator_Behaviour.Barrier = BoolUnion(oldData.Elevator_Behaviour.Barrier, newData.Elevator_Behaviour.Barrier)
+	}
+
+	if oldData.Motor_Direction.Value == newData.Motor_Direction.Value {
+		updatedData.Motor_Direction.Barrier = BoolUnion(oldData.Motor_Direction.Barrier, newData.Motor_Direction.Barrier)
+	}
+
+	for i := 0; i < N_ELEVATORS; i++ {
+		updatedData.Cab_Requests[i] = UpdateCC(oldData.Cab_Requests[i], newData.Cab_Requests[i], id)
+	}
+
+	return updatedData
+}
+
+func UpdateConfirmedSystemData(unconfinedData SystemData_t, confirmedData SystemData_t) (SystemData_t, bool) {
+	var isUpdated bool = false
+
+	for i := 0; i < N_ELEVATORS; i++ {
+		if CheckBarrier(unconfinedData.Elevator_Data[i].Is_Alive.Barrier, elevator_network_list) {
+			confirmedData.Elevator_Data[i].Is_Alive.Value = unconfinedData.Elevator_Data[i].Is_Alive.Value
+			isUpdated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Able.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Is_Able.Value = unconfirmed_data.Elevator_Data[i].Is_Able.Value
-			is_updated = true
+		if CheckBarrier(unconfinedData.Elevator_Data[i].Is_Functional.Barrier, elevator_network_list) {
+			confirmedData.Elevator_Data[i].Is_Functional.Value = unconfinedData.Elevator_Data[i].Is_Functional.Value
+			isUpdated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Floor.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Floor.Value = unconfirmed_data.Elevator_Data[i].Floor.Value
-			is_updated = true
+		if CheckBarrier(unconfinedData.Elevator_Data[i].Floor.Barrier, elevator_network_list) {
+			confirmedData.Elevator_Data[i].Floor.Value = unconfinedData.Elevator_Data[i].Floor.Value
+			isUpdated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Elevator_Behaviour.Value = unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.Value
-			is_updated = true
+		if CheckBarrier(unconfinedData.Elevator_Data[i].Elevator_Behaviour.Barrier, elevator_network_list) {
+			confirmedData.Elevator_Data[i].Elevator_Behaviour.Value = unconfinedData.Elevator_Data[i].Elevator_Behaviour.Value
+			isUpdated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Motor_Direction.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Motor_Direction.Value = unconfirmed_data.Elevator_Data[i].Motor_Direction.Value
-			is_updated = true
+		if CheckBarrier(unconfinedData.Elevator_Data[i].Motor_Direction.Barrier, elevator_network_list) {
+			confirmedData.Elevator_Data[i].Motor_Direction.Value = unconfinedData.Elevator_Data[i].Motor_Direction.Value
+			isUpdated = true
 		}
 		for floor := 0; floor < elevator.N_FLOORS; floor++ {
-			if Check_Barrier(unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].barrier, elevator_network_list) {
-				confirmed_data.Elevator_Data[i].Cab_Requests[floor].Value = unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].Value
-				is_updated = true
+			if CheckBarrier(unconfinedData.Elevator_Data[i].Cab_Requests[floor].Barrier, elevator_network_list) {
+				confirmedData.Elevator_Data[i].Cab_Requests[floor].Value = unconfinedData.Elevator_Data[i].Cab_Requests[floor].Value
+				isUpdated = true
 			}
 		}
 	}
-	//Dont need barrier check since the Update_CC() have barrier checks 
+	//Dont need Barrier check since the UpdateCC() have Barrier checks
 	for floor := 0; floor < elevator.N_FLOORS; floor++ {
-		for btn := 0; btn < 2; btn++{
-			if unconfirmed_data.Hall_Request_Data[floor][btn].Value != confirmed_data.Hall_Request_Data[floor][btn].Value{
-				unconfirmed_data.Hall_Request_Data[floor][btn] = confirmed_data.Hall_Request_Data[floor][btn]
-				is_updated = true
+		for btn := 0; btn < 2; btn++ {
+			if unconfinedData.Hall_Request_Data[floor][btn].Value != confirmedData.Hall_Request_Data[floor][btn].Value {
+				unconfinedData.Hall_Request_Data[floor][btn] = confirmedData.Hall_Request_Data[floor][btn]
+				isUpdated = true
 			}
 		}
 	}
 
-	return confirmed_data, is_updated
+	return confirmedData, isUpdated
 }
 
-func Update_CC(old_CC Request_Cyclic_Counter_t, new_CC Request_Cyclic_Counter_t, id int) Request_Cyclic_Counter_t{
-	 var updated_CC Request_Cyclic_Counter_t = old_CC
+func UpdateCC(oldCC RequestCyclicCounter_t, newCC RequestCyclicCounter_t, id int) RequestCyclicCounter_t {
+	var updatedCC RequestCyclicCounter_t = oldCC
 
-	if old_CC.Value == CC_Done && new_CC.Value == CC_No{
+	if oldCC.Value == CC_Done && newCC.Value == CC_No {
 		//Accept new value
-		updated_CC.Value = new_CC.Value
-		updated_CC.barrier = Deep_Copy_Barrier(new_CC.barrier)
-		updated_CC.barrier[id] = true
-	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done{
+		updatedCC.Value = newCC.Value
+		updatedCC.Barrier = DeepCopyBarrier(newCC.Barrier)
+		updatedCC.Barrier[id] = true
+	} else if oldCC.Value == CC_No && newCC.Value == CC_Done {
 		//Keep old value
-		updated_CC.Value = old_CC.Value
-		updated_CC.barrier = Deep_Copy_Barrier(old_CC.barrier)
-	} else if old_CC.Value == new_CC.Value{
-		//They are the same, only update barrier
-		updated_CC.barrier = Bool_Union(old_CC.barrier, new_CC.barrier)
-	} else if old_CC.Value < new_CC.Value {
+		updatedCC.Value = oldCC.Value
+		updatedCC.Barrier = DeepCopyBarrier(oldCC.Barrier)
+	} else if oldCC.Value == newCC.Value {
+		//They are the same, only update Barrier
+		updatedCC.Barrier = BoolUnion(oldCC.Barrier, newCC.Barrier)
+	} else if oldCC.Value < newCC.Value {
 		//Accept new value
-		updated_CC.Value = new_CC.Value
-		updated_CC.barrier = Deep_Copy_Barrier(new_CC.barrier)
-		updated_CC.barrier[id] = true
+		updatedCC.Value = newCC.Value
+		updatedCC.Barrier = DeepCopyBarrier(newCC.Barrier)
+		updatedCC.Barrier[id] = true
 	}
-	return updated_CC
+	return updatedCC
 }
 
-func Light_Cab_Lights(Cab_Requests []Request_Cyclic_Counter_t){
+func LightCabLights(CabRequests []RequestCyclicCounter_t) {
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++{
-		elevator.SetButtonLamp(elevator.BT_Cab, floor, CC_To_Bool(Cab_Requests[floor].Value))
-	}
-}
-
-func Light_Hall_Lights(Hall_Requests [][2]Request_Cyclic_Counter_t){
-	for floor := 0; floor < elevator.N_FLOORS; floor++{
-		elevator.SetButtonLamp(elevator.BT_HallUp, floor, CC_To_Bool(Hall_Requests[floor][elevator.BT_HallUp].Value))
-		elevator.SetButtonLamp(elevator.BT_HallDown, floor, CC_To_Bool(Hall_Requests[floot][elevator.BT_HallDown].Value))
+	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		elevator.SetButtonLamp(elevator.BT_Cab, floor, CCToBool(CabRequests[floor].Value))
 	}
 }
 
-func Check_Barrier(barrier Elev_List_t, Elev_Alive_List Elev_List_t)bool{
-	for i := 0; i < N_ELEVATORS; i++{
-		if barrier[i] != Elev_Alive_List[i]{
+func LightHallLights(HallRequests [][2]RequestCyclicCounter_t) {
+	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		elevator.SetButtonLamp(elevator.BT_HallUp, floor, CCToBool(HallRequests[floor][elevator.BT_HallUp].Value))
+		elevator.SetButtonLamp(elevator.BT_HallDown, floor, CCToBool(HallRequests[floor][elevator.BT_HallDown].Value))
+	}
+}
+
+func CheckBarrier(Barrier ElevList_t, ElevAliveList ElevList_t) bool {
+	for i := 0; i < N_ELEVATORS; i++ {
+		if Barrier[i] != ElevAliveList[i] {
 			return false
 		}
 	}
 	return true
 }
 
-func Bool_Union(a []bool, b []bool) []bool {
-    n := len(a)
-    if len(b) > n {
-        n = len(b)
-    }
-    result := make([]bool, n)
-    for i := 0; i < n; i++ {
-        var valA, valB bool
-        if i < len(a) {
-            valA = a[i]
-        }
-        if i < len(b) {
-            valB = b[i]
-        }
-        result[i] = valA || valB
-    }
-    return result
+func BoolUnion(a []bool, b []bool) []bool {
+	n := len(a)
+	if len(b) > n {
+		n = len(b)
+	}
+	result := make([]bool, n)
+	for i := 0; i < n; i++ {
+		var valA, valB bool
+		if i < len(a) {
+			valA = a[i]
+		}
+		if i < len(b) {
+			valB = b[i]
+		}
+		result[i] = valA || valB
+	}
+	return result
 }
 
-func CC_To_Bool(CC Cyclic_Counter_t)bool{
-	if (CC == CC_Uninit || CC == CC_No || CC == CC_Unconfirmed) {
+func CCToBool(CC CyclicCounter_t) bool {
+	if CC == CC_Uninit || CC == CC_No || CC == CC_Unconfirmed {
 		return false
 	}
 	if CC == CC_Confirmed || CC == CC_Done {
@@ -294,67 +294,64 @@ func CC_To_Bool(CC Cyclic_Counter_t)bool{
 	}
 }
 
-//
-func Deep_Copy_System_Data(src System_Data_t)System_Data_t{
-	dst := src 
-	dst.Elevator_Data = Deep_Copy_Elevator_data(src.Elevator_Data)
-	dst.Hall_Request_Data = Deep_Copy_Hall_Requests(src.Hall_Request_Data)
+func DeepCopySystemData(src SystemData_t) SystemData_t {
+	dst := src
+	dst.Elevator_Data = DeepCopyElevatorData(src.Elevator_Data)
+	dst.Hall_Request_Data = DeepCopyHallRequests(src.Hall_Request_Data)
 	return dst
 }
 
-func Deep_Copy_Elevator_data(src []Elevator_Data_t) []Elevator_Data_t{
-	dst := make([]Elevator_Data_t, len(src))
+func DeepCopyElevatorData(src []ElevatorData_t) []ElevatorData_t {
+	dst := make([]ElevatorData_t, len(src))
 
 	for i := range src {
-		dst[i] = Deep_Copy_Single_Elevator_Data(src[i])
+		dst[i] = DeepCopySingleElevatorData(src[i])
 	}
 	return dst
 }
 
-func Deep_Copy_Single_Elevator_Data(src Elevator_Data_t) Elevator_Data_t{
-	 dst := src
+func DeepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
+	dst := src
 
-	dst.Is_Alive.barrier = Deep_Copy_Barrier(src.Is_Alive.barrier)
-	dst.Is_Able.barrier = Deep_Copy_Barrier(src.Is_Able.barrier)
-	dst.Floor.barrier = Deep_Copy_Barrier(src.Floor.barrier)
-	dst.Elevator_Behaviour.barrier = Deep_Copy_Barrier(src.Elevator_Behaviour.barrier)
-	dst.Motor_Direction.barrier = Deep_Copy_Barrier(src.Motor_Direction.barrier)
-	dst.Cab_Requests = Deep_Copy_Cab_Requests(src.Cab_Requests)
+	dst.Is_Alive.Barrier = DeepCopyBarrier(src.Is_Alive.Barrier)
+	dst.Is_Functional.Barrier = DeepCopyBarrier(src.Is_Functional.Barrier)
+	dst.Floor.Barrier = DeepCopyBarrier(src.Floor.Barrier)
+	dst.Elevator_Behaviour.Barrier = DeepCopyBarrier(src.Elevator_Behaviour.Barrier)
+	dst.Motor_Direction.Barrier = DeepCopyBarrier(src.Motor_Direction.Barrier)
+	dst.Cab_Requests = DeepCopyCabRequests(src.Cab_Requests)
 	return dst
 }
 
-func Deep_Copy_Hall_Requests(src [][2]Request_Cyclic_Counter_t) [][2]Request_Cyclic_Counter_t {
-	dst := make([][2]Request_Cyclic_Counter_t, len(src))
-	
-    for floor := range src {
+func DeepCopyHallRequests(src [][2]RequestCyclicCounter_t) [][2]RequestCyclicCounter_t {
+	dst := make([][2]RequestCyclicCounter_t, len(src))
+
+	for floor := range src {
 		for btn := 0; btn < 2; btn++ {
 			dst[floor][btn] = src[floor][btn]
-			
-			barrierCopy := make([]bool, len(src[floor][btn].barrier))
-			copy(barrierCopy, src[floor][btn].barrier)
-			dst[floor][btn].barrier = barrierCopy
-        }
-    }
-    return dst
-}
 
-func Deep_Copy_Cab_Requests(src []Request_Cyclic_Counter_t) []Request_Cyclic_Counter_t {
-	dst := make([]Request_Cyclic_Counter_t, len(src))
-	for i := range src {
-		dst[i] = src[i]
-		if src[i].barrier != nil {
-			barrierCopy := make([]bool, len(src[i].barrier))
-			copy(barrierCopy, src[i].barrier)
-			dst[i].barrier = barrierCopy
+			barrierCopy := make([]bool, len(src[floor][btn].Barrier))
+			copy(barrierCopy, src[floor][btn].Barrier)
+			dst[floor][btn].Barrier = barrierCopy
 		}
 	}
 	return dst
 }
 
-func Deep_Copy_Barrier(src Elev_List_t) Elev_List_t{
+func DeepCopyCabRequests(src []RequestCyclicCounter_t) []RequestCyclicCounter_t {
+	dst := make([]RequestCyclicCounter_t, len(src))
+	for i := range src {
+		dst[i] = src[i]
+		if src[i].Barrier != nil {
+			barrierCopy := make([]bool, len(src[i].Barrier))
+			copy(barrierCopy, src[i].Barrier)
+			dst[i].Barrier = barrierCopy
+		}
+	}
+	return dst
+}
+
+func DeepCopyBarrier(src ElevList_t) ElevList_t {
 	dst := make([]bool, len(src))
 	copy(dst, src)
 	return dst
 }
-
-
