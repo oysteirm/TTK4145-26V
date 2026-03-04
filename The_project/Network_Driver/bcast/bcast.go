@@ -1,7 +1,7 @@
 package bcast
 
 import (
-	"Network_Driver/conn"
+	"the_project/Network_Driver/conn"
 	"encoding/json"
 	"fmt"
 	"net"
