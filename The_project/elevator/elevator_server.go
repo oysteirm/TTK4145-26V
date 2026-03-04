@@ -11,31 +11,25 @@ const inactivityTimeout = 9 * time.Second
 const obstructionTimeout = 5 * time.Second
 
 func ElevatorServerMain(
-	toFsmData chan<- messageSync.ElevatorData_t,
+	DataToFSM chan<- messageSync.ElevatorData_t,
 	localID int,
 	peersReceiver <-chan peers.PeerUpdate,
 ) {
-	// Create internal channels for state machine
 	commands := make(chan Command_t)
 
-	// Create event channels
 	floorSensor := make(chan int)
 	obstructionSwitch := make(chan bool)
 	doorTimerStart := make(chan time.Duration)
 	doorTimerStop := make(chan struct{})
 	doorTimerTimeout := make(chan struct{})
 
-	// Launch main elevator state machine (internal)
 	go ElevatorServer(commands)
 
-	// Launch polling goroutines
 	go PollFloorSensor(floorSensor)
 	go PollObstructionSwitch(obstructionSwitch)
 
-	// Launch door timer
 	go DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout)
 
-	// Initialize timers
 	doorTimer := time.NewTimer(0)
 	doorTimer.Stop()
 	obstructionTimer := time.NewTimer(obstructionTimeout)
@@ -43,20 +37,17 @@ func ElevatorServerMain(
 	inactivityTimer := time.NewTimer(inactivityTimeout)
 	inactivityTimer.Stop()
 
-	// Initialize elevator (move down between floors)
 	OnInitBetweenFloors(commands)
 
-	// Track obstruction state
 	isObstructed := false
 	var activePeers []string
 
-	// Send initial state
 	e_state := GetState(commands)
-	toFsmData <- BuildElevatorData(localID, e_state)
+	DataToFSM <- BuildElevatorData(localID, e_state)
 
 	for {
 		select {
-		// Floor arrival
+
 		case newFloor := <-floorSensor:
 			SetFloorIndicator(newFloor)
 			commands <- SetFloor_t{Floor: newFloor}
@@ -79,7 +70,6 @@ func ElevatorServerMain(
 			}
 			UpdateFunctionalStatus(commands)
 
-		// Obstruction switch
 		case isObstructed = <-obstructionSwitch:
 			e_state := GetState(commands)
 			if e_state.ElevatorBehaviour == EB_DoorOpen {
@@ -87,7 +77,6 @@ func ElevatorServerMain(
 			}
 			UpdateFunctionalStatus(commands)
 
-		// Door timeout
 		case <-doorTimerTimeout:
 			e_state := GetState(commands)
 			if e_state.ElevatorBehaviour == EB_DoorOpen && !isObstructed {
@@ -114,36 +103,31 @@ func ElevatorServerMain(
 			}
 			UpdateFunctionalStatus(commands)
 
-		// Obstruction timeout - safety check
 		case <-obstructionTimer.C:
-			if len(activePeers) > 1 {
-				os.Exit(1) // Obstruction timeout - emergency exit
+			if len(activePeers) > 1 { // If we are alone, we cannot reset on obstruction or inactivity without loosing orders
+				os.Exit(1) // 
 			} else {
 				obstructionTimer.Reset(obstructionTimeout)
 			}
 
-		// Inactivity timeout - safety check
 		case <-inactivityTimer.C:
 			if len(activePeers) > 1 {
-				os.Exit(2) // Inactivity timeout - emergency exit
+				os.Exit(2) // 
 			} else {
 				inactivityTimer.Reset(inactivityTimeout)
 			}
 
-		// Peers update
 		case peersUpdate := <-peersReceiver:
 			activePeers = peersUpdate.Peers
 		}
 
-		// Send state to msgSync (non-blocking)
 		select {
-		case toFsmData <- BuildElevatorData(localID, GetState(commands)):
+		case DataToFSM <- BuildElevatorData(localID, GetState(commands)):
 		default:
 		}
 	}
 }
 
-// ResetTimers resets the door and obstruction timers appropriately
 func ResetTimers(isObstructed bool, obstructionTimer *time.Timer, doorTimer *time.Timer, inactivityTimer *time.Timer, doorOpenDuration time.Duration) {
 	if isObstructed {
 		obstructionTimer.Reset(obstructionTimeout)
