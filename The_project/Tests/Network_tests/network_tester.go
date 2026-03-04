@@ -6,6 +6,7 @@ import (
 	"TTK4145-26V/Network_Driver/localip"
 	"TTK4145-26V/Network_Driver/peers"
 	"TTK4145-26V/message_sync"
+	"TTK4145-26V/Tests/Helper_functions_for_tests"
 	"flag"
 	"fmt"
 	"os"
@@ -82,9 +83,8 @@ func main() {
 	// 	}
 	// }()
 	go func() {
-		sd:=message_sync.System_Data_t{Id: 0}
+		sd:= test_helpers.Make_Fake_Confirmed_System_Data_t(4, 3)
 		for {
-			sd.Id++
 			sys_TX <- sd
 			time.Sleep(1 * time.Second)
 		}

@@ -30,42 +30,41 @@ var N_ELEVATORS int = 3
 
 
 type Elev_List_t []bool
-type Cyclic_Counter_t int
+type Cyclic_Counter_t int8
 
 //Data type structs that include the data and a barrier
 type Request_Cyclic_Counter_t struct{
 	Value Cyclic_Counter_t
 	barrier Elev_List_t
 }
-type Is_Alive_Data_t struct{
-	Value bool
-	barrier Elev_List_t
-}
-type Is_Able_Data_t struct{
-	Value bool
-	barrier Elev_List_t
-}
-type Floor_Data_t struct{
-	Value int
-	barrier Elev_List_t
-}
-type Elevator_Behaviour_Data_t struct{
-	Value elevator.ElevatorBehaviour_t
-	barrier Elev_List_t
-}
-type Motor_Direction_Data_t struct{
-	Value elevator.MotorDirection_t
-	barrier Elev_List_t
-}
+// type Is_Alive_Data_t struct{
+// 	Value bool
+// 	barrier Elev_List_t
+// }
+// type Is_Able_Data_t struct{
+// 	Value bool
+// 	barrier Elev_List_t
+// }
+// type Floor_Data_t struct{
+// 	Value int
+// 	barrier Elev_List_t
+// }
+// type Elevator_Behaviour_Data_t struct{
+// 	Value elevator.ElevatorBehaviour_t
+// 	barrier Elev_List_t
+// }
+// type Motor_Direction_Data_t struct{
+// 	Value elevator.MotorDirection_t
+// 	barrier Elev_List_t
+// }
 
 type Elevator_Data_t struct {
 	Id int
-	Msg_counter uint64
-	Is_Alive Is_Alive_Data_t
-	Is_Able Is_Able_Data_t
-	Floor Floor_Data_t
-	Elevator_Behaviour Elevator_Behaviour_Data_t
-	Motor_Direction Motor_Direction_Data_t
+	Is_Alive bool
+	Is_Able bool
+	Floor int
+	Elevator_Behaviour elevator.ElevatorBehaviour_t
+	Motor_Direction elevator.MotorDirection_t
 	Cab_Requests []Request_Cyclic_Counter_t
 }
 

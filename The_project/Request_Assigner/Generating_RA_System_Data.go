@@ -25,30 +25,30 @@ import (
 func Generating_RA_System_Data(confirmed_system_data message_sync.System_Data_t) RA_System_Data{
 	ra_system := RA_System_Data{}
 	ra_system.HallRequests = make([][N_HALL_CALLS]bool,elevator.N_FLOORS)
-	for i:=0; i < elevator.N_FLOORS;i++{
-		for j:= 0; j < N_HALL_CALLS; j++{
-			ra_system.HallRequests[i][j] = CC_To_Bool(confirmed_system_data.Hall_Request_Data[i][j].Value)
+	for floor:=0; floor < elevator.N_FLOORS;floor++{
+		for button:= 0; button < N_HALL_CALLS; button++{
+			ra_system.HallRequests[floor][button] = CC_To_Bool(confirmed_system_data.Hall_Request_Data[floor][button].Value)
 		}
 	}
 
 	ra_system.States = make(map[string]RA_Local_Elevator_State)
 	for _,elev := range confirmed_system_data.Elevator_Data{
 
-		if !(elev.Is_Alive.Value) || !(elev.Is_Able.Value){
+		if !(elev.Is_Alive) || !(elev.Is_Able){
 			continue
 		}
 
 		cab_bools := make([]bool,elevator.N_FLOORS)
-		for i:= 0; i< elevator.N_FLOORS; i++{
-			cab_bools[i] = CC_To_Bool(elev.Cab_Requests[i].Value)
+		for floor:= 0; floor< elevator.N_FLOORS; floor++{
+			cab_bools[floor] = CC_To_Bool(elev.Cab_Requests[floor].Value)
 		}
 
 		Id_str := strconv.Itoa(elev.Id)
 
 		ra_system.States[Id_str] = RA_Local_Elevator_State{
-			Behavior:    elevator.Elevator_behaviour_to_string(elev.Elevator_Behaviour.Value),
-			Floor:       elev.Floor.Value,
-			Direction:   elevator.Elevator_dirn_to_string(elev.Motor_Direction.Value),
+			Behavior:    elevator.Elevator_behaviour_to_string(elev.Elevator_Behaviour),
+			Floor:       elev.Floor,
+			Direction:   elevator.Elevator_dirn_to_string(elev.Motor_Direction),
 			CabRequests: cab_bools,
 		}
 	}

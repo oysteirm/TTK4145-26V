@@ -56,11 +56,11 @@ func Make_Fake_Confirmed_System_Data_t(floors int, nElev int) message_sync.Syste
 	if nElev >= 1 {
 		e := &confirmed.Elevator_Data[0]
 		e.Id = 1
-		e.Is_Alive.Value = true
-		e.Is_Able.Value = true
-		e.Floor.Value = 0
-		e.Elevator_Behaviour.Value = elevator.EB_Idle
-		e.Motor_Direction.Value = elevator.MD_Stop
+		e.Is_Alive = true
+		e.Is_Able = true
+		e.Floor = 0
+		e.Elevator_Behaviour = elevator.EB_Idle
+		e.Motor_Direction = elevator.MD_Stop
 		e.Cab_Requests = make([]message_sync.Request_Cyclic_Counter_t, floors)
 
 		// cab call in floor 3 (0-indexed => 2)
@@ -71,9 +71,9 @@ func Make_Fake_Confirmed_System_Data_t(floors int, nElev int) message_sync.Syste
 	if nElev >= 2 {
 		e := &confirmed.Elevator_Data[1]
 		e.Id = 2
-		e.Is_Alive.Value = true
-		e.Is_Able.Value = false
-		e.Floor.Value = 2
+		e.Is_Alive = true
+		e.Is_Able = false
+		e.Floor = 2
 		e.Cab_Requests = make([]message_sync.Request_Cyclic_Counter_t, floors)
 	}
 
@@ -81,11 +81,11 @@ func Make_Fake_Confirmed_System_Data_t(floors int, nElev int) message_sync.Syste
 	if nElev >= 3 {
 		e := &confirmed.Elevator_Data[2]
 		e.Id = 3
-		e.Is_Alive.Value = true
-		e.Is_Able.Value = true
-		e.Floor.Value = 2
-		e.Elevator_Behaviour.Value = elevator.EB_Moving
-		e.Motor_Direction.Value = elevator.MD_Down
+		e.Is_Alive = true
+		e.Is_Able = true
+		e.Floor = 2
+		e.Elevator_Behaviour = elevator.EB_Moving
+		e.Motor_Direction = elevator.MD_Down
 		e.Cab_Requests = make([]message_sync.Request_Cyclic_Counter_t, floors)
 
 	
