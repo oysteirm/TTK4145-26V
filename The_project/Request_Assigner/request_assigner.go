@@ -50,6 +50,8 @@ func Assign_Orders(Elevator_System RA_System_Data) RA_Output {
 	).CombinedOutput()
 	if err != nil {
 		fmt.Println("Exec error in Assign_Orders:", err)
+    	fmt.Println("Assigner output:\n", string(output))
+    	fmt.Println("Input JSON:\n", string(input))
 		return nil
 	}
 
