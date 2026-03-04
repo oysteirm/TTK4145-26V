@@ -33,7 +33,7 @@ type RA_Output map[string][][]bool
 
 
 
-func Assign_Orders(Elevator_System RA_System_Data) RA_Output {
+func Assign_Requests(Elevator_System RA_System_Data) RA_Output {
 
 	//ENCODING SYSTEM
 	input, err := json.Marshal(Elevator_System)
