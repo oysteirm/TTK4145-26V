@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Network_Driver/conn"
+	"TTK4145-26V/Network_Driver/conn"
 	"fmt"
 	"net"
 	"sort"

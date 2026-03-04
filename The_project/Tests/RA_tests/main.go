@@ -58,4 +58,12 @@ func main() {
 
 	// 3) Print resultatet (det som sendes til assigner)
 	prettyPrint("RA_System_Data", ra)
+
+	// 4) Kjør assigner
+	orders := requestassigner.Assign_Orders(ra)
+
+	// 5) Print resultat
+	prettyPrint("RA_Output", orders)
+
+
 }
