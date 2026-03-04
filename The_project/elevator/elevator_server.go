@@ -3,15 +3,15 @@ package elevator
 import (
 	"os"
 	"the_project/Network_Driver/peers"
-	"the_project/message_sync"
+	"the_project/message_sync/msg_sync_server"
 	"time"
 )
 
 const inactivityTimeout = 9 * time.Second
 const obstructionTimeout = 5 * time.Second
 
-func Elevator_Server_main(
-	to_fsm_data chan<- message_sync.Elevator_Data_t,
+func ElevatorServerMain(
+	to_fsm_data chan<- messageSync.Elevator_Data_t,
 	local_id int,
 	peersReceiver <-chan peers.PeerUpdate,
 ) {

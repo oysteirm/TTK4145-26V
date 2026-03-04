@@ -1,9 +1,9 @@
-package message_sync
+package messageSync
 
 import (
 	"time"
 	"the_project/elevator"
-	"the_project/Network_driver/peers"
+	"the_project/Network_Driver/peers"
 	"the_project/Network_Driver/bcast"
 )	
 /* map over data that is being syncronized
@@ -82,7 +82,7 @@ type GetSystemData_t struct{
 	Reply SystemData_t
 }
 
-func Message_Sync_Server(
+func MessageSyncServer(
 	fromNetworkData <-chan SystemData_t, //channel for recieving new system data
 	getSystemData <-chan GetSystemData_t, //channel for other routines to get the current system data
 	fromFsmData <-chan ElevatorData_t, //channel for recieving elevator data from fsm
