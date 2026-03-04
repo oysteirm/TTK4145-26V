@@ -101,7 +101,6 @@ func main() {
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
 		case a := <-sys_RX:
-			fmt.Printf("Received:")
 			test_helpers.More_readable_json_print("Received System_Data",a)
 		}
 	}
