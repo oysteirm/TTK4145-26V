@@ -17,13 +17,13 @@ func main() {
 	ra := requestassigner.Generating_RA_System_Data(confirmed)
 
 	// 3) Printing the generated RA_System_Data to see the format
-	test_helpers.More_readable_print("Generated RA_System_Data", ra)
+	test_helpers.More_readable_json_print("Generated RA_System_Data", ra)
 
 	// 4) Exectuing the "Black Box" for assigning requests
 	requests := requestassigner.Assign_Requests(ra)
 
 	// 5) Printing the result from the assigner (can compare with ra)
-	test_helpers.More_readable_print("RA_Output from assigner", requests)
+	test_helpers.More_readable_json_print("RA_Output from assigner", requests)
 
 
 }
