@@ -3,7 +3,7 @@ package message_sync
 import (
 	"time"
 	"the_project/elevator"
-	"the_project/Network_driver/peers"
+	"the_project/Network_Driver/peers"
 	"the_project/Network_Driver/bcast"
 )	
 /* map over data that is being syncronized
@@ -22,55 +22,61 @@ If this list == elevator_network_list then we send this data have reached consen
 */
 
 const (
-	CC_Uninit Cyclic_Counter_t 	= -1
-	CC_No 						= 0
-	CC_Unconfirmed 				= 1
-	CC_Confirmed 				= 2
-	CC_Done 					= 3
+	CC_Uninit 		Cyclic_Counter_t 	= -1
+	CC_No 			Cyclic_Counter_t	= 0
+	CC_Unconfirmed 	Cyclic_Counter_t	= 1
+	CC_Confirmed 	Cyclic_Counter_t	= 2
+	CC_Done 		Cyclic_Counter_t	= 3
 )
 
-const N_ELEVATORS int = 3
-const btns_UP_and_Down int = 2
+const N_ELEVATORS 		int = 3
+const btns_UP_and_Down 	int = 2
 
-type Elev_List_t []bool
+// List containing info about our network peers
+// 1: part of network
+// 0: not part of network
+var Active_Peers []bool
+
 type Cyclic_Counter_t int
 
-//Data type structs that include the data and a barrier
+//Data type structs that include the data and a Barrier
 type Request_Cyclic_Counter_t struct{
 	Value Cyclic_Counter_t
-	barrier Elev_List_t
+	Barrier []bool
 }
 type Is_Alive_Data_t struct{
 	Value bool
-	barrier Elev_List_t
+	Barrier []bool
 }
-type Is_Able_Data_t struct{
+type Is_Functional_Data_t struct{
 	Value bool
-	barrier Elev_List_t
+	Barrier []bool
 }
 type Floor_Data_t struct{
 	Value int
-	barrier Elev_List_t
+	Barrier []bool
 }
 type Elevator_Behaviour_Data_t struct{
 	Value elevator.Elevator_Behaviour_t
-	barrier Elev_List_t
+	Barrier []bool
 }
 type Motor_Direction_Data_t struct{
 	Value elevator.Motor_Direction_t
-	barrier Elev_List_t
+	Barrier []bool
 }
+
 //Datatype for elevator states with barriers
 type Elevator_Data_t struct {
 	Id int
 	//Msg_counter uint64
 	Is_Alive Is_Alive_Data_t
-	Is_Able Is_Able_Data_t
+	Is_Functional Is_Functional_Data_t
 	Floor Floor_Data_t
 	Elevator_Behaviour Elevator_Behaviour_Data_t
 	Motor_Direction Motor_Direction_Data_t
 	Cab_Requests []Request_Cyclic_Counter_t
 }
+
 //Datatype for multi elevator states and hall requests
 type System_Data_t struct {
 	Id int
@@ -83,27 +89,27 @@ type Get_System_Data_t struct{
 }
 
 func Message_Sync_Server(
-	from_network_data <-chan System_Data_t, //channel for recieving new system data
-	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
-	from_fsm_data <-chan Elevator_Data_t, //channel for recieving elevator data from fsm
+	get_system_data <-chan Get_System_Data_t, 	//channel for other routines to get the current system data
+	data_from_fsm <-chan Elevator_Data_t, 		//channel for recieving elevator data from elevator FSM
+	data_to_fsm chan<- System_Data_t, 			//channel for sending confirmed data to FSM
 	peersReciever <-chan peers.PeerUpdate,
 	local_id int,
 	){
-	// 
+
+	// Variables used to sync data
 	var system_data System_Data_t
 	var confirmed_system_data System_Data_t
 	system_data, confirmed_system_data = Init_System_Data(local_id)
 	var is_confirmed_data_updated bool = false
 
 	// Network variables
-	var activePeers []string
-	networkReciever := make(chan System_Data_t)
-	networkTransmitter := make(chan System_Data_t)
+	network_receiver := make(chan System_Data_t)
+	network_transmitter := make(chan System_Data_t)
 	bcastPort := 1234 //TODO: change this to a correct value
 
 	// Go routines from Network_Driver
-	go bcast.Receiver(bcastPort, networkReciever)
-	go bcast.Transmitter(bcastPort, networkTransmitter)
+	go bcast.Receiver(bcastPort, network_receiver)
+	go bcast.Transmitter(bcastPort, network_transmitter)
 	
 	// Timer for broadcasting
 	ticker := time.NewTicker(10 * time.Millisecond)
@@ -113,46 +119,51 @@ func Message_Sync_Server(
 	drv_buttons := make(chan elevator.ButtonEvent_t)
 	go elevator.PollButtons(drv_buttons)
 	
-
 	for {
 		select{
+		//Someone needs the system data
 		case reg := <- get_system_data:
 			reg.Reply = system_data
 
-		case fresh_data := <- from_network_data:
-			system_data, confirmed_system_data, is_confirmed_data_updated = On_Recieved_Fresh_Data(system_data, confirmed_system_data, fresh_data)
+		//We recieve new data from the network
+		case fresh_data := <- network_receiver:
+			system_data, confirmed_system_data, is_confirmed_data_updated = On_Received_Fresh_Data(system_data, confirmed_system_data, fresh_data)
 
+			//If we have new confirmed data, we sent it to the elevator FSM
 			if is_confirmed_data_updated{
-				//TODO: send confirmed_data til elev_FSM
+				data_to_fsm <- confirmed_system_data
 			}
-			//use confirmed_data for light contract 
-			//TODO: write these functions and place them in elev_server
+
+			//TODO: place them in elev_server
 			Light_Cab_Lights(confirmed_system_data.Elevator_Data[local_id].Cab_Requests)
 			Light_Hall_Lights(confirmed_system_data.Hall_Request_Data)
 
-		case fresh_data := <- from_fsm_data:
+		//We recieve data from the elevator FSM
+		case fresh_data := <- data_from_fsm:
 			system_data.Elevator_Data[local_id] = Update_Elevator_Data_About_Self(system_data.Elevator_Data[local_id], fresh_data, local_id)
 			
-		//buttonpress tries to change the CC to unconfirmed
+		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)}
+				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
 				system_data.Elevator_Data[local_id].Cab_Requests[btn.Floor] = Update_CC(system_data.Elevator_Data[local_id].Cab_Requests[btn.Floor], tmp_cab_request, local_id)
 			} else {
-				var tmp_hall_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)}
+				var tmp_hall_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
 				system_data.Hall_Request_Data[btn.Floor][btn.Button] = Update_CC(system_data.Hall_Request_Data[btn.Floor][btn.Button], tmp_hall_request, local_id)
 			}
 
 		//broadcast timer timeout
 		case <-ticker.C: 
-			//TODO: write timeout timer, and broadcast System 
-			//system_data.Elevator_Data[local_id].Msg_counter++
+			//TODO: check broadcast System data is correct
+			network_transmitter <- system_data 
 
-
-		case peersUpdate := <-peersReciever:
+		//Updates on the active peers list
+		case Peers_Update := <-peersReciever:
 			//TODO: format peersupdate to a bool list 
-			activePeers = peersUpdate.Peers
-
+			Active_Peers = From_Peers_Update_To_Active_Peers(Peers_Update)
+			for i := 0; i < N_ELEVATORS; i++{
+				system_data.Elevator_Data[i].Is_Alive.Value = Active_Peers[i]
+			}
 		}
 	}
 }
