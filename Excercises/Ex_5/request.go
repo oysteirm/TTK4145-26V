@@ -145,7 +145,6 @@ func main(){
 }
 
 
-busy = false
 // --- PRIORITY QUEUE --- //
 /*
 Who needs type-safety anyway? Can take elements of any type, and also mix them...
