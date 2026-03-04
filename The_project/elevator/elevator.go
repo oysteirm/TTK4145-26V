@@ -13,7 +13,6 @@ type Requests_t [][]bool
 type Command_t interface{}
 
 const (
-<<<<<<< HEAD
 	EB_Idle     ElevatorBehaviour_t = 0
 	EB_DoorOpen                      = 1
 	EB_Moving                        = 2
@@ -26,19 +25,6 @@ type ElevatorState_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 	DoorOpenDuration  time.Duration
 	IsFunctional      bool
-=======
-    EB_Idle ElevatorBehaviour_t = 0
-    EB_DoorOpen               = 1  
-    EB_Moving                 = 2
-)
-
-type ElevatorState_t struct {
-    Floor              int
-    MotorDirection     MotorDirection_t
-    Requests           Requests_t
-    ElevatorBehaviour  ElevatorBehaviour_t
-    DoorOpenDuration   time.Duration
->>>>>>> origin/henning/ReqAssign
 }
 
 type GetState_t struct {

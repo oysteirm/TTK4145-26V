@@ -1,8 +1,11 @@
 package elevator
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 	"the_project/Network_Driver/peers"
+	ra "the_project/Request_Assigner"
 	"the_project/messageSync"
 	"time"
 )
@@ -14,6 +17,7 @@ func ElevatorServerMain(
 	DataToFSM chan<- messageSync.ElevatorData_t,
 	localID int,
 	peersReceiver <-chan peers.PeerUpdate,
+	getSystemData chan messageSync.GetSystemData_t,
 ) {
 	commands := make(chan Command_t)
 
@@ -58,10 +62,10 @@ func ElevatorServerMain(
 					SetMotorDirection(MD_Stop)
 					SetDoorOpenLamp(true)
 
-				e_state = RequestsClearAtCurrentFloor(e_state)
-				commands <- SetState_t{ElevatorState: e_state}
-				commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
-				commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
+					e_state = RequestsClearAtCurrentFloor(e_state)
+					commands <- SetState_t{ElevatorState: e_state}
+					commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
+					commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
 					doorTimerStop <- struct{}{}
 					doorTimerStart <- e_state.DoorOpenDuration
 
@@ -80,7 +84,17 @@ func ElevatorServerMain(
 		case <-doorTimerTimeout:
 			e_state := GetState(commands)
 			if e_state.ElevatorBehaviour == EB_DoorOpen && !isObstructed {
-				pair := RequestsChooseDirection(e_state)
+				// Get system data from message sync
+				systemDataRequest := messageSync.GetSystemData_t{Reply: messageSync.SystemData_t{}}
+				getSystemData <- systemDataRequest
+				systemData := systemDataRequest.Reply
+
+				// Convert to RA_System_Data and get request assignments
+				raSystemData := ra.Generating_RA_System_Data(systemData)
+				raOutput := ra.Assign_Requests(raSystemData)
+
+				// Convert RA_Output to motor direction and behavior
+				pair := RAOutputToMotorDirectionPair(raOutput, localID, e_state)
 				commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
 				commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
 
@@ -105,14 +119,14 @@ func ElevatorServerMain(
 
 		case <-obstructionTimer.C:
 			if len(activePeers) > 1 { // If we are alone, we cannot reset on obstruction or inactivity without loosing orders
-				os.Exit(1) // 
+				os.Exit(1) //
 			} else {
 				obstructionTimer.Reset(obstructionTimeout)
 			}
 
 		case <-inactivityTimer.C:
 			if len(activePeers) > 1 {
-				os.Exit(2) // 
+				os.Exit(2) //
 			} else {
 				inactivityTimer.Reset(inactivityTimeout)
 			}
@@ -160,7 +174,7 @@ func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.Elevato
 	}
 
 	elevatorData := messageSync.ElevatorData_t{
-		Id:          localID,
+		Id:         localID,
 		MsgCounter: 0,
 		IsAlive: messageSync.IsAliveData_t{
 			Value:   true,
@@ -186,4 +200,35 @@ func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.Elevato
 	}
 
 	return elevatorData
+}
+
+// Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
+func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
+	if raOutput == nil {
+		fmt.Println("Error: RA_Output is nil, falling back to RequestsChooseDirection")
+		return RequestsChooseDirection(e_state)
+	}
+
+	// Get the assigned requests for this elevator
+	elevIDStr := strconv.Itoa(localID)
+	assignedRequests, exists := raOutput[elevIDStr]
+	if !exists {
+		fmt.Printf("Error: Elevator %d not found in RA_Output, falling back to RequestsChooseDirection\n", localID)
+		return RequestsChooseDirection(e_state)
+	}
+
+	// Create a temporary elevator state with the assigned requests
+	tempState := e_state
+	tempState.Requests = make([][]bool, N_FLOORS)
+	for floor := 0; floor < N_FLOORS; floor++ {
+		tempState.Requests[floor] = make([]bool, N_BUTTONS)
+		if floor < len(assignedRequests) && assignedRequests[floor] != nil {
+			for btn := 0; btn < len(assignedRequests[floor]) && btn < int(N_BUTTONS); btn++ {
+				tempState.Requests[floor][btn] = assignedRequests[floor][btn]
+			}
+		}
+	}
+
+	// Use the same logic as RequestsChooseDirection but with assigned requests
+	return RequestsChooseDirection(tempState)
 }
