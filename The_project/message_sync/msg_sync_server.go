@@ -10,9 +10,9 @@ import (
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
-[ 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
-	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]], 
-	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
+[ 	[ID		ALIVE 	IS_Functional		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
+	[ID		ALIVE 	IS_Functional	    FLOOR	EB		MD	Cab_Requests[N_FLOORS]], 
+	[ID		ALIVE 	IS_Functional		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
 
 Hall Requests:
 Hall_Request_Data[N_FLOORS][N_HALL_CALLS]
@@ -38,35 +38,35 @@ type Cyclic_Counter_t int
 
 //Data type structs that include the data and a barrier
 type Request_Cyclic_Counter_t struct{
-	value Cyclic_Counter_t
-	barrier Elev_List_t
+	Value Cyclic_Counter_t
+	Barrier Elev_List_t
 }
 type Is_Alive_Data_t struct{
-	value bool
-	barrier Elev_List_t
+	Value bool
+	Barrier Elev_List_t
 }
-type Is_Able_Data_t struct{
-	value bool
-	barrier Elev_List_t
+type Is_Functional_Data_t struct{
+	Value bool
+	Barrier Elev_List_t
 }
 type Floor_Data_t struct{
-	value int
-	barrier Elev_List_t
+	Value int
+	Barrier Elev_List_t
 }
 type Elevator_Behaviour_Data_t struct{
-	value elevator.Elevator_Behaviour_t
-	barrier Elev_List_t
+	Value elevator.Elevator_Behaviour_t
+	Barrier Elev_List_t
 }
 type Motor_Direction_Data_t struct{
-	value elevator.Motor_Direction_t
-	barrier Elev_List_t
+	Value elevator.Motor_Direction_t
+	Barrier Elev_List_t
 }
 
 type Elevator_Data_t struct {
 	Id int
 	Msg_counter uint64
 	Is_Alive Is_Alive_Data_t
-	Is_Able Is_Able_Data_t
+	Is_Functional Is_Functional_Data_t
 	Floor Floor_Data_t
 	Elevator_Behaviour Elevator_Behaviour_Data_t
 	Motor_Direction Motor_Direction_Data_t
@@ -126,7 +126,7 @@ func Message_Sync_Server(
 			
 		case btn := <-drv_buttons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
+				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, Barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
 
 			}
 		case //broadcast timer timeout

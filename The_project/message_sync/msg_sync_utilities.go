@@ -11,9 +11,9 @@ func Init_System_Data(local_id int) (System_Data_t, System_Data_t){
 	var tmp_Cab_Requests []Request_Cyclic_Counter_t
 	var tmp_Hall_Request_Data [][2]Request_Cyclic_Counter_t
 	for floor := 0; floor < elevator.N_FLOORS; floor++{
-		Cab_Requests[i] =  Request_Cyclic_Counter_t{value: CC_Uninit, barrier: Elev_List_t{}}
-		Hall_Request_Data[i][0] =  Request_Cyclic_Counter_t{value: CC_Uninit, barrier: Elev_List_t{}}
-		Hall_Request_Data[i][1] =  Request_Cyclic_Counter_t{value: CC_Uninit, barrier: Elev_List_t{}}
+		Cab_Requests[i] =  Request_Cyclic_Counter_t{Value: CC_Uninit, Barrier: Elev_List_t{}}
+		Hall_Request_Data[i][0] =  Request_Cyclic_Counter_t{Value: CC_Uninit, Barrier: Elev_List_t{}}
+		Hall_Request_Data[i][1] =  Request_Cyclic_Counter_t{Value: CC_Uninit, Barrier: Elev_List_t{}}
 	}
 	
 	var tmp_Elevator_Data []Elevator_Data_t
@@ -61,39 +61,39 @@ func Update_Hall_Request_Data(old_data [][2]Request_Cyclic_Counter_t, new_data [
 func Update_Single_Elevator_Data(old_data Elevator_Data_t, new_data Elevator_Data_t, id int) Elevator_Data_t{ 
 	var updated_data Elevator_Data_t = old_data
 
-	if old_data.Is_Alive.value == new_data.Is_Alive.value {
-		 updated_data.Is_Alive.barrier = Bool_Union(old_data.Is_Alive.barrier, new_data.Is_Alive.barrier)
+	if old_data.Is_Alive.Value == new_data.Is_Alive.Value {
+		 updated_data.Is_Alive.Barrier = Bool_Union(old_data.Is_Alive.Barrier, new_data.Is_Alive.Barrier)
 	} else {
 		updated_data.Is_Alive = new_data.Is_Alive
-		updated_data.Is_Alive.barrier[id] = true
+		updated_data.Is_Alive.Barrier[id] = true
 	}
 
-	if old_data.Is_Able.value == new_data.Is_Able.value {
-		 updated_data.Is_Able.barrier = Bool_Union(old_data.Is_Able.barrier, new_data.Is_Able.barrier)
+	if old_data.Is_Able.Value == new_data.Is_Able.Value {
+		 updated_data.Is_Able.Barrier = Bool_Union(old_data.Is_Able.Barrier, new_data.Is_Able.Barrier)
 	} else {
 		updated_data.Is_Able = new_data.Is_Able
-		updated_data.Is_Able.barrier[id] = true
+		updated_data.Is_Able.Barrier[id] = true
 	}
 
-	if old_data.Floor.value == new_data.Floor.value {
-		 updated_data.Floor.barrier = Bool_Union(old_data.Floor.barrier, new_data.Floor.barrier)
+	if old_data.Floor.Value == new_data.Floor.Value {
+		 updated_data.Floor.Barrier = Bool_Union(old_data.Floor.Barrier, new_data.Floor.Barrier)
 	} else {
 		updated_data.Floor = new_data.Floor
-		updated_data.Floor.barrier[id] = true
+		updated_data.Floor.Barrier[id] = true
 	}
 
-	if old_data.Elevator_Behaviour.value == new_data.Elevator_Behaviour.value {
-		 updated_data.Elevator_Behaviour.barrier = Bool_Union(old_data.Elevator_Behaviour.barrier, new_data.Elevator_Behaviour.barrier)
+	if old_data.Elevator_Behaviour.Value == new_data.Elevator_Behaviour.Value {
+		 updated_data.Elevator_Behaviour.Barrier = Bool_Union(old_data.Elevator_Behaviour.Barrier, new_data.Elevator_Behaviour.Barrier)
 	} else {
 		updated_data.Elevator_Behaviour = new_data.Elevator_Behaviour
-		updated_data.Elevator_Behaviour.barrier[id] = true
+		updated_data.Elevator_Behaviour.Barrier[id] = true
 	}
 
-	if old_data.Motor_Direction.value == new_data.Motor_Direction.value {
-		 updated_data.Motor_Direction.barrier = Bool_Union(old_data.Motor_Direction.barrier, new_data.Motor_Direction.barrier)
+	if old_data.Motor_Direction.Value == new_data.Motor_Direction.Value {
+		 updated_data.Motor_Direction.Barrier = Bool_Union(old_data.Motor_Direction.Barrier, new_data.Motor_Direction.Barrier)
 	} else {
 		updated_data.Motor_Direction = new_data.Motor_Direction
-		updated_data.Motor_Direction.barrier[id] = true
+		updated_data.Motor_Direction.Barrier[id] = true
 	}
 
 	for i := 0; i < N_ELEVATORS; i++{
@@ -107,29 +107,29 @@ func Update_Confirmed_System_Data(unconfirmed_data System_Data_t, confirmed_data
 	var is_updated bool = false
 	
 	for i := 0; i < N_ELEVATORS; i++ {
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Alive.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Is_Alive.value = unconfirmed_data.Elevator_Data[i].Is_Alive.value
+		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Alive.Barrier, elevator_network_list) {
+			confirmed_data.Elevator_Data[i].Is_Alive.Value = unconfirmed_data.Elevator_Data[i].Is_Alive.Value
 			is_updated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Able.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Is_Able.value = unconfirmed_data.Elevator_Data[i].Is_Able.value
+		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Is_Able.Barrier, elevator_network_list) {
+			confirmed_data.Elevator_Data[i].Is_Able.Value = unconfirmed_data.Elevator_Data[i].Is_Able.Value
 			is_updated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Floor.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Floor.value = unconfirmed_data.Elevator_Data[i].Floor.value
+		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Floor.Barrier, elevator_network_list) {
+			confirmed_data.Elevator_Data[i].Floor.Value = unconfirmed_data.Elevator_Data[i].Floor.Value
 			is_updated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Elevator_Behaviour.value = unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.value
+		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.Barrier, elevator_network_list) {
+			confirmed_data.Elevator_Data[i].Elevator_Behaviour.Value = unconfirmed_data.Elevator_Data[i].Elevator_Behaviour.Value
 			is_updated = true
 		}
-		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Motor_Direction.barrier, elevator_network_list) {
-			confirmed_data.Elevator_Data[i].Motor_Direction.value = unconfirmed_data.Elevator_Data[i].Motor_Direction.value
+		if Check_Barrier(unconfirmed_data.Elevator_Data[i].Motor_Direction.Barrier, elevator_network_list) {
+			confirmed_data.Elevator_Data[i].Motor_Direction.Value = unconfirmed_data.Elevator_Data[i].Motor_Direction.Value
 			is_updated = true
 		}
 		for floor := 0; floor < elevator.N_FLOORS; floor++ {
-			if Check_Barrier(unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].barrier, elevator_network_list) {
-				confirmed_data.Elevator_Data[i].Cab_Requests[floor].value = unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].value
+			if Check_Barrier(unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].Barrier, elevator_network_list) {
+				confirmed_data.Elevator_Data[i].Cab_Requests[floor].Value = unconfirmed_data.Elevator_Data[i].Cab_Requests[floor].Value
 				is_updated = true
 			}
 		}
@@ -140,19 +140,19 @@ func Update_Confirmed_System_Data(unconfirmed_data System_Data_t, confirmed_data
 func Update_CC(old_CC Request_Cyclic_Counter_t, new_CC Request_Cyclic_Counter_t, id int) Request_Cyclic_Counter_t{
 	 var updated_CC Request_Cyclic_Counter_t = old_CC
 
-	if old_CC.value == CC_Done && new_CC.value == CC_No{
+	if old_CC.Value == CC_Done && new_CC.Value == CC_No{
 		updated_CC = new_CC
-		updated_CC.barrier[id] = 1
+		updated_CC.Barrier[id] = 1
 	} 
-	else if old_CC.value == CC_No && new_CC.value == CC_Done{
+	else if old_CC.Value == CC_No && new_CC.Value == CC_Done{
 		updated_CC = old_CC
 	} 
-	else if old_CC.value == new_CC.value{
-		old_CC.barrier = Bool_Union(old_CC.barrier, new_CC.barrier)
+	else if old_CC.Value == new_CC.Value{
+		old_CC.Barrier = Bool_Union(old_CC.Barrier, new_CC.Barrier)
 	}
-	else if old_CC.value < new_CC.value {
+	else if old_CC.Value < new_CC.Value {
 		updated_CC = new_CC
-		updated_CC.barrier[id] = 1
+		updated_CC.Barrier[id] = 1
 	}
 
 	return updated_CC
