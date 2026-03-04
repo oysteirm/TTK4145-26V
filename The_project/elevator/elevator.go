@@ -53,7 +53,7 @@ type SetElevatorBehaviour_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 }
 
-func Elevator_Server(commands chan Command_t) {
+func ElevatorServer(commands chan Command_t) {
 	requests_temp := make([][]bool, N_FLOORS)
 	for i := range requests_temp {
 		requests_temp[i] = make([]bool, N_BUTTONS)

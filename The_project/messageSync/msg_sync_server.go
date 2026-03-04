@@ -9,9 +9,9 @@ import (
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
-[ 	[ID		ALIVE 	IsFunctional		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
-	[ID		ALIVE 	IsFunctional	    FLOOR	EB		MD	Cab_Requests[N_FLOORS]], 
-	[ID		ALIVE 	IsFunctional		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
+[ 	[ID		ALIVE 	IsFunctional		FLOOR	EB		MD	CabRequests[N_FLOORS]],
+	[ID		ALIVE 	IsFunctional	    FLOOR	EB		MD	CabRequests[N_FLOORS]], 
+	[ID		ALIVE 	IsFunctional		FLOOR	EB		MD	CabRequests[N_FLOORS]]	]
 
 Hall Requests:
 Hall_Request_Data[N_FLOORS][N_HALL_CALLS]
@@ -37,20 +37,20 @@ type CyclicCounter_t int
 
 //Data type structs that include the data and a barrier
 type RequestCyclicCounter_t struct{
-	Value Cyclic_Counter_t
-	Barrier Elev_List_t
+	Value CyclicCounter_t
+	Barrier ElevList_t
 }
 type IsAliveData_t struct{
 	Value bool
-	Barrier Elev_List_t
+	Barrier ElevList_t
 }
 type IsFunctionalData_t struct{
 	Value bool
-	Barrier Elev_List_t
+	Barrier ElevList_t
 }
 type FloorData_t struct{
 	Value int
-	Barrier Elev_List_t
+	Barrier ElevList_t
 }
 type ElevatorBehaviourData_t struct{
 	Value elevator.ElevatorBehaviour_t
@@ -63,7 +63,7 @@ type MotorDirectionData_t struct{
 //Datatype for elevator states with barriers
 type ElevatorData_t struct {
 	Id int
-	//Msg_counter uint64
+	//MsgCounter uint64
 	IsAlive IsAliveData_t
 	IsFunctional IsFunctionalData_t
 	Floor FloorData_t
@@ -92,7 +92,7 @@ func MessageSyncServer(
 	// 
 	var systemData SystemData_t
 	var confirmedSystemData SystemData_t
-	systemData, confirmedSystemData = Init_systemData(local_id)
+	systemData, confirmedSystemData = Init_systemData(localID)
 	var iisConfirmedDataUpdated bool = false
 
 	// Network variables
@@ -110,8 +110,8 @@ func MessageSyncServer(
 	defer ticker.Stop()
 
 	// Go routine for button polling
-	drv_buttons := make(chan elevator.ButtonEvent_t)
-	go elevator.PollButtons(drv_buttons)
+	drvButtons := make(chan elevator.ButtonEvent_t)
+	go elevator.PollButtons(drvButtons)
 	
 
 	for {
@@ -119,28 +119,28 @@ func MessageSyncServer(
 		case reg := <- get_systemData:
 			reg.Reply = systemData
 
-		case fresh_data := <- from_network_data:
-			systemData, confirmedSystemData, isConfirmedDataUpdated = OnRecievedFreshData(systemData, confirmedSystemData, fresh_data)
+		case freshData := <- fromNetworkData:
+			systemData, confirmedSystemData, isConfirmedDataUpdated = OnRecievedFreshData(systemData, confirmedSystemData, freshData)
 
 			if isConfirmedDataUpdated{
 				//TODO: send confirmed_data til elev_FSM
 			}
 			//use confirmed_data for light contract 
 			//TODO: write these functions and place them in elev_server
-			LightCabLights(confirmedSystemData.ElevatorData[local_id].Cab_Requests)
-			LightHallLights(confirmedSystemData.Hall_Request_Data)
+			LightCabLights(confirmedSystemData.ElevatorData[localID].CabRequests)
+			LightHallLights(confirmedSystemData.HallRequestData)
 
-		case fresh_data := <- from_fsm_data:
-			systemData.ElevatorData[local_id] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[local_id], fresh_data, local_id)
+		case freshData := <- fromFsmData:
+			systemData.ElevatorData[localID] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			
 		//buttonpress tries to change the CC to unconfirmed
-		case btn := <-drv_buttons:
+		case btn := <-drvButtons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, Barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
+				var tmpCabRequest Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{Value: CC_Unconfirmed, Barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
 
 			}
 		case //broadcast timer timeout
-			systemData.ElevatorData[local_id].Msg_counter ++
+			systemData.ElevatorData[localID].MsgCounter
 
 
 		case peersUpdate := <-peersReciever:

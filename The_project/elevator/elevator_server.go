@@ -3,7 +3,7 @@ package elevator
 import (
 	"os"
 	"the_project/Network_Driver/peers"
-	"the_project/message_sync/msg_sync_server"
+	"the_project/messageSync"
 	"time"
 )
 
@@ -11,8 +11,8 @@ const inactivityTimeout = 9 * time.Second
 const obstructionTimeout = 5 * time.Second
 
 func ElevatorServerMain(
-	to_fsm_data chan<- messageSync.Elevator_Data_t,
-	local_id int,
+	toFsmData chan<- messageSync.ElevatorData_t,
+	localID int,
 	peersReceiver <-chan peers.PeerUpdate,
 ) {
 	// Create internal channels for state machine
@@ -26,7 +26,7 @@ func ElevatorServerMain(
 	doorTimerTimeout := make(chan struct{})
 
 	// Launch main elevator state machine (internal)
-	go Elevator_Server(commands)
+	go ElevatorServer(commands)
 
 	// Launch polling goroutines
 	go PollFloorSensor(floorSensor)
@@ -52,7 +52,7 @@ func ElevatorServerMain(
 
 	// Send initial state
 	e_state := GetState(commands)
-	to_fsm_data <- BuildElevatorData(local_id, e_state)
+	toFsmData <- BuildElevatorData(localID, e_state)
 
 	for {
 		select {
@@ -67,7 +67,7 @@ func ElevatorServerMain(
 					SetMotorDirection(MD_Stop)
 					SetDoorOpenLamp(true)
 
-					e_state = RequestsClearAtCurrentFloor(e_state)
+				e_state = RequestsClearAtCurrentFloor(e_state)
 				commands <- SetState_t{ElevatorState: e_state}
 				commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
 				commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
@@ -135,9 +135,9 @@ func ElevatorServerMain(
 			activePeers = peersUpdate.Peers
 		}
 
-		// Send state to msg_sync (non-blocking)
+		// Send state to msgSync (non-blocking)
 		select {
-		case to_fsm_data <- BuildElevatorData(local_id, GetState(commands)):
+		case toFsmData <- BuildElevatorData(localID, GetState(commands)):
 		default:
 		}
 	}
@@ -154,52 +154,52 @@ func ResetTimers(isObstructed bool, obstructionTimer *time.Timer, doorTimer *tim
 }
 
 // Helper function to convert ElevatorState_t to Elevator_Data_t for message sync
-func BuildElevatorData(local_id int, e_state ElevatorState_t) message_sync.Elevator_Data_t {
+func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.ElevatorData_t {
 	// Initialize barrier with this elevator marked as sender
-	barrier := make(message_sync.Elev_List_t, message_sync.N_ELEVATORS)
-	barrier[local_id] = true
+	barrier := make(messageSync.ElevList_t, messageSync.N_ELEVATORS)
+	barrier[localID] = true
 
 	// Convert cab requests from ElevatorState_t.Requests
-	cab_requests := make([]message_sync.Request_Cyclic_Counter_t, N_FLOORS)
+	cabRequests := make([]messageSync.RequestCyclicCounter_t, N_FLOORS)
 	for floor := 0; floor < N_FLOORS; floor++ {
 		if e_state.Requests[floor][BT_Cab] {
-			cab_requests[floor] = message_sync.Request_Cyclic_Counter_t{
-				Value:   message_sync.CC_Unconfirmed,
+			cabRequests[floor] = messageSync.RequestCyclicCounter_t{
+				Value:   messageSync.CC_Unconfirmed,
 				Barrier: barrier,
 			}
 		} else {
-			cab_requests[floor] = message_sync.Request_Cyclic_Counter_t{
-				Value:   message_sync.CC_Uninit,
+			cabRequests[floor] = messageSync.RequestCyclicCounter_t{
+				Value:   messageSync.CC_Uninit,
 				Barrier: barrier,
 			}
 		}
 	}
 
-	elevator_data := message_sync.Elevator_Data_t{
-		Id:          local_id,
-		Msg_counter: 0,
-		Is_Alive: message_sync.Is_Alive_Data_t{
+	elevatorData := messageSync.ElevatorData_t{
+		Id:          localID,
+		MsgCounter: 0,
+		IsAlive: messageSync.IsAliveData_t{
 			Value:   true,
 			Barrier: barrier,
 		},
-		Is_Functional: message_sync.Is_Functional_Data_t{
+		IsFunctional: messageSync.IsFunctionalData_t{
 			Value:   e_state.IsFunctional,
 			Barrier: barrier,
 		},
-		Floor: message_sync.Floor_Data_t{
+		Floor: messageSync.FloorData_t{
 			Value:   e_state.Floor,
 			Barrier: barrier,
 		},
-		Elevator_Behaviour: message_sync.Elevator_Behaviour_Data_t{
+		ElevatorBehaviour: messageSync.ElevatorBehaviourData_t{
 			Value:   e_state.ElevatorBehaviour,
 			Barrier: barrier,
 		},
-		Motor_Direction: message_sync.Motor_Direction_Data_t{
+		MotorDirection: messageSync.MotorDirectionData_t{
 			Value:   e_state.MotorDirection,
 			Barrier: barrier,
 		},
-		Cab_Requests: cab_requests,
+		CabRequests: cabRequests,
 	}
 
-	return elevator_data
+	return elevatorData
 }
