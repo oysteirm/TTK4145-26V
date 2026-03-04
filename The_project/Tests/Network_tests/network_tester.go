@@ -5,6 +5,7 @@ import (
 	"TTK4145-26V/Network_Driver/bcast"
 	"TTK4145-26V/Network_Driver/localip"
 	"TTK4145-26V/Network_Driver/peers"
+	"TTK4145-26V/message_sync"
 	"flag"
 	"fmt"
 	"os"
@@ -56,23 +57,39 @@ func main() {
 	go peers.Receiver(peer_port, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
-	helloTx := make(chan HelloMsg)
-	helloRx := make(chan HelloMsg)
+
+	//for HelloMSG test
+	//helloTx := make(chan HelloMsg)
+	//helloRx := make(chan HelloMsg)
+
+	//for System_Data_t test
+	sys_TX := make(chan message_sync.System_Data_t)
+	sys_RX := make(chan message_sync.System_Data_t)
+
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(bcast_port, helloTx)
-	go bcast.Receiver(bcast_port, helloRx)
+	go bcast.Transmitter(bcast_port, sys_TX)
+	go bcast.Receiver(bcast_port, sys_RX)
 
 	// The example message. We just send one of these every second.
+	// go func() {
+	// 	helloMsg := HelloMsg{"Hello from " + id, 0}
+	// 	for {
+	// 		helloMsg.Iter++
+	// 		helloTx <- helloMsg
+	// 		time.Sleep(1 * time.Second)
+	// 	}
+	// }()
 	go func() {
-		helloMsg := HelloMsg{"Hello from " + id, 0}
+		sd:=message_sync.System_Data_t{Id: 0}
 		for {
-			helloMsg.Iter++
-			helloTx <- helloMsg
+			sd.Id++
+			sys_TX <- sd
 			time.Sleep(1 * time.Second)
 		}
 	}()
+
 
 	fmt.Println("Started")
 	for {
@@ -83,7 +100,7 @@ func main() {
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
-		case a := <-helloRx:
+		case a := <-sys_RX:
 			fmt.Printf("Received: %#v\n", a)
 		}
 	}
