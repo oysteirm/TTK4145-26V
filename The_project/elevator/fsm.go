@@ -22,7 +22,7 @@ func OnInitBetweenFloors(commands chan Command_t){
 }
 
 
-//what to do if there is a button press
+//what to do if we arrive at a button before moving
 func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btn_floor int, btn_type ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
 	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, elevator_button_to_string(btn_type))
@@ -55,6 +55,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
             
             doorTimerStart <- e_state.DoorOpenDuration
             e_state = requests_clear_at_current_floor(e_state);
+            doorOpenTime = time.Now()  // Update time when door opens
             commands <- SetState_t{ElevatorState: e_state}
 
         case EB_Moving:
@@ -78,6 +79,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
 func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, newFloor int) {
     // Update floor
     commands <- SetFloor_t{Floor: newFloor}
+    lastFloorTime = time.Now()  // Update time when reaching floor
 
     var e_state ElevatorState_t = GetState(commands)
 
@@ -89,7 +91,8 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
             SetMotorDirection(MD_Stop)
             SetDoorOpenLamp(true)
 
-            e_state = requests_clear_at_current_floor(e_state) 
+            e_state = requests_clear_at_current_floor(e_state)
+            doorOpenTime = time.Now()  // Update time when door opens
             commands <- SetState_t{ElevatorState: e_state}
             commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
             commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
@@ -119,6 +122,7 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
             doorTimerStop <- struct{}{}
             doorTimerStart <- e_state.DoorOpenDuration
             e_state = requests_clear_at_current_floor(e_state);
+            doorOpenTime = time.Now()  // Reset time when door stays open
             commands <- SetState_t{ElevatorState: e_state}
             set_all_lights(e_state);
             break;

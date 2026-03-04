@@ -8,6 +8,9 @@ import (
 var N_FLOORS int = 4
 var N_BUTTONS ButtonType_t = 3
 
+var lastFloorTime time.Time
+var doorOpenTime time.Time
+
 type Elevator_Behaviour_t int
 type Requests_t [][]bool
 type Command_t interface{}
@@ -24,6 +27,7 @@ type ElevatorState_t struct {
     Requests           Requests_t
     ElevatorBehaviour  Elevator_Behaviour_t
     DoorOpenDuration   time.Duration
+    Is_Operative       bool
 }
 
 type GetState_t struct {
@@ -64,7 +68,10 @@ func Elevator_Server(commands chan Command_t) {
 		Requests: requests_temp,
 		ElevatorBehaviour: EB_Idle,
 		DoorOpenDuration: 3 * time.Second,
+		Is_Operative: true,
 	}
+	lastFloorTime = time.Now()
+	doorOpenTime = time.Now()
 
 	for cmd := range commands {
 		switch c := cmd.(type) {
@@ -77,6 +84,7 @@ func Elevator_Server(commands chan Command_t) {
             e_state.Requests = c.ElevatorState.Requests
             e_state.ElevatorBehaviour = c.ElevatorState.ElevatorBehaviour
             e_state.DoorOpenDuration = c.ElevatorState.DoorOpenDuration
+            e_state.Is_Operative = c.ElevatorState.Is_Operative
 		case SetFloor_t:
 			e_state.Floor = c.Floor
 		case SetMotorDirection_t:
@@ -168,4 +176,28 @@ func elevator_print(e_state ElevatorState_t) {
     }
 
     fmt.Println("  +--------------------+")
+}
+// Check if elevator is operative based on three conditions:
+// 1. Not stuck between floors (> 5 seconds without reaching floor)
+// 2. Door not stuck open (> 5 seconds)
+// 3. No obstruction
+func UpdateOperativeStatus(commands chan Command_t) {
+	e_state := GetState(commands)
+	now := time.Now()
+	
+	// Check if between floors for too long
+	timeBetweenFloors := now.Sub(lastFloorTime).Seconds()
+	betweenFloorsTimeout := e_state.ElevatorBehaviour == EB_Moving && timeBetweenFloors > 5.0
+	
+	// Check if door open for too long
+	doorOpenTimeout := e_state.ElevatorBehaviour == EB_DoorOpen && 
+	                   now.Sub(doorOpenTime).Seconds() > 5.0
+	
+	// Check if obstruction is on
+	obstruction := GetObstruction()
+	
+	// Elevator is operative if none of the fault conditions are true
+	e_state.Is_Operative = !(betweenFloorsTimeout || doorOpenTimeout || obstruction)
+	
+	commands <- SetState_t{ElevatorState: e_state}
 }
