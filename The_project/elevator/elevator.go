@@ -13,6 +13,7 @@ type Requests_t [][]bool
 type Command_t interface{}
 
 const (
+<<<<<<< HEAD
 	EB_Idle     ElevatorBehaviour_t = 0
 	EB_DoorOpen                      = 1
 	EB_Moving                        = 2
@@ -25,6 +26,19 @@ type ElevatorState_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 	DoorOpenDuration  time.Duration
 	IsFunctional      bool
+=======
+    EB_Idle ElevatorBehaviour_t = 0
+    EB_DoorOpen               = 1  
+    EB_Moving                 = 2
+)
+
+type ElevatorState_t struct {
+    Floor              int
+    MotorDirection     MotorDirection_t
+    Requests           Requests_t
+    ElevatorBehaviour  ElevatorBehaviour_t
+    DoorOpenDuration   time.Duration
+>>>>>>> origin/henning/ReqAssign
 }
 
 type GetState_t struct {
@@ -96,6 +110,7 @@ func GetState(commands chan Command_t) ElevatorState_t {
 	return <-reply
 }
 
+<<<<<<< HEAD
 func ElevatorBehaviourToString(eb ElevatorBehaviour_t) string {
 	switch eb {
 	case EB_Idle:
@@ -133,6 +148,45 @@ func ElevatorButtonToString(b ButtonType_t) string {
 	default:
 		return "B_UNDEFINED"
 	}
+=======
+func Elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
+    switch eb {
+    case EB_Idle:
+        return "idle"
+    case EB_DoorOpen:
+        return "doorOpen"
+    case EB_Moving:
+        return "moving"
+    default:
+        return "EB_UNDEFINED"
+    }
+}
+
+func Elevator_dirn_to_string(d MotorDirection_t) string {
+    switch d {
+    case MD_Up:
+        return "up"
+    case MD_Down:
+        return "down"
+    case MD_Stop:
+        return "stop"
+    default:
+        return "D_UNDEFINED"
+    }
+}
+
+func Elevator_button_to_string(b ButtonType_t) string {
+    switch b {
+    case BT_HallUp:
+        return "B_HallUp"
+    case BT_HallDown:
+        return "B_HallDown"
+    case BT_Cab:
+        return "B_Cab"
+    default:
+        return "B_UNDEFINED"
+    }
+>>>>>>> origin/henning/ReqAssign
 }
 
 func ElevatorPrint(e_state ElevatorState_t) {
@@ -148,8 +202,23 @@ func ElevatorPrint(e_state ElevatorState_t) {
 	fmt.Println("  +--------------------+")
 	fmt.Println("  |  | up  | dn  | cab |")
 
+<<<<<<< HEAD
 	for f := N_FLOORS - 1; f >= 0; f-- {
 		fmt.Printf("  | %d", f)
+=======
+func Elevator_print(e_state ElevatorState_t) {
+    fmt.Println("  +--------------------+")
+    fmt.Printf(
+        "  |floor = %-2d          |\n"+
+            "  |dirn  = %-12s|\n"+
+            "  |behav = %-12s|\n",
+        e_state.Floor,
+        Elevator_dirn_to_string(e_state.MotorDirection),
+        Elevator_behaviour_to_string(e_state.ElevatorBehaviour),
+    )
+    fmt.Println("  +--------------------+")
+    fmt.Println("  |  | up  | dn  | cab |")
+>>>>>>> origin/henning/ReqAssign
 
 		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++ {
 			if (f == N_FLOORS-1 && btn == BT_HallUp) ||

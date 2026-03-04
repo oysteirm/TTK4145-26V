@@ -25,8 +25,13 @@ func OnInitBetweenFloors(commands chan Command_t){
 //what to do if there is a button press
 func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btn_floor int, btn_type ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
+<<<<<<< HEAD
 	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, ElevatorButtonToString(btn_type))
 	ElevatorPrint(e_state)
+=======
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, Elevator_button_to_string(btn_type))
+	Elevator_print(e_state)
+>>>>>>> origin/henning/ReqAssign
 
 	switch(e_state.ElevatorBehaviour){
     case EB_DoorOpen:
@@ -70,7 +75,11 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
     SetAllLights(e_state);
     
     fmt.Printf("\nNew state:\n");
+<<<<<<< HEAD
     ElevatorPrint(e_state);
+=======
+    Elevator_print(e_state);
+>>>>>>> origin/henning/ReqAssign
 }
 
 
@@ -100,7 +109,11 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
+<<<<<<< HEAD
     ElevatorPrint(e_state);
+=======
+    Elevator_print(e_state);
+>>>>>>> origin/henning/ReqAssign
 }
 
 
@@ -135,5 +148,9 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
+<<<<<<< HEAD
     ElevatorPrint(e_state);
+=======
+    Elevator_print(e_state);
+>>>>>>> origin/henning/ReqAssign
 }
