@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+
+
+
 // We define some custom struct to send over the network.
 // Note that all members we want to transmit must be public. Any private members
 //  will be received as zero-values.
@@ -22,6 +25,11 @@ type HelloMsg struct {
 func main() {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
+	
+	//defined in usage example: peer_port was 15647 and bcast_port 16569
+	peer_port := 20011
+	bcast_port := 20012
+
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
 	flag.Parse()
@@ -44,8 +52,8 @@ func main() {
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(15647, id, peerTxEnable)
-	go peers.Receiver(15647, peerUpdateCh)
+	go peers.Transmitter(peer_port, id, peerTxEnable)
+	go peers.Receiver(peer_port, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
 	helloTx := make(chan HelloMsg)
@@ -53,8 +61,8 @@ func main() {
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, helloTx)
-	go bcast.Receiver(16569, helloRx)
+	go bcast.Transmitter(bcast_port, helloTx)
+	go bcast.Receiver(bcast_port, helloRx)
 
 	// The example message. We just send one of these every second.
 	go func() {
