@@ -8,16 +8,16 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
 	var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevator.N_FLOORS)
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < N_FLOORS; floor++ {
 		tmpCabRequests[floor] = RequestCyclicCounter_t{
 			Value:   CC_Uninit,
 			Barrier: make(ElevList_t, N_ELEVATORS),
 		}
 	}
 
-	var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, elevator.N_FLOORS)
+	var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, N_FLOORS)
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
 			tmpHallRequestData[floor][btn] = RequestCyclicCounter_t{
 				Value:   CC_Uninit,
@@ -45,11 +45,11 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 				Barrier: make(ElevList_t, N_ELEVATORS),
 			},
 			ElevatorBehaviour: ElevatorBehaviourData_t{
-				Value:   elevator.EB_Idle,
+				Value:   EB_Idle,
 				Barrier: make(ElevList_t, N_ELEVATORS),
 			},
 			MotorDirection: MotorDirectionData_t{
-				Value:   elevator.MD_Stop,
+				Value:   MD_Stop,
 				Barrier: make(ElevList_t, N_ELEVATORS),
 			},
 			CabRequests: DeepCopyCabRequests(tmpCabRequests),
@@ -87,7 +87,7 @@ func OnReceivedFreshData(systemData SystemData_t, confirmedSystemData SystemData
 func UpdateHallRequestData(oldData [][2]RequestCyclicCounter_t, newData [][2]RequestCyclicCounter_t, id int) [][2]RequestCyclicCounter_t {
 	var updatedHallRequests [][2]RequestCyclicCounter_t = DeepCopyHallRequests(oldData)
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
 			updatedHallRequests[floor][btn] = UpdateCC(oldData[floor][btn], newData[floor][btn], id)
 		}
@@ -196,7 +196,7 @@ func UpdateConfirmedSystemData(unconfinedData SystemData_t, confirmedData System
 			confirmedData.ElevatorData[i].MotorDirection.Value = unconfinedData.ElevatorData[i].MotorDirection.Value
 			isUpdated = true
 		}
-		for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		for floor := 0; floor < N_FLOORS; floor++ {
 			if CheckBarrier(unconfinedData.ElevatorData[i].CabRequests[floor].Barrier, elevator_network_list) {
 				confirmedData.ElevatorData[i].CabRequests[floor].Value = unconfinedData.ElevatorData[i].CabRequests[floor].Value
 				isUpdated = true
@@ -204,7 +204,7 @@ func UpdateConfirmedSystemData(unconfinedData SystemData_t, confirmedData System
 		}
 	}
 	//Dont need Barrier check since the UpdateCC() have Barrier checks
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
 			if unconfinedData.HallRequestData[floor][btn].Value != confirmedData.HallRequestData[floor][btn].Value {
 				unconfinedData.HallRequestData[floor][btn] = confirmedData.HallRequestData[floor][btn]
@@ -242,15 +242,15 @@ func UpdateCC(oldCC RequestCyclicCounter_t, newCC RequestCyclicCounter_t, id int
 
 func LightCabLights(CabRequests []RequestCyclicCounter_t) {
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
-		elevator.SetButtonLamp(elevator.BT_Cab, floor, CCToBool(CabRequests[floor].Value))
+	for floor := 0; floor < N_FLOORS; floor++ {
+		SetButtonLamp(BT_Cab, floor, CCToBool(CabRequests[floor].Value))
 	}
 }
 
 func LightHallLights(HallRequests [][2]RequestCyclicCounter_t) {
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
-		elevator.SetButtonLamp(elevator.BT_HallUp, floor, CCToBool(HallRequests[floor][elevator.BT_HallUp].Value))
-		elevator.SetButtonLamp(elevator.BT_HallDown, floor, CCToBool(HallRequests[floor][elevator.BT_HallDown].Value))
+	for floor := 0; floor < N_FLOORS; floor++ {
+		SetButtonLamp(BT_HallUp, floor, CCToBool(HallRequests[floor][BT_HallUp].Value))
+		SetButtonLamp(BT_HallDown, floor, CCToBool(HallRequests[floor][BT_HallDown].Value))
 	}
 }
 
