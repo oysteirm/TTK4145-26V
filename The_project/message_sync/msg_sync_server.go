@@ -31,6 +31,7 @@ const (
 
 const N_ELEVATORS 		int = 3
 const btns_UP_and_Down 	int = 2
+const BROADCAST_PERIOD 	int = 10
 
 // List containing info about our network peers
 // 1: part of network
@@ -44,6 +45,7 @@ type Request_Cyclic_Counter_t struct{
 	Value Cyclic_Counter_t
 	Barrier []bool
 }
+/*
 type Is_Alive_Data_t struct{
 	Value bool
 	Barrier []bool
@@ -64,16 +66,17 @@ type Motor_Direction_Data_t struct{
 	Value elevator.Motor_Direction_t
 	Barrier []bool
 }
+*/
 
 //Datatype for elevator states with barriers
 type Elevator_Data_t struct {
 	Id int
-	//Msg_counter uint64
-	Is_Alive Is_Alive_Data_t
-	Is_Functional Is_Functional_Data_t
-	Floor Floor_Data_t
-	Elevator_Behaviour Elevator_Behaviour_Data_t
-	Motor_Direction Motor_Direction_Data_t
+	Is_Alive bool
+	Is_Functional bool
+	Floor int
+	Elevator_Behaviour elevator.ElevatorBehaviour_t
+	Motor_Direction elevator.MotorDirection_t
+	Elevator_Barrier []bool
 	Cab_Requests []Request_Cyclic_Counter_t
 }
 
@@ -92,8 +95,8 @@ func Message_Sync_Server(
 	get_system_data <-chan Get_System_Data_t, 	//channel for other routines to get the current system data
 	data_from_fsm <-chan Elevator_Data_t, 		//channel for recieving elevator data from elevator FSM
 	data_to_fsm chan<- System_Data_t, 			//channel for sending confirmed data to FSM
-	peersReciever <-chan peers.PeerUpdate,
-	local_id int,
+	peersReciever <-chan peers.PeerUpdate,		//channel for updating Active_Peers list
+	local_id int,								//Id of local elevator 
 	){
 
 	// Variables used to sync data
@@ -102,21 +105,21 @@ func Message_Sync_Server(
 	system_data, confirmed_system_data = Init_System_Data(local_id)
 	var is_confirmed_data_updated bool = false
 
-	// Network variables
+	// Network channels and variable
 	network_receiver := make(chan System_Data_t)
 	network_transmitter := make(chan System_Data_t)
 	bcastPort := 1234 //TODO: change this to a correct value
 
-	// Go routines from Network_Driver
+	// Go routines for communicating with other elevators
 	go bcast.Receiver(bcastPort, network_receiver)
 	go bcast.Transmitter(bcastPort, network_transmitter)
 	
-	// Timer for broadcasting
+	// Ticker for periodic broadcasting 100Hz
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 
 	// Go routine for button polling
-	drv_buttons := make(chan elevator.ButtonEvent_t)
+	drv_buttons := make(chan elevator.Button_Event_t)
 	go elevator.PollButtons(drv_buttons)
 	
 	for {
@@ -162,7 +165,7 @@ func Message_Sync_Server(
 			//TODO: format peersupdate to a bool list 
 			Active_Peers = From_Peers_Update_To_Active_Peers(Peers_Update)
 			for i := 0; i < N_ELEVATORS; i++{
-				system_data.Elevator_Data[i].Is_Alive.Value = Active_Peers[i]
+				system_data.Elevator_Data[i].Is_Alive = Active_Peers[i]
 			}
 		}
 	}
