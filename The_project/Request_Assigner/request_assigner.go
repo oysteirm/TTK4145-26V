@@ -15,7 +15,7 @@ import (
 )
 
 type RA_Local_Elevator_State struct {
-    Behavior    string      `json:"behaviour"`
+    Behavior    string      `json:"behaviour"`// "idle", "moving", "doorOpen"
     Floor       int         `json:"floor"` 
     Direction   string      `json:"direction"`
     CabRequests []bool      `json:"cabRequests"`
@@ -50,8 +50,6 @@ func Assign_Orders(Elevator_System RA_System_Data) RA_Output {
 	).CombinedOutput()
 	if err != nil {
 		fmt.Println("Exec error in Assign_Orders:", err)
-    	fmt.Println("Assigner output:\n", string(output))
-    	fmt.Println("Input JSON:\n", string(input))
 		return nil
 	}
 

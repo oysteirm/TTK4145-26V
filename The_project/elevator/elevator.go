@@ -98,11 +98,11 @@ func GetState(commands chan Command_t) ElevatorState_t {
 func Elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
     switch eb {
     case EB_Idle:
-        return "EB_Idle"
+        return "idle"
     case EB_DoorOpen:
-        return "EB_DoorOpen"
+        return "doorOpen"
     case EB_Moving:
-        return "EB_Moving"
+        return "moving"
     default:
         return "EB_UNDEFINED"
     }
@@ -111,11 +111,11 @@ func Elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
 func Elevator_dirn_to_string(d MotorDirection_t) string {
     switch d {
     case MD_Up:
-        return "D_Up"
+        return "up"
     case MD_Down:
-        return "D_Down"
+        return "down"
     case MD_Stop:
-        return "D_Stop"
+        return "stop"
     default:
         return "D_UNDEFINED"
     }
