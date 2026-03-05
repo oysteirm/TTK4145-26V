@@ -28,7 +28,7 @@ const (
 	BT_Cab                 = 2
 )
 
-type Button_Event_t struct {
+type ButtonEvent_t struct {
 	Floor  int
 	Button ButtonType_t
 }
@@ -74,7 +74,7 @@ func SetStopLamp(value bool) {
 
 
 
-func PollButtons(receiver chan<- Button_Event_t) {
+func PollButtons(receiver chan<- ButtonEvent_t) {
 	prev := make([][3]bool, _numFloors)
 	for {
 		time.Sleep(_pollRate)
@@ -82,7 +82,7 @@ func PollButtons(receiver chan<- Button_Event_t) {
 			for b := ButtonType_t(0); b < 3; b++ {
 				v := GetButton(b, f)
 				if v != prev[f][b] && v != false {
-					receiver <- Button_Event_t{f, ButtonType_t(b)}
+					receiver <- ButtonEvent_t{f, ButtonType_t(b)}
 				}
 				prev[f][b] = v
 			}
