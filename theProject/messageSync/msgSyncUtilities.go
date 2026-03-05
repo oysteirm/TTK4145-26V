@@ -76,7 +76,6 @@ func onReceivedFreshData(systemData SystemData_t,
 	var isConfirmedDataUpdated bool = false
 
 	for i := 0; i < N_ELEVATORS; i++{
-		//if the new data have newer information about a elevator, we accept it
 
 		if systemData.ElevatorData[i].ID == fresh_data.ID {
 			updatedSystemData.ElevatorData[i] = updateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
