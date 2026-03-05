@@ -43,12 +43,13 @@ func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
 
 	//EXECUTING COMPILED "hallRequestAssigner", fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
-		"./tools/hallRequestAssigner",
+		"./tools/hallRequestAssignerDir/hallRequestAssigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
 	if err != nil {
 		fmt.Println("Exec error in AssignRequests:", err)
+		fmt.Println("AssignRequests output:", string(output))
 		return nil
 	}
 

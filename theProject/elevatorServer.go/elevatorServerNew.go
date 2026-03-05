@@ -4,14 +4,14 @@ import (
 	//"fmt"
 	"os"
 	"theProject/networkDriver/peers"
-	ra "theProject/requestAssigner"
+	"theProject/requestAssigner"
 	"theProject/messageSync"
-	e "theProject/elevator"
+	"theProject/elevator"
 	"time"
 )
 
 
-func ElevatorServerMain(){
+func ElevatorServer(){
 
     elevator.Init("localhost:15657", elevator.N_FLOORS)
 
