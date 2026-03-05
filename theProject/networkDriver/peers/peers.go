@@ -1,11 +1,7 @@
 package peers
 
 import (
-<<<<<<< HEAD
-	"the_project/Network_Driver/conn"
-=======
-	"TTK4145-26V/Network_Driver/conn"
->>>>>>> origin/henning/ReqAssign
+	"theProject/networkDriver/conn"
 	"fmt"
 	"net"
 	"sort"

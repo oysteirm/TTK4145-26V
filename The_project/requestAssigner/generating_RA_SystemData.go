@@ -1,0 +1,56 @@
+package requestAssigner
+/* map over data that is being syncronized
+-----------------------------------
+Elevator States:
+[ 	[ID		IsAlive 	IsFunctional	FLOOR	EB		MD	CabRequests[4]],
+	[ID		IsAlive 	IsFunctional	FLOOR	EB		MD	CabRequests[4]],
+	[ID		IsAlive 	IsFunctional	FLOOR	EB		MD	CabRRequests[4]]	]
+
+Hall Requests:
+HallRequestData[N_FLOORS][2]
+
+Every piece of data have a list with the elevators that also agree with the iformation.
+If this list == elevatorNetworkList then we send this data to the HSA
+-----------------------------------
+*/
+
+
+
+import (
+	"TTK4145-26V/elevator"
+	"TTK4145-26V/messageSync"
+	"strconv"
+)
+
+func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_SystemData{
+	raSystem := RA_SystemData{}
+	raSystem.HallRequests = make([][N_HALL_CALLS]bool,elevator.N_FLOORS)
+	for floor:=0; floor < elevator.N_FLOORS;floor++{
+		for button:= 0; button < N_HALL_CALLS; button++{
+			raSystem.HallRequests[floor][button] = CC_ToBool(confirmedSystemData.HallRequestData[floor][button].Value)
+		}
+	}
+
+	raSystem.States = make(map[string]RA_LocalElevatorState)
+	for _,elev := range confirmedSystemData.ElevatorData{
+
+		if !(elev.IsAlive) || !(elev.IsFunctional){
+			continue
+		}
+
+		cabBools := make([]bool,elevator.N_FLOORS)
+		for floor:= 0; floor< elevator.N_FLOORS; floor++{
+			cabBools[floor] = CC_ToBool(elev.CabRequests[floor].Value)
+		}
+
+		IdStr := strconv.Itoa(elev.Id)
+
+		raSystem.States[IdStr] = RA_LocalElevatorState{
+			Behavior:    elevator.ElevatorBehaviourToString(elev.ElevatorBehaviour),
+			Floor:       elev.Floor,
+			Direction:   elevator.ElevatorDirnToString(elev.MotorDirection),
+			CabRequests: cabBools,
+		}
+	}
+	return raSystem
+}

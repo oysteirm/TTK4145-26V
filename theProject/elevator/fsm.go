@@ -25,7 +25,8 @@ func OnInitBetweenFloors(commands chan Command_t){
 //what to do if there is a button press
 func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btnFloor int, btnType ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btnFloor, ElevatorButtonToString(btnType))
+
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, ElevatorButtonToString(btn_type))
 	ElevatorPrint(e_state)
 
 	switch(e_state.ElevatorBehaviour){
