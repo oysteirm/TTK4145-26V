@@ -65,7 +65,10 @@ func ElevatorServer(commands chan Command_t) {
 		Requests:           requests_temp,
 		ElevatorBehaviour: EB_Idle,
 		DoorOpenDuration: 3 * time.Second,
+		Is_Functional: true,
 	}
+	lastFloorTime = time.Now()
+	doorOpenTime = time.Now()
 
 	for cmd := range commands {
 		switch c := cmd.(type) {
@@ -195,5 +198,29 @@ func UpdateFunctionalStatus(commands chan Command_t) {
 	// Elevator is functional if none of the fault conditions are true
 	e_state.IsFunctional = !(betweenFloorsTimeout || doorOpenTimeout || obstruction)
 
+	commands <- SetState_t{ElevatorState: e_state}
+}
+// Check if elevator is functional based on three conditions:
+// 1. Not stuck between floors (> 5 seconds without reaching floor)
+// 2. Door not stuck open (> 5 seconds)
+// 3. No obstruction
+func UpdateFunctionalStatus(commands chan Command_t) {
+	e_state := GetState(commands)
+	now := time.Now()
+	
+	// Check if between floors for too long
+	timeBetweenFloors := now.Sub(lastFloorTime).Seconds()
+	betweenFloorsTimeout := e_state.ElevatorBehaviour == EB_Moving && timeBetweenFloors > 5.0
+	
+	// Check if door open for too long
+	doorOpenTimeout := e_state.ElevatorBehaviour == EB_DoorOpen && 
+	                   now.Sub(doorOpenTime).Seconds() > 5.0
+	
+	// Check if obstruction is on
+	obstruction := GetObstruction()
+	
+	// Elevator is functional if none of the fault conditions are true
+	e_state.Is_Functional = !(betweenFloorsTimeout || doorOpenTimeout || obstruction)
+	
 	commands <- SetState_t{ElevatorState: e_state}
 }
