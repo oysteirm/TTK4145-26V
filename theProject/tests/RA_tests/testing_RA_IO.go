@@ -4,7 +4,7 @@ package main
 import (
 	
 	"theProject/requestAssigner"
-	"theProject/Tests/helperFunctionsForTests"
+	"theProject/tests/helperFunctionsForTests"
 	
 )
 
