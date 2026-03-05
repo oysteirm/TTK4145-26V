@@ -1,3 +1,3 @@
-module TTK4145-26V
+module theProject
 
 go 1.25.5
