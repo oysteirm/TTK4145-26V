@@ -1,12 +1,11 @@
-package elevator
+package elevatorServer
 
 import (
 	//"fmt"
 	"os"
 	"theProject/networkDriver/peers"
 	"theProject/requestAssigner"
-	"theProject/messageSync/msgSyncServer"
-	"messageSync"
+	"theProject/messageSync"
 	"time"
 )
 
