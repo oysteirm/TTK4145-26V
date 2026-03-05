@@ -61,7 +61,7 @@ func ElevatorServerMain(
 				if e.RequestsShouldStop(e_state) {
 					e.SetMotorDirection(e.MD_Stop)
 					e.SetDoorOpenLamp(true)
-
+					
 					e_state = e.RequestsClearAtCurrentFloor(e_state)
 					commands <- e.SetState_t{ElevatorState: e_state}
 					commands <- e.SetMotorDirection_t{MotorDirection: e.MD_Stop}

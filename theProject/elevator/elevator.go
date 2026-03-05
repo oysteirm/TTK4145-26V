@@ -24,6 +24,7 @@ type ElevatorState_t struct {
     Requests           Requests_t
     ElevatorBehaviour  ElevatorBehaviour_t
     DoorOpenDuration   time.Duration
+    IsFunctional       bool
 }
 
 type GetState_t struct {
@@ -52,7 +53,7 @@ type SetElevatorBehaviour_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 }
 
-func ElevatorServer(commands chan Command_t) {
+func ElevatorStateGuardian(commands chan Command_t) {
 	requests_temp := make([][]bool, N_FLOORS)
     for i := range requests_temp {
         requests_temp[i] = make([]bool, N_BUTTONS)

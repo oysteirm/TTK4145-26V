@@ -1,7 +1,7 @@
 package requestAssigner
 
 //Example terminal_input to test compiled hallRequestAssigner:
-//./tools/hallRequestAssigner/hallRequestAssigner -i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
+//./tools/hallRequestAssigner-i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
 
 
 
@@ -43,7 +43,7 @@ func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
 
 	//EXECUTING COMPILED "hallRequestAssigner", fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
-		"./tools/hallRequestAssigner/hallRequestAssigner",
+		"./tools/hallRequestAssigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
