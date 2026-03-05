@@ -43,7 +43,7 @@ func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_S
 			cabBools[floor] = CC_ToBool(elev.CabRequests[floor].Value)
 		}
 
-		IdStr := strconv.Itoa(elev.Id)
+		IdStr := strconv.Itoa(elev.ID)
 
 		raSystem.States[IdStr] = RA_LocalElevatorState{
 			Behavior:    elevator.ElevatorBehaviourToString(elev.ElevatorBehaviour),
