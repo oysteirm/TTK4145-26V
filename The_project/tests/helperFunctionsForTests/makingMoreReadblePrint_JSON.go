@@ -1,11 +1,11 @@
-package test_helpers
+package testHelpers
 
 import(
 	"encoding/json"
 	"fmt"
 )
 
-func More_readable_json_print(label string, v any) {
+func MoreReadablePrint_JSON(label string, v any) {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		fmt.Println("Marshal error:", err)

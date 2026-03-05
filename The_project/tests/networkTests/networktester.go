@@ -2,11 +2,11 @@ package main
 
 //Usage example fetched from https://github.com/TTK4145/Network-go/tree/master
 import (
-	"TTK4145-26V/Network_Driver/bcast"
-	"TTK4145-26V/Network_Driver/localip"
-	"TTK4145-26V/Network_Driver/peers"
-	"TTK4145-26V/message_sync"
-	"TTK4145-26V/Tests/Helper_functions_for_tests"
+	"TTK4145-26V/networkDriver/bcast"
+	"TTK4145-26V/networkDriver/localip"
+	"TTK4145-26V/networkDriver/peers"
+	"TTK4145-26V/messageSync"
+	"TTK4145-26V/tests/helperFunctionsForTests"
 	"flag"
 	"fmt"
 	"os"
@@ -28,9 +28,9 @@ func main() {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 	
-	//defined in usage example: peer_port was 15647 and bcast_port 16569
-	peer_port := 20011
-	bcast_port := 20012
+	//defined in usage example: peerPort was 15647 and bcastPort 16569
+	peerPort := 20011
+	bcastPort := 20012
 
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
@@ -54,8 +54,8 @@ func main() {
 	// We can disable/enable the transmitter after it has been started.
 	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(peer_port, id, peerTxEnable)
-	go peers.Receiver(peer_port, peerUpdateCh)
+	go peers.Transmitter(peerPort, id, peerTxEnable)
+	go peers.Receiver(peerPort, peerUpdateCh)
 
 	// We make channels for sending and receiving our custom data types
 
@@ -63,15 +63,15 @@ func main() {
 	//helloTx := make(chan HelloMsg)
 	//helloRx := make(chan HelloMsg)
 
-	//for System_Data_t test
-	sys_TX := make(chan message_sync.System_Data_t)
-	sys_RX := make(chan message_sync.System_Data_t)
+	//for SystemData_t test
+	sysTX := make(chan messageSync.SystemData_t)
+	sysRX := make(chan messageSync.SystemData_t)
 
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(bcast_port, sys_TX)
-	go bcast.Receiver(bcast_port, sys_RX)
+	go bcast.Transmitter(bcastPort, sysTX)
+	go bcast.Receiver(bcastPort, sysRX)
 
 	// The example message. We just send one of these every second.
 	// go func() {
@@ -83,9 +83,9 @@ func main() {
 	// 	}
 	// }()
 	go func() {
-		sd:= test_helpers.Make_Fake_Confirmed_System_Data_t(4, 3)
+		sd:= testHelpers.MakeFakeConfirmedSystemData(4, 3)
 		for {
-			sys_TX <- sd
+			sysTX <- sd
 			time.Sleep(1 * time.Second)
 		}
 	}()
@@ -100,8 +100,8 @@ func main() {
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
-		case a := <-sys_RX:
-			test_helpers.More_readable_json_print("Received System_Data",a)
+		case a := <-sysRX:
+			testHelpers.MoreReadablePrint_JSON("Received SystemData",a)
 		}
 	}
 }
