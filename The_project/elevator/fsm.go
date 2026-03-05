@@ -25,8 +25,8 @@ func OnInitBetweenFloors(commands chan Command_t){
 //what to do if we arrive at a button before moving
 func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btn_floor int, btn_type ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, elevator_button_to_string(btn_type))
-	elevator_print(e_state)
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, Elevator_button_to_string(btn_type))
+	Elevator_print(e_state)
 
 	switch(e_state.ElevatorBehaviour){
     case EB_DoorOpen:
@@ -71,7 +71,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
     set_all_lights(e_state);
     
     fmt.Printf("\nNew state:\n");
-    elevator_print(e_state);
+    Elevator_print(e_state);
 }
 
 
@@ -103,7 +103,7 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
-    elevator_print(e_state);
+    Elevator_print(e_state);
 }
 
 
@@ -139,5 +139,5 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
-    elevator_print(e_state);
+    Elevator_print(e_state);
 }

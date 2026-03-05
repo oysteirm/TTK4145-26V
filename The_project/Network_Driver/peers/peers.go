@@ -1,7 +1,7 @@
 package peers
 
 import (
-	"Network_Driver/conn"
+	"TTK4145-26V/Network_Driver/conn"
 	"fmt"
 	"net"
 	"sort"
@@ -27,7 +27,7 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 		select {
 		case enable = <-transmitEnable:
 		case <-time.After(interval):
-		}
+		}// Removing dead connection
 		if enable {
 			conn.WriteTo([]byte(id), addr)
 		}
