@@ -6,6 +6,7 @@ import (
 	"theProject/networkDriver/peers"
 	"theProject/networkDriver/bcast"
 )	
+
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
@@ -162,7 +163,12 @@ func MessageSyncServer(
 		case peersUpdate := <-peersReciever:
 			activePeers = fromPeersUpdateToActivePeers(peersUpdate)
 			for i := 0; i < N_ELEVATORS; i++{
-				systemData.ElevatorData[i].IsAlive = activePeers[i]
+				//if there is new info, new barrier
+				if systemData.ElevatorData[i].IsAlive != activePeers[i]{
+					systemData.ElevatorData[i].IsAlive = activePeers[i]
+					systemData.ElevatorData[i].ElevatorBarrier = make([]bool, N_ELEVATORS)
+					systemData.ElevatorData[i].ElevatorBarrier[localID] = true
+				}
 			}
 		}
 	}
