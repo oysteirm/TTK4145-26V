@@ -115,7 +115,7 @@ func ElevatorServerMain(
 					doorTimer.Stop()
 				}
 			}
-			UpdateFunctionalStatus(commands)
+			//TODO: UpdateFunctionalStatus(commands)
 
 		case <-obstructionTimer.C:
 			if len(activePeers) > 1 { // If we are alone, we cannot reset on obstruction or inactivity without loosing orders
