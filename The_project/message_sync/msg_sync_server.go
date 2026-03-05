@@ -1,12 +1,11 @@
 package message_sync
 
 import (
-	"fmt"
 	"time"
-	"../elevator"
-	"Network_Driver/bcast"
-	"Network_Driver/peers"
-)
+	"the_project/elevator"
+	"the_project/Network_Driver/peers"
+	"the_project/Network_Driver/bcast"
+)	
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
@@ -15,7 +14,7 @@ Elevator States:
 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
 
 Hall Requests:
-Hall_Request_Data[N_FLOORS][N_HALL_CALLS]
+HallRequestData[N_FLOORS][N_HALL_CALLS]
 
 Every piece of data have a list with the elevators who agree with the information. 
 If this list == elevator_network_list then we send this data have reached consensus and is put in confirmed data which is sent to HSA
@@ -23,121 +22,150 @@ If this list == elevator_network_list then we send this data have reached consen
 */
 
 const (
-	CC_Uninit Cyclic_Counter_t 	= -1
-	CC_No 						= 0
-	CC_Unconfirmed 				= 1
-	CC_Confirmed 				= 2
-	CC_Done 					= 3
+	CC_Uninit 		CyclicCounter_t = -1
+	CC_No 			CyclicCounter_t	= 0
+	CC_Unconfirmed 	CyclicCounter_t	= 1
+	CC_Confirmed 	CyclicCounter_t	= 2
+	CC_Done 		CyclicCounter_t	= 3
 )
 
-var N_ELEVATORS int = 3
-var elevator_network_list Elev_List_t = [0 0 0]
+const N_ELEVATORS 		int = 3
 
-type Elev_List_t []bool
-type Cyclic_Counter_t int
+// List containing info about our network peers
+// 1: part of network
+// 0: not part of network
+var activePeers []bool
 
-//Data type structs that include the data and a barrier
-type Request_Cyclic_Counter_t struct{
-	value Cyclic_Counter_t
-	barrier Elev_List_t
+type CyclicCounter_t int
+
+//Data type structs that include the data and a Barrier
+type RequestCyclicCounter_t struct{
+	Value CyclicCounter_t
+	Barrier []bool
 }
+/*
 type Is_Alive_Data_t struct{
-	value bool
-	barrier Elev_List_t
+	Value bool
+	Barrier []bool
 }
-type Is_Able_Data_t struct{
-	value bool
-	barrier Elev_List_t
+type Is_Functional_Data_t struct{
+	Value bool
+	Barrier []bool
 }
 type Floor_Data_t struct{
-	value int
-	barrier Elev_List_t
+	Value int
+	Barrier []bool
 }
 type Elevator_Behaviour_Data_t struct{
-	value elevator.Elevator_Behaviour_t
-	barrier Elev_List_t
+	Value elevator.Elevator_Behaviour_t
+	Barrier []bool
 }
 type Motor_Direction_Data_t struct{
-	value elevator.Motor_Direction_t
-	barrier Elev_List_t
+	Value elevator.Motor_Direction_t
+	Barrier []bool
+}
+*/
+
+//Datatype for elevator states with barrier
+type ElevatorData_t struct {
+	ID int
+	IsAlive bool
+	IsFunctional bool
+	Floor int
+	ElevatorBehaviour elevator.ElevatorBehaviour_t
+	MotorDirection elevator.MotorDirection_t
+	ElevatorBarrier []bool
+	CabRequests []RequestCyclicCounter_t
 }
 
-type Elevator_Data_t struct {
-	Id int
-	Msg_counter uint64
-	Is_Alive Is_Alive_Data_t
-	Is_Able Is_Able_Data_t
-	Floor Floor_Data_t
-	Elevator_Behaviour Elevator_Behaviour_Data_t
-	Motor_Direction Motor_Direction_Data_t
-	Cab_Requests []Request_Cyclic_Counter_t
+//Datatype for multi elevator states and hall requests
+type SystemData_t struct {
+	ID int
+	ElevatorData []ElevatorData_t
+	HallRequestData [][2]RequestCyclicCounter_t
 }
 
-type System_Data_t struct {
-	Id int
-	Elevator_Data []Elevator_Data_t
-	Hall_Request_Data [][2]Request_Cyclic_Counter_t
+type GetSystemData_t struct{
+	Reply SystemData_t
 }
 
-type Get_System_Data_t struct{
-	Reply System_Data_t
-}
-
-func Message_Sync_Server(
-	from_network_data <-chan System_Data_t, //channel for recieving new system data
-	get_system_data <-chan Get_System_Data_t, //channel for other routines to get the current system data
-	from_fsm_data <-chan Elevator_Data_t //channel for recieving elevator data from fsm
-	peersReciever <-chan peers.PeerUpdate,
-	local_id int,
+func MessageSyncServer(
+	getSystemData <-chan GetSystemData_t, 	//channel for other routines to get the current system data
+	dataFromFSM <-chan ElevatorData_t, 		//channel for recieving elevator data from elevator FSM
+	dataToFSM chan<- SystemData_t, 			//channel for sending confirmed data to FSM
+	peersReciever <-chan peers.PeerUpdate,	//channel for updating activePeers list
+	localID int,							//ID of local elevator 
 	){
-	var system_data System_Data_t
-	var confirmed_system_data System_Data_t
-	system_data, confirmed_system_data = Init_System_Data(local_id)
-	var is_confirmed_data_updated bool = false
 
-	// Network variables
-	var activePeers []string
-	networkReciever := make(chan StateMsg)
-	networkTransmitter := make(chan StateMsg)
-	
-	// Go routines from Network_Driver
-	go bcast.Receiver(bcastPort, networkReciever)
+	// Variables used to sync data
+	var systemData SystemData_t
+	var confirmedSystemData SystemData_t
+	systemData, confirmedSystemData = initSystemData(localID)
+	var isConfirmedDataUpdated bool = false
+
+	// Network channels and variable
+	networkReceiver := make(chan SystemData_t)
+	networkTransmitter := make(chan SystemData_t)
+	bcastPort := 1234 //TODO: change this to a correct value
+
+	// Go routines for communicating with other elevators
+	go bcast.Receiver(bcastPort, networkReceiver)
 	go bcast.Transmitter(bcastPort, networkTransmitter)
-
-	drv_buttons := make(chan elevator.ButtonEvent_t)
-	go elevator.PollButtons(drv_buttons)
 	
+	// Ticker for periodic broadcasting 100Hz
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
 
+	// Go routine for button polling
+	drvButtons := make(chan elevator.ButtonEvent_t)
+	go elevator.PollButtons(drvButtons)
+	
 	for {
 		select{
-		case reg := <- get_system_data:
-			reg.Reply = system_data
+		//Someone needs the system data
+		case reg := <- getSystemData:
+			reg.Reply = systemData
 
-		case fresh_data := <- from_network_data:
-			system_data, confirmed_system_data, is_confirmed_data_updated = On_Recieved_Fresh_Data(system_data, confirmed_system_data, fresh_data)
+		//We recieve new data from the network
+		case freshData := <- networkReceiver:
+			systemData, confirmedSystemData, isConfirmedDataUpdated = onReceivedFreshData(systemData, confirmedSystemData, freshData)
 
-			if is_confirmed_data_updated{
-				//send confirmed_data til HSA
+			//If we have new confirmed data, we sent it to the elevator FSM
+			if isConfirmedDataUpdated {
+				dataToFSM <- confirmedSystemData
 			}
-			//use confirmed_data to light the correct lights
 
-		case fresh_data := <- from_fsm_data:
-			system_data.Elevator_Data[local_id] = fresh_data
+			//TODO: place them in elev_server
+			lightCabLights(confirmedSystemData.ElevatorData[localID].CabRequests)
+			lightHallLights(confirmedSystemData.HallRequestData)
+
+		//We recieve data from the elevator FSM
+		case freshData := <- dataFromFSM:
+			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			
-		case btn := <-drv_buttons:
+		//new buttonpress tries to change the CC to unconfirmed
+		case btn := <-drvButtons:
 			if btn.Button == elevator.BT_Cab {
-				var tmp_cab_request Request_Cyclic_Counter_t = Request_Cyclic_Counter_t{value: CC_Unconfirmed, barrier: make(Elev_List_t, N_ELEVATORS)} //blind copy
-
+				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
+				systemData.ElevatorData[localID].CabRequests[btn.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btn.Floor], tmpCabRequest, localID)
+			} else {
+				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
+				systemData.HallRequestData[btn.Floor][btn.Button] = update_CC(systemData.HallRequestData[btn.Floor][btn.Button], tmpHallRequest, localID)
 			}
-		case //broadcast timer timeout
-			system_data.Elevator_Data[local_id].Msg_counter ++
 
+		//broadcast timer timeout
+		case <-ticker.C: 
+			//TODO: check broadcast System data is correct
+			networkTransmitter <- systemData 
 
-		}
+		//Updates on the active peers list
 		case peersUpdate := <-peersReciever:
-			activePeers = peersUpdate.Peers
+			activePeers = fromPeersUpdateToActivePeers(peersUpdate)
+			for i := 0; i < N_ELEVATORS; i++{
+				systemData.ElevatorData[i].IsAlive = activePeers[i]
+			}
+		}
 	}
-
 }
 
 
