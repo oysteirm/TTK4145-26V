@@ -23,33 +23,28 @@ func OnInitBetweenFloors(commands chan Command_t){
 
 
 //what to do if there is a button press
-func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btn_floor int, btn_type ButtonType_t){
+func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btnFloor int, btnType ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
-<<<<<<< HEAD
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, ElevatorButtonToString(btn_type))
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btnFloor, ElevatorButtonToString(btnType))
 	ElevatorPrint(e_state)
-=======
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, Elevator_button_to_string(btn_type))
-	Elevator_print(e_state)
->>>>>>> origin/henning/ReqAssign
 
 	switch(e_state.ElevatorBehaviour){
     case EB_DoorOpen:
-        if(RequestsShouldClearImmediately(e_state, btn_floor, btn_type)){
+        if(RequestsShouldClearImmediately(e_state, btnFloor, btnType)){
             doorTimerStop <- struct{}{} 
             doorTimerStart <- e_state.DoorOpenDuration
             SetDoorOpenLamp(true)
         } else {
-            commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+            commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
         }
         break;
 
     case EB_Moving:
-        commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+        commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
         break;
         
     case EB_Idle:    
-        commands <- SetRequest_t{RequestValue: true, Floor: btn_floor, Button: btn_type}
+        commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
         e_state = GetState(commands)
         var pair MotorDirectionBehaviourPair_t = RequestsChooseDirection(e_state);
         commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
@@ -75,11 +70,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
     SetAllLights(e_state);
     
     fmt.Printf("\nNew state:\n");
-<<<<<<< HEAD
     ElevatorPrint(e_state);
-=======
-    Elevator_print(e_state);
->>>>>>> origin/henning/ReqAssign
 }
 
 
@@ -109,11 +100,7 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
-<<<<<<< HEAD
     ElevatorPrint(e_state);
-=======
-    Elevator_print(e_state);
->>>>>>> origin/henning/ReqAssign
 }
 
 
@@ -148,9 +135,5 @@ func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, d
     }
     e_state = GetState(commands)
     fmt.Printf("\nNew state:\n");
-<<<<<<< HEAD
     ElevatorPrint(e_state);
-=======
-    Elevator_print(e_state);
->>>>>>> origin/henning/ReqAssign
 }
