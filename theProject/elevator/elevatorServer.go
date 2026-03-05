@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"the_project/Network_Driver/peers"
-	ra "the_project/Request_Assigner"
+	"the_project/networkDriver/peers"
+	ra "the_project/requestAssigner"
 	"the_project/messageSync"
 	"time"
 )
