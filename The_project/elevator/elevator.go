@@ -27,7 +27,7 @@ type ElevatorState_t struct {
 	Requests          Requests_t
 	ElevatorBehaviour ElevatorBehaviour_t
 	DoorOpenDuration  time.Duration
-	Is_Functional     bool
+	IsFunctional      bool
 }
 
 type GetState_t struct {
@@ -56,16 +56,22 @@ type SetElevatorBehaviour_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 }
 
-func Elevator_Server(commands chan Command_t) {
+func ElevatorServer(commands chan Command_t) {
 	requests_temp := make([][]bool, N_FLOORS)
 	for i := range requests_temp {
 		requests_temp[i] = make([]bool, N_BUTTONS)
 	}
 
 	e_state := ElevatorState_t{
+<<<<<<< HEAD
 		Floor:             -1,
 		MotorDirection:    MD_Stop,
 		Requests:          requests_temp,
+=======
+		Floor:              -1,
+		MotorDirection:    MD_Stop,
+		Requests:           requests_temp,
+>>>>>>> 4b1bc6e7d776ff1bee808b848908bc746d63493e
 		ElevatorBehaviour: EB_Idle,
 		DoorOpenDuration:  3 * time.Second,
 		Is_Functional:     true,
@@ -84,7 +90,10 @@ func Elevator_Server(commands chan Command_t) {
 			e_state.Requests = c.ElevatorState.Requests
 			e_state.ElevatorBehaviour = c.ElevatorState.ElevatorBehaviour
 			e_state.DoorOpenDuration = c.ElevatorState.DoorOpenDuration
+<<<<<<< HEAD
 			e_state.Is_Functional = c.ElevatorState.Is_Functional
+=======
+>>>>>>> 4b1bc6e7d776ff1bee808b848908bc746d63493e
 		case SetFloor_t:
 			e_state.Floor = c.Floor
 		case SetMotorDirection_t:
@@ -129,7 +138,7 @@ func Elevator_dirn_to_string(d MotorDirection_t) string {
 	}
 }
 
-func Elevator_button_to_string(b ButtonType_t) string {
+func ElevatorButtonToString(b ButtonType_t) string {
 	switch b {
 	case BT_HallUp:
 		return "B_HallUp"
@@ -142,15 +151,15 @@ func Elevator_button_to_string(b ButtonType_t) string {
 	}
 }
 
-func Elevator_print(e_state ElevatorState_t) {
+func ElevatorPrint(e_state ElevatorState_t) {
 	fmt.Println("  +--------------------+")
 	fmt.Printf(
 		"  |floor = %-2d          |\n"+
 			"  |dirn  = %-12s|\n"+
 			"  |behav = %-12s|\n",
 		e_state.Floor,
-		Elevator_dirn_to_string(e_state.MotorDirection),
-		Elevator_behaviour_to_string(e_state.ElevatorBehaviour),
+		ElevatorDirnToString(e_state.MotorDirection),
+		ElevatorBehaviourToString(e_state.ElevatorBehaviour),
 	)
 	fmt.Println("  +--------------------+")
 	fmt.Println("  |  | up  | dn  | cab |")
@@ -175,6 +184,34 @@ func Elevator_print(e_state ElevatorState_t) {
 	}
 
 	fmt.Println("  +--------------------+")
+}
+
+var LastFloorTime time.Time
+var DoorOpenTime time.Time
+
+// Check if elevator is functional based on three conditions:
+// 1. Not stuck between floors (> 5 seconds without reaching floor)
+// 2. Door not stuck open (> 5 seconds)
+// 3. No obstruction
+func UpdateFunctionalStatus(commands chan Command_t) {
+	e_state := GetState(commands)
+	now := time.Now()
+
+	// Check if between floors for too long
+	timeBetweenFloors := now.Sub(LastFloorTime).Seconds()
+	betweenFloorsTimeout := e_state.ElevatorBehaviour == EB_Moving && timeBetweenFloors > 5.0
+
+	// Check if door open for too long
+	doorOpenTimeout := e_state.ElevatorBehaviour == EB_DoorOpen &&
+		now.Sub(DoorOpenTime).Seconds() > 5.0
+
+	// Check if obstruction is on
+	obstruction := GetObstruction()
+
+	// Elevator is functional if none of the fault conditions are true
+	e_state.IsFunctional = !(betweenFloorsTimeout || doorOpenTimeout || obstruction)
+
+	commands <- SetState_t{ElevatorState: e_state}
 }
 
 // Check if elevator is functional based on three conditions:

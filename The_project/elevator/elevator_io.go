@@ -5,8 +5,6 @@ import "sync"
 import "net"
 import "fmt"
 
-
-
 const _pollRate = 20 * time.Millisecond
 
 var _initialized    bool = false
@@ -59,7 +57,7 @@ func SetMotorDirection(dir MotorDirection_t) {
 }
 
 func SetButtonLamp(button ButtonType_t, floor int, value bool) {
-	write([4]byte{2, byte(button), byte(floor), toByte(value)})
+	write([4]byte{2, byte(button), byte(floor), to_Byte(value)})
 }
 
 func SetFloorIndicator(floor int) {
@@ -67,11 +65,11 @@ func SetFloorIndicator(floor int) {
 }
 
 func SetDoorOpenLamp(value bool) {
-	write([4]byte{4, toByte(value), 0, 0})
+	write([4]byte{4, to_Byte(value), 0, 0})
 }
 
 func SetStopLamp(value bool) {
-	write([4]byte{5, toByte(value), 0, 0})
+	write([4]byte{5, to_Byte(value), 0, 0})
 }
 
 
@@ -133,7 +131,7 @@ func PollObstructionSwitch(receiver chan<- bool) {
 
 func GetButton(button ButtonType_t, floor int) bool {
 	a := read([4]byte{6, byte(button), byte(floor), 0})
-	return toBool(a[1])
+	return to_Bool(a[1])
 }
 
 func GetFloor() int {
@@ -147,12 +145,12 @@ func GetFloor() int {
 
 func GetStop() bool {
 	a := read([4]byte{8, 0, 0, 0})
-	return toBool(a[1])
+	return to_Bool(a[1])
 }
 
 func GetObstruction() bool {
 	a := read([4]byte{9, 0, 0, 0})
-	return toBool(a[1])
+	return to_Bool(a[1])
 }
 
 
@@ -182,7 +180,7 @@ func write(in [4]byte) {
 }
 
 
-func toByte(a bool) byte {
+func to_Byte(a bool) byte {
 	var b byte = 0
 	if a {
 		b = 1
@@ -190,7 +188,7 @@ func toByte(a bool) byte {
 	return b
 }
 
-func toBool(a byte) bool {
+func to_Bool(a byte) bool {
 	var b bool = false
 	if a != 0 {
 		b = true
