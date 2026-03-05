@@ -1,10 +1,10 @@
-package message_sync
+package messageSync
 
 import (
 	"fmt"
 	"strconv"
-	"the_project/Network_Driver/peers"
-	"the_project/elevator"
+	"theProject/Network_Driver/peers"
+	"theProject/elevator"
 )
 
 //Initalizing the the systemData and confirmedSystemData in Message_Sync_Server

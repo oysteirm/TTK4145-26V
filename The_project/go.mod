@@ -1,3 +1,3 @@
-module the_project
+module theProject
 
 go 1.22

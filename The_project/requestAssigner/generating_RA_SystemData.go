@@ -17,8 +17,8 @@ If this list == elevatorNetworkList then we send this data to the HSA
 
 
 import (
-	"TTK4145-26V/elevator"
-	"TTK4145-26V/messageSync"
+	"theProject/elevator"
+	"theProject/messageSync"
 	"strconv"
 )
 
