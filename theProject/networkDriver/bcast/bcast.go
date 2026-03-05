@@ -1,7 +1,11 @@
 package bcast
 
 import (
-	"Network_Driver/conn"
+<<<<<<< HEAD
+	"the_project/Network_Driver/conn"
+=======
+	"TTK4145-26V/Network_Driver/conn"
+>>>>>>> origin/henning/ReqAssign
 	"encoding/json"
 	"fmt"
 	"net"
