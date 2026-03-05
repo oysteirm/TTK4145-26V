@@ -26,7 +26,7 @@ func OnInitBetweenFloors(commands chan Command_t){
 func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btnFloor int, btnType ButtonType_t){
     var e_state ElevatorState_t = GetState(commands)
 
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btn_floor, ElevatorButtonToString(btn_type))
+	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btnFloor, ElevatorButtonToString(btnType))
 	ElevatorPrint(e_state)
 
 	switch(e_state.ElevatorBehaviour){
@@ -79,7 +79,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
 func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, newFloor int) {
     // Update floor
     commands <- SetFloor_t{Floor: newFloor}
-    lastFloorTime = time.Now()  // Update time when reaching floor
+    //TODO: lastFloorTime = time.Now()  // Update time when reaching floor
 
     var e_state ElevatorState_t = GetState(commands)
 

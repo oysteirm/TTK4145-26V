@@ -1,12 +1,12 @@
 package elevator
 
 import (
-	"fmt"
+	//"fmt"
 	"os"
-	"strconv"
 	"theProject/networkDriver/peers"
-	RA "theProject/requestAssigner"
-	"theProject/messageSync"
+	"theProject/requestAssigner"
+	"theProject/messageSync/msgSyncServer"
+	"messageSync"
 	"time"
 )
 
@@ -72,14 +72,14 @@ func ElevatorServerMain(
 					ResetTimers(isObstructed, obstructionTimer, doorTimer, inactivityTimer, e_state.DoorOpenDuration)
 				}
 			}
-			UpdateFunctionalStatus(commands)
+			//TODO: UpdateFunctionalStatus(commands)
 
 		case isObstructed = <-obstructionSwitch:
 			e_state := GetState(commands)
 			if e_state.ElevatorBehaviour == EB_DoorOpen {
 				ResetTimers(isObstructed, obstructionTimer, doorTimer, inactivityTimer, e_state.DoorOpenDuration)
 			}
-			UpdateFunctionalStatus(commands)
+			//TODO: UpdateFunctionalStatus(commands)
 
 		case <-doorTimerTimeout:
 			e_state := GetState(commands)
@@ -90,8 +90,8 @@ func ElevatorServerMain(
 				systemData := systemDataRequest.Reply
 
 				// Convert to RA_System_Data and get request assignments
-				raSystemData := ra.Generating_RA_System_Data(systemData)
-				raOutput := ra.Assign_Requests(raSystemData)
+				raSystemData := ra.Generating_RA_SystemData(systemData)
+				raOutput := ra.AssignRequests(raSystemData)
 
 				// Convert RA_Output to motor direction and behavior
 				pair := RAOutputToMotorDirectionPair(raOutput, localID, e_state)
@@ -157,6 +157,6 @@ func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.Elevato
 }
 
 //TODO: Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
-func RAOutputToMotorDirectionPair(raOutput RA.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
+func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
 
 }

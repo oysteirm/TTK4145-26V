@@ -52,7 +52,7 @@ type SetElevatorBehaviour_t struct {
 	ElevatorBehaviour ElevatorBehaviour_t
 }
 
-func Elevator_Server(commands chan Command_t) {
+func ElevatorServer(commands chan Command_t) {
 	requests_temp := make([][]bool, N_FLOORS)
     for i := range requests_temp {
         requests_temp[i] = make([]bool, N_BUTTONS)
@@ -95,7 +95,7 @@ func GetState(commands chan Command_t) ElevatorState_t {
     return <-reply
 }
 
-func elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
+func ElevatorBehaviourToString(eb ElevatorBehaviour_t) string {
     switch eb {
     case EB_Idle:
         return "EB_Idle"
@@ -108,7 +108,7 @@ func elevator_behaviour_to_string(eb ElevatorBehaviour_t) string {
     }
 }
 
-func elevator_dirn_to_string(d MotorDirection_t) string {
+func ElevatorDirnToString(d MotorDirection_t) string {
     switch d {
     case MD_Up:
         return "D_Up"
@@ -121,7 +121,7 @@ func elevator_dirn_to_string(d MotorDirection_t) string {
     }
 }
 
-func elevator_button_to_string(b ButtonType_t) string {
+func ElevatorButtonToString(b ButtonType_t) string {
     switch b {
     case BT_HallUp:
         return "B_HallUp"
@@ -135,15 +135,15 @@ func elevator_button_to_string(b ButtonType_t) string {
 }
 
 
-func elevator_print(e_state ElevatorState_t) {
+func ElevatorPrint(e_state ElevatorState_t) {
     fmt.Println("  +--------------------+")
     fmt.Printf(
         "  |floor = %-2d          |\n"+
             "  |dirn  = %-12s|\n"+
             "  |behav = %-12s|\n",
         e_state.Floor,
-        elevator_dirn_to_string(e_state.MotorDirection),
-        elevator_behaviour_to_string(e_state.ElevatorBehaviour),
+        ElevatorDirnToString(e_state.MotorDirection),
+        ElevatorBehaviourToString(e_state.ElevatorBehaviour),
     )
     fmt.Println("  +--------------------+")
     fmt.Println("  |  | up  | dn  | cab |")
