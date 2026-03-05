@@ -7,6 +7,7 @@ import (
 
 var N_FLOORS int = 4
 var N_BUTTONS ButtonType_t = 3
+const N_UP_DOWN int = 2
 
 type ElevatorBehaviour_t int
 type Requests_t [][]bool

@@ -156,7 +156,7 @@ func BuildElevatorData(localID int, e_state e.ElevatorState_t) messageSync.Eleva
 
 }
 
-//TODO: Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
+//TODO: Helper function to convert RA_Output to MotorDirectionBehaviourPair 
 func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state e.ElevatorState_t) e.MotorDirectionBehaviourPair_t {
 
 }

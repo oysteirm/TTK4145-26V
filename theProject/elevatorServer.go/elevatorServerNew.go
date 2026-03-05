@@ -20,12 +20,10 @@ func ElevatorServer(){
 	// Start elevator state server
 	go elevator.ElevatorStateGuardian(commands)
     
-    drv_buttons := make(chan elevator.ButtonEvent_t)
     drv_floors  := make(chan int)
     drv_obstr   := make(chan bool)
     drv_stop    := make(chan bool)    
     
-    go elevator.PollButtons(drv_buttons)
     go elevator.PollFloorSensor(drv_floors)
     go elevator.PollObstructionSwitch(drv_obstr)
     go elevator.PollStopButton(drv_stop)
@@ -39,24 +37,24 @@ func ElevatorServer(){
 	doorTimeout    := make(chan struct{})
 
 	go elevator.DoorTimer(doorTimerStart, doorTimerStop, doorTimeout)
-
-    
     
     for {
 		select {
 
-		// Button pressed
+		// Recieved data from msg sync
 		case btn := <-drv_buttons:
 			elevator.OnRequestButtonPress(commands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
 
 		// Floor arrival
 		case floor := <-drv_floors:
 			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, floor)
+			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
 		case <-doorTimeout:
 			elevator.OnDoorTimeout(commands, doorTimerStart, doorTimerStop)
-
+			//TODO: fix the double requests issue
+			
 		// Stop button
 		case stop := <-drv_stop:
 			if stop {

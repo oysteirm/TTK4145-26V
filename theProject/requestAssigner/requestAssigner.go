@@ -8,6 +8,7 @@ package requestAssigner
 
 
 import (
+	"theProject/elevator"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -19,11 +20,10 @@ type RA_LocalElevatorState struct {
     Direction   string      `json:"direction"`
     CabRequests []bool      `json:"cabRequests"`
 }
-//REMEMBER TO MOVE N_CAB_CALLS, ex into elevator_io
-const N_HALL_CALLS = 2
+
 
 type RA_SystemData  struct {
-    HallRequests    [][N_HALL_CALLS]bool                   `json:"hallRequests"`
+    HallRequests    [][elevator.N_UP_DOWN]bool                   `json:"hallRequests"`
     States          map[string]RA_LocalElevatorState     `json:"states"`
 }
 

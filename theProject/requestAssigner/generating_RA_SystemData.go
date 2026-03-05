@@ -24,9 +24,9 @@ import (
 
 func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_SystemData{
 	raSystem := RA_SystemData{}
-	raSystem.HallRequests = make([][N_HALL_CALLS]bool,elevator.N_FLOORS)
+	raSystem.HallRequests = make([][elevator.N_UP_DOWN]bool,elevator.N_FLOORS)
 	for floor:=0; floor < elevator.N_FLOORS;floor++{
-		for button:= 0; button < N_HALL_CALLS; button++{
+		for button:= 0; button < elevator.N_UP_DOWN; button++{
 			raSystem.HallRequests[floor][button] = CC_ToBool(confirmedSystemData.HallRequestData[floor][button].Value)
 		}
 	}
