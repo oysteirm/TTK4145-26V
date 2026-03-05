@@ -1,7 +1,7 @@
 package requestAssigner
 //import something to use System_Data_t??
 import (
-	"TTK4145-26V/messageSync"
+	"theProject/messageSync"
 )
 
 func CC_ToBool(cc messageSync.CyclicCounter_t) bool {
