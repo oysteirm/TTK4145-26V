@@ -4,8 +4,9 @@ import (
 	//"fmt"
 	"os"
 	"theProject/networkDriver/peers"
-	"theProject/requestAssigner"
+	ra "theProject/requestAssigner"
 	"theProject/messageSync"
+	e "theProject/elevator"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func ElevatorServerMain(
 	peersReceiver <-chan peers.PeerUpdate,
 	getSystemData chan messageSync.GetSystemData_t,
 ) {
-	commands := make(chan Command_t)
+	commands := make(chan e.Command_t)
 
 	floorSensor := make(chan int)
 	obstructionSwitch := make(chan bool)
@@ -26,12 +27,12 @@ func ElevatorServerMain(
 	doorTimerStop := make(chan struct{})
 	doorTimerTimeout := make(chan struct{})
 
-	go ElevatorServer(commands)
+	go e.ElevatorServer(commands)
 
-	go PollFloorSensor(floorSensor)
-	go PollObstructionSwitch(obstructionSwitch)
+	go e.PollFloorSensor(floorSensor)
+	go e.PollObstructionSwitch(obstructionSwitch)
 
-	go DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout)
+	go e.DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout)
 
 	doorTimer := time.NewTimer(0)
 	doorTimer.Stop()
@@ -40,31 +41,31 @@ func ElevatorServerMain(
 	inactivityTimer := time.NewTimer(inactivityTimeout)
 	inactivityTimer.Stop()
 
-	OnInitBetweenFloors(commands)
+	e.OnInitBetweenFloors(commands)
 
 	isObstructed := false
 	var activePeers []string
 
-	e_state := GetState(commands)
+	e_state := e.GetState(commands)
 	DataToFSM <- BuildElevatorData(localID, e_state)
 
 	for {
 		select {
 
 		case newFloor := <-floorSensor:
-			SetFloorIndicator(newFloor)
-			commands <- SetFloor_t{Floor: newFloor}
-			e_state := GetState(commands)
+			e.SetFloorIndicator(newFloor)
+			commands <- e.SetFloor_t{Floor: newFloor}
+			e_state := e.GetState(commands)
 
-			if e_state.ElevatorBehaviour == EB_Moving {
-				if RequestsShouldStop(e_state) {
-					SetMotorDirection(MD_Stop)
-					SetDoorOpenLamp(true)
+			if e_state.ElevatorBehaviour == e.EB_Moving {
+				if e.RequestsShouldStop(e_state) {
+					e.SetMotorDirection(e.MD_Stop)
+					e.SetDoorOpenLamp(true)
 
-					e_state = RequestsClearAtCurrentFloor(e_state)
-					commands <- SetState_t{ElevatorState: e_state}
-					commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
-					commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
+					e_state = e.RequestsClearAtCurrentFloor(e_state)
+					commands <- e.SetState_t{ElevatorState: e_state}
+					commands <- e.SetMotorDirection_t{MotorDirection: e.MD_Stop}
+					commands <- e.SetElevatorBehaviour_t{ElevatorBehaviour: e.EB_DoorOpen}
 					doorTimerStop <- struct{}{}
 					doorTimerStart <- e_state.DoorOpenDuration
 
@@ -74,15 +75,15 @@ func ElevatorServerMain(
 			//TODO: UpdateFunctionalStatus(commands)
 
 		case isObstructed = <-obstructionSwitch:
-			e_state := GetState(commands)
-			if e_state.ElevatorBehaviour == EB_DoorOpen {
+			e_state := e.GetState(commands)
+			if e_state.ElevatorBehaviour == e.EB_DoorOpen {
 				ResetTimers(isObstructed, obstructionTimer, doorTimer, inactivityTimer, e_state.DoorOpenDuration)
 			}
 			//TODO: UpdateFunctionalStatus(commands)
 
 		case <-doorTimerTimeout:
-			e_state := GetState(commands)
-			if e_state.ElevatorBehaviour == EB_DoorOpen && !isObstructed {
+			e_state := e.GetState(commands)
+			if e_state.ElevatorBehaviour == e.EB_DoorOpen && !isObstructed {
 				// Get system data from message sync
 				systemDataRequest := messageSync.GetSystemData_t{Reply: messageSync.SystemData_t{}}
 				getSystemData <- systemDataRequest
@@ -94,23 +95,23 @@ func ElevatorServerMain(
 
 				// Convert RA_Output to motor direction and behavior
 				pair := RAOutputToMotorDirectionPair(raOutput, localID, e_state)
-				commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
-				commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
+				commands <- e.SetMotorDirection_t{MotorDirection: pair.MotorDirection}
+				commands <- e.SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
 
-				e_state = GetState(commands)
+				e_state = e.GetState(commands)
 
 				switch e_state.ElevatorBehaviour {
-				case EB_DoorOpen:
+				case e.EB_DoorOpen:
 					ResetTimers(isObstructed, obstructionTimer, doorTimer, inactivityTimer, e_state.DoorOpenDuration)
-				case EB_Idle:
-					SetDoorOpenLamp(false)
-					SetMotorDirection(e_state.MotorDirection)
+				case e.EB_Idle:
+					e.SetDoorOpenLamp(false)
+					e.SetMotorDirection(e_state.MotorDirection)
 					doorTimer.Stop()
 					inactivityTimer.Stop()
-				case EB_Moving:
+				case e.EB_Moving:
 					inactivityTimer.Reset(inactivityTimeout)
-					SetDoorOpenLamp(false)
-					SetMotorDirection(e_state.MotorDirection)
+					e.SetDoorOpenLamp(false)
+					e.SetMotorDirection(e_state.MotorDirection)
 					doorTimer.Stop()
 				}
 			}
@@ -135,7 +136,7 @@ func ElevatorServerMain(
 		}
 
 		select {
-		case DataToFSM <- BuildElevatorData(localID, GetState(commands)):
+		case DataToFSM <- BuildElevatorData(localID, e.GetState(commands)):
 		default:
 		}
 	}
@@ -151,11 +152,11 @@ func ResetTimers(isObstructed bool, obstructionTimer *time.Timer, doorTimer *tim
 }
 
 //TODO: Helper function to convert ElevatorState_t to Elevator_Data_t for message sync
-func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.ElevatorData_t {
+func BuildElevatorData(localID int, e_state e.ElevatorState_t) messageSync.ElevatorData_t {
 
 }
 
 //TODO: Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
-func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
+func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state e.ElevatorState_t) e.MotorDirectionBehaviourPair_t {
 
 }
