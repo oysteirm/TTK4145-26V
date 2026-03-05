@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 	"the_project/networkDriver/peers"
-	ra "the_project/requestAssigner"
+	RA "the_project/requestAssigner"
 	"the_project/messageSync"
 	"time"
 )
@@ -151,84 +151,12 @@ func ResetTimers(isObstructed bool, obstructionTimer *time.Timer, doorTimer *tim
 	doorTimer.Reset(doorOpenDuration)
 }
 
-// Helper function to convert ElevatorState_t to Elevator_Data_t for message sync
+//TODO: Helper function to convert ElevatorState_t to Elevator_Data_t for message sync
 func BuildElevatorData(localID int, e_state ElevatorState_t) messageSync.ElevatorData_t {
-	// Initialize barrier with this elevator marked as sender
-	barrier := make(messageSync.ElevList_t, messageSync.N_ELEVATORS)
-	barrier[localID] = true
 
-	// Convert cab requests from ElevatorState_t.Requests
-	cabRequests := make([]messageSync.RequestCyclicCounter_t, N_FLOORS)
-	for floor := 0; floor < N_FLOORS; floor++ {
-		if e_state.Requests[floor][BT_Cab] {
-			cabRequests[floor] = messageSync.RequestCyclicCounter_t{
-				Value:   messageSync.CC_Unconfirmed,
-				Barrier: barrier,
-			}
-		} else {
-			cabRequests[floor] = messageSync.RequestCyclicCounter_t{
-				Value:   messageSync.CC_Uninit,
-				Barrier: barrier,
-			}
-		}
-	}
-
-	elevatorData := messageSync.ElevatorData_t{
-		Id:         localID,
-		MsgCounter: 0,
-		IsAlive: messageSync.IsAliveData_t{
-			Value:   true,
-			Barrier: barrier,
-		},
-		IsFunctional: messageSync.IsFunctionalData_t{
-			Value:   e_state.IsFunctional,
-			Barrier: barrier,
-		},
-		Floor: messageSync.FloorData_t{
-			Value:   e_state.Floor,
-			Barrier: barrier,
-		},
-		ElevatorBehaviour: messageSync.ElevatorBehaviourData_t{
-			Value:   e_state.ElevatorBehaviour,
-			Barrier: barrier,
-		},
-		MotorDirection: messageSync.MotorDirectionData_t{
-			Value:   e_state.MotorDirection,
-			Barrier: barrier,
-		},
-		CabRequests: cabRequests,
-	}
-
-	return elevatorData
 }
 
-// Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
-func RAOutputToMotorDirectionPair(raOutput ra.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
-	if raOutput == nil {
-		fmt.Println("Error: RA_Output is nil, falling back to RequestsChooseDirection")
-		return RequestsChooseDirection(e_state)
-	}
+//TODO: Helper function to convert RA_Output to MotorDirectionBehaviourPair using request assigner output
+func RAOutputToMotorDirectionPair(raOutput RA.RA_Output, localID int, e_state ElevatorState_t) MotorDirectionBehaviourPair_t {
 
-	// Get the assigned requests for this elevator
-	elevIDStr := strconv.Itoa(localID)
-	assignedRequests, exists := raOutput[elevIDStr]
-	if !exists {
-		fmt.Printf("Error: Elevator %d not found in RA_Output, falling back to RequestsChooseDirection\n", localID)
-		return RequestsChooseDirection(e_state)
-	}
-
-	// Create a temporary elevator state with the assigned requests
-	tempState := e_state
-	tempState.Requests = make([][]bool, N_FLOORS)
-	for floor := 0; floor < N_FLOORS; floor++ {
-		tempState.Requests[floor] = make([]bool, N_BUTTONS)
-		if floor < len(assignedRequests) && assignedRequests[floor] != nil {
-			for btn := 0; btn < len(assignedRequests[floor]) && btn < int(N_BUTTONS); btn++ {
-				tempState.Requests[floor][btn] = assignedRequests[floor][btn]
-			}
-		}
-	}
-
-	// Use the same logic as RequestsChooseDirection but with assigned requests
-	return RequestsChooseDirection(tempState)
 }
