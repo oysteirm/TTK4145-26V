@@ -35,30 +35,14 @@ func initSystemData(localID int) (SystemData_t, SystemData_t){
 
 	for i := 0; i < N_ELEVATORS; i++ {
 		tmpElevatorData[i] = ElevatorData_t{
-			Id: i,
-			//Msg_counter: 0,
-			IsAlive: IsAliveData_t{
-				Value:   false,
-				Barrier: make(ElevList_t, N_ELEVATORS),
-			},
-			IsFunctional: IsFunctionalData_t{
-				Value:   false,
-				Barrier: make(ElevList_t, N_ELEVATORS),
-			},
-			Floor: FloorData_t{
-				Value:   -1,
-				Barrier: make(ElevList_t, N_ELEVATORS),
-			},
-			ElevatorBehaviour: ElevatorBehaviourData_t{
-				Value:   EB_Idle,
-				Barrier: make(ElevList_t, N_ELEVATORS),
-			},
-			MotorDirection: MotorDirectionData_t{
-				Value:   MD_Stop,
-				Barrier: make(ElevList_t, N_ELEVATORS),
-			},
-			CabRequests: DeepCopyCabRequests(tmpCabRequests),
-		}
+            ID:          i,
+            IsAlive: false,
+            IsFunctional: false,
+            Floor: -1,
+            ElevatorBehaviour: elevator.EB_Idle,
+            MotorDirection: elevator.MD_Stop,
+            CabRequests: deepCopyCabRequests(tmpCabRequests),
+        }
 	}
 
 	var systemData SystemData_t = SystemData_t{ID: localID, ElevatorData: tmpElevatorData, HallRequestData: tmpHallRequestData}
