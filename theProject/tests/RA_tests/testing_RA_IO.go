@@ -3,8 +3,8 @@ package main
 
 import (
 	
-	"TTK4145-26V/requestAssigner"
-	"TTK4145-26V/Tests/helperFunctionsForTests"
+	"theProject/requestAssigner"
+	"theProject/Tests/helperFunctionsForTests"
 	
 )
 

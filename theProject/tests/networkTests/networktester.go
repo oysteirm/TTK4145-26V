@@ -2,11 +2,11 @@ package main
 
 //Usage example fetched from https://github.com/TTK4145/Network-go/tree/master
 import (
-	"TTK4145-26V/networkDriver/bcast"
-	"TTK4145-26V/networkDriver/localip"
-	"TTK4145-26V/networkDriver/peers"
-	"TTK4145-26V/messageSync"
-	"TTK4145-26V/tests/helperFunctionsForTests"
+	"theProject/networkDriver/bcast"
+	"theProject/networkDriver/localip"
+	"theProject/networkDriver/peers"
+	"theProject/messageSync"
+	"theProject/tests/helperFunctionsForTests"
 	"flag"
 	"fmt"
 	"os"

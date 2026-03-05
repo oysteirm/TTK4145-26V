@@ -3,8 +3,8 @@ package testHelpers
 
 
 import (
-	"TTK4145-26V/elevator"
-	"TTK4145-26V/messageSync"
+	"theProject/elevator"
+	"theProject/messageSync"
 )
 
 // making "confirmed" SystemData_t example
@@ -55,7 +55,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 	// Elevator 1
 	if nElev >= 1 {
 		e := &confirmed.ElevatorData[0]
-		e.Id = 1
+		e.ID = 1
 		e.IsAlive = true
 		e.IsFunctional = true
 		e.Floor = 0
@@ -70,9 +70,9 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 	// Elevator 2 (here set to not able -> filtered)
 	if nElev >= 2 {
 		e := &confirmed.ElevatorData[1]
-		e.Id = 2
+		e.ID = 2
 		e.IsAlive = true
-		e.IsFunctonal = false
+		e.IsFunctional = false
 		e.Floor = 2
 		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
 	}
@@ -80,7 +80,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 	// Elevator 3
 	if nElev >= 3 {
 		e := &confirmed.ElevatorData[2]
-		e.Id = 3
+		e.ID = 3
 		e.IsAlive = true
 		e.IsFunctional = true
 		e.Floor = 2
