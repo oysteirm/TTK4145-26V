@@ -3,7 +3,7 @@ package messageSync
 import (
 	"fmt"
 	"strconv"
-	"theProject/Network_Driver/peers"
+	"theProject/networkDriver/peers"
 	"theProject/elevator"
 )
 

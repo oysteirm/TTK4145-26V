@@ -3,8 +3,8 @@ package messageSync
 import (
 	"time"
 	"theProject/elevator"
-	"theProject/Network_Driver/peers"
-	"theProject/Network_Driver/bcast"
+	"theProject/networkDriver/peers"
+	"theProject/networkDriver/bcast"
 )	
 /* map over data that is being syncronized
 -----------------------------------
