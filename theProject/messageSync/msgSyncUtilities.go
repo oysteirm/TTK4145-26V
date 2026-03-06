@@ -9,7 +9,7 @@ import (
 
 //Initalizing the the systemData and confirmedSystemData in Message_Sync_Server
 //All values are initialized to 0, -1 (not in a floor, EB_Idle, CC_Uninit and empty barriers
-func initSystemData(localID int) (SystemData_t, SystemData_t){
+func InitSystemData(localID int) (SystemData_t, SystemData_t){
 
     var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevator.N_FLOORS)
 
@@ -82,7 +82,7 @@ func updateHallRequestData(	oldData [][2]RequestCyclicCounter_t,
 								newData [][2]RequestCyclicCounter_t, 
 								ID int) [][2]RequestCyclicCounter_t {
 
-	var updatedHallRequests [][2]RequestCyclicCounter_t = deepCopyHallRequests(oldData)
+	var updatedHallRequests [][2]RequestCyclicCounter_t = DeepCopyHallRequests(oldData)
 	
 	for floor := 0; floor < elevator.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++{
@@ -322,7 +322,7 @@ func peerStrToInt(peerStr string) int {
 func deepCopySystemData(src SystemData_t)SystemData_t{
 	dst := src 
 	dst.ElevatorData = deepCopyElevatordata(src.ElevatorData)
-	dst.HallRequestData = deepCopyHallRequests(src.HallRequestData)
+	dst.HallRequestData = DeepCopyHallRequests(src.HallRequestData)
 	return dst
 }
 
@@ -343,7 +343,7 @@ func deepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
 	return dst
 }
 
-func deepCopyHallRequests(src [][2]RequestCyclicCounter_t) [][2]RequestCyclicCounter_t {
+func DeepCopyHallRequests(src [][2]RequestCyclicCounter_t) [][2]RequestCyclicCounter_t {
 	dst := make([][2]RequestCyclicCounter_t, len(src))
 	
     for floor := range src {

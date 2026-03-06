@@ -101,7 +101,7 @@ func MessageSyncServer(
 	// Variables used to sync data
 	var systemData SystemData_t
 	var confirmedSystemData SystemData_t
-	systemData, confirmedSystemData = initSystemData(localID)
+	systemData, confirmedSystemData = InitSystemData(localID)
 	var isConfirmedDataUpdated bool = false
 
 	// Network channels and variable
