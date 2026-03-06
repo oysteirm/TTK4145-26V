@@ -92,7 +92,7 @@ type GetSystemData_t struct{
 
 func MessageSyncServer(
 	getSystemData <-chan GetSystemData_t, 	//channel for other routines to get the current system data
-	dataFromFSM <-chan ElevatorData_t, 		//channel for recieving elevator data from elevator FSM
+	dataFromFSM <-chan SystemData_t, 		//channel for recieving elevator data from elevator FSM
 	dataToFSM chan<- SystemData_t, 			//channel for sending confirmed data to FSM
 	peersReciever <-chan peers.PeerUpdate,	//channel for updating activePeers list
 	localID int,							//ID of local elevator 
@@ -142,7 +142,8 @@ func MessageSyncServer(
 
 		//We recieve data from the elevator FSM
 		case freshData := <- dataFromFSM:
-			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
+			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData.ElevatorData[localID], localID)
+			systemData.HallRequestData = updateHallRequestData(systemData.HallRequestData, freshData.HallRequestData, localID)
 			
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
