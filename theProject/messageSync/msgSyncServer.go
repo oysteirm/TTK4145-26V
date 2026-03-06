@@ -30,7 +30,7 @@ const (
 	CC_Done 		CyclicCounter_t	= 3
 )
 
-const N_ELEVATORS 		int = 3
+const N_ELEVATORS int = 3
 
 // List containing info about our network peers
 // 1: part of network
