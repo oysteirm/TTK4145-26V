@@ -80,6 +80,7 @@ type SetAssignedRequest_t struct {
     AssignedRequests AssignedRequests_t
 }
 
+
 //routine that owns the local elevator data
 //responible for message passing with messageSync, FSM and RA
 func ElevatorStateGuardian( commands chan Command_t,                       //channel for using the locally stored system state
