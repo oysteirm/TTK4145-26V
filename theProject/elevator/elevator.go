@@ -66,7 +66,7 @@ type GetAssignedRequests_t struct{
 type SetSystemData_t struct {
     SystemData messageSync.SystemData_t
 }
-type SetIsFunctnional_t struct {
+type SetIsFunctional_t struct {
     IsFunctional bool
 }
 type SetCabRequestDone_t struct {
@@ -123,7 +123,7 @@ func ElevatorStateGuardian( commands chan Command_t,                       //cha
             //we dont need to mark as systemDataChanged when we recieve from msgSync and send it back to the msgSync
             //but maybe this is not a ploblem since the data should be the same? but now with empty barriers?
         
-        case SetIsFunctnional_t:
+        case SetIsFunctional_t:
             systemData.ElevatorData[localID].IsFunctional               = c.IsFunctional
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
