@@ -44,28 +44,6 @@ type RequestCyclicCounter_t struct{
 	Value CyclicCounter_t
 	Barrier []bool
 }
-/*
-type Is_Alive_Data_t struct{
-	Value bool
-	Barrier []bool
-}
-type Is_Functional_Data_t struct{
-	Value bool
-	Barrier []bool
-}
-type Floor_Data_t struct{
-	Value int
-	Barrier []bool
-}
-type Elevator_Behaviour_Data_t struct{
-	Value elevator.Elevator_Behaviour_t
-	Barrier []bool
-}
-type Motor_Direction_Data_t struct{
-	Value elevator.Motor_Direction_t
-	Barrier []bool
-}
-*/
 
 //Datatype for elevator states with barrier
 type ElevatorData_t struct {
