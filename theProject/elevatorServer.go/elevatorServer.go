@@ -32,7 +32,7 @@ func ElevatorServerMain(
 	go e.PollFloorSensor(floorSensor)
 	go e.PollObstructionSwitch(obstructionSwitch)
 
-	go e.DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout)
+	go e.Timers(doorTimerStart, doorTimerStop, doorTimeout)
 
 	doorTimer := time.NewTimer(0)
 	doorTimer.Stop()

@@ -76,7 +76,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
 
 
 //what to do if we arrive at a floor
-func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, resetInactive chan struct{}, newFloor int) {
+func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, inactiveStart chan struct{}, inactiveStop chan struct{}, newFloor int) {
     // Update floor
     commands <- SetFloor_t{Floor: newFloor}
     //TODO: lastFloorTime = time.Now()  // Update time when reaching floor
@@ -85,7 +85,7 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
 
     SetFloorIndicator(newFloor)
 
-    resetInactive <- struct{}{}
+    inactiveStop <- struct{}{}
 
     if e_state.ElevatorBehaviour == EB_Moving {
         if RequestsShouldStop(e_state) {

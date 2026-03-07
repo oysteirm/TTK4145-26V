@@ -36,11 +36,12 @@ func ElevatorServer(){
 	doorTimerStop     := make(chan struct{})
 	doorTimerTimeout  := make(chan struct{})
 	obstruction       := make(chan struct{})
-	resetInactive     := make(chan struct{})
+	inactiveStart     := make(chan struct{})
+	inactiveStop      := make(chan struct{})
 	setFunctional     := make(chan bool)
 
 
-	go elevator.DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, resetInactive, setFunctional)
+	go elevator.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, inactiveStart, inactiveStop, setFunctional)
     
     for {
 		select {
@@ -51,7 +52,7 @@ func ElevatorServer(){
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, resetInactive)
+			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop)
 			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
