@@ -37,7 +37,7 @@ func Timers(
 			return nil
 		}():
 			timer = nil
-			timeout <- struct{}{}
+			doorTimeout <- struct{}{}
 		
 		case <-obstruction:
 			setFunctional <- false

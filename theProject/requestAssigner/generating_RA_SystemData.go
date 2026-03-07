@@ -18,6 +18,7 @@ If this list == elevatorNetworkList then we send this data to the HSA
 
 import (
 	"theProject/elevator"
+	"theProject/elevatorStateGuardian"
 	"theProject/messageSync"
 	"strconv"
 )
@@ -46,9 +47,9 @@ func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_S
 		IdStr := strconv.Itoa(elev.ID)
 
 		raSystem.States[IdStr] = RA_LocalElevatorState{
-			Behavior:    elevator.ElevatorBehaviourToString(elev.ElevatorBehaviour),
+			Behavior:    elevatorStateGuardian.ElevatorBehaviourToString(elev.ElevatorBehaviour),
 			Floor:       elev.Floor,
-			Direction:   elevator.ElevatorDirnToString(elev.MotorDirection),
+			Direction:   elevatorStateGuardian.ElevatorDirnToString(elev.MotorDirection),
 			CabRequests: cabBools,
 		}
 	}
