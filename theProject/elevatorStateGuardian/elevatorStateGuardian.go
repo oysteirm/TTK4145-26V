@@ -1,4 +1,4 @@
-package elevatorServer
+package elevatorStateGuardian
 
 import (
 	"fmt"
@@ -6,44 +6,32 @@ import (
     "theProject/elevator"
 )
 
-type GetState_t struct {
-	Reply chan elevator.ElevatorState_t
-}
-
-type SetState_t struct {
-    e_state elevator.ElevatorState_t
-}
-
-type SetFloor_t struct {
-	Floor int
-}
-
-type SetMotorDirection_t struct {
-	MotorDirection elevator.MotorDirection_t
-}
-
-type SetRequest_t struct {
-	RequestValue bool 
-    Floor int
-    Button elevator.ButtonType_t
-}
-
-type SetElevatorBehaviour_t struct {
-	ElevatorBehaviour elevator.ElevatorBehaviour_t
-}
-
-//New channel types 
+//Get types
 type GetElevatorData_t struct {
     Reply chan messageSync.ElevatorData_t
 }
 type GetAssignedRequests_t struct{
     Reply chan elevator.AssignedRequests_t
 }
+
+//Set types
 type SetSystemData_t struct {
     SystemData messageSync.SystemData_t
 }
+type SetElevatorData_t struct {
+    ElevatorData messageSync.ElevatorData_t
+}
 type SetIsFunctional_t struct {
     IsFunctional bool
+}
+type SetFloor_t struct {
+	Floor int
+}
+type SetMotorDirection_t struct {
+	MotorDirection elevator.MotorDirection_t
+}
+type SetElevatorBehaviour_t struct {
+	ElevatorBehaviour elevator.ElevatorBehaviour_t
 }
 type SetCabRequestDone_t struct {
     Floor int
@@ -59,9 +47,11 @@ type SetAssignedRequest_t struct {
 
 //routine that owns the local elevator data
 //responible for message passing with messageSync, FSM and RA
-func ElevatorStateGuardian( commands chan elevator.Command_t,                       //channel for using the locally stored system state
-                            dataToMsgSync chan<- messageSync.SystemData_t, //channel for sending data to messageSyncServer
-                            localID int) {                                 //ID of the local elevator 
+func ElevatorStateGuardian( 
+    commands chan elevator.Command_t,                               //channel for using the locally stored system state
+    elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
+    hallRequestToMsgSync chan<- messageSync.RequestCyclicCounter_t, //channel for sending done request CC to msg sync
+    localID int) {                                                  //ID of the local elevator 
 
 	requests_temp := make([][]bool, elevator.N_FLOORS)
     for i := range requests_temp {
@@ -72,7 +62,7 @@ func ElevatorStateGuardian( commands chan elevator.Command_t,                   
     var systemData messageSync.SystemData_t
     var assignedRequests elevator.AssignedRequests_t = requests_temp
 	systemData, _ = messageSync.InitSystemData(localID)
-    var systemDataChanged bool = false
+    var elevatorDataChanged bool = false
     
 
 	for cmd := range commands {
@@ -84,71 +74,73 @@ func ElevatorStateGuardian( commands chan elevator.Command_t,                   
 		case GetAssignedRequests_t:
 			c.Reply <- assignedRequests
 
-        //We don't care about elevator state about other elevators
-        //Also ID and IsAlive can't change is the FMS, and USE the Set Hall/Cab Requests to set requests
+        //Used by msg sync to set the new confirmed system data
         case SetSystemData_t:
-            systemData.ElevatorData[localID].IsFunctional       = c.SystemData.ElevatorData[localID].IsFunctional
-            systemData.ElevatorData[localID].Floor              = c.SystemData.ElevatorData[localID].Floor
-            systemData.ElevatorData[localID].ElevatorBehaviour  = c.SystemData.ElevatorData[localID].ElevatorBehaviour
-            systemData.ElevatorData[localID].MotorDirection     = c.SystemData.ElevatorData[localID].MotorDirection
+            systemData = messageSync.DeepCopySystemData(c.SystemData)
+        
+        //Used by the FSM to set the local elevator state
+        case SetElevatorData_t:
+            systemData.ElevatorData[localID].IsFunctional       = c.ElevatorData.IsFunctional
+            systemData.ElevatorData[localID].Floor              = c.ElevatorData.Floor
+            systemData.ElevatorData[localID].ElevatorBehaviour  = c.ElevatorData.ElevatorBehaviour
+            systemData.ElevatorData[localID].MotorDirection     = c.ElevatorData.MotorDirection
 
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
-            systemDataChanged = true
+            elevatorDataChanged = true
 
-            //something to think about: how to seperate when we recieve data from msgSync and we recieve from FSM
-            //we dont need to mark as systemDataChanged when we recieve from msgSync and send it back to the msgSync
-            //but maybe this is not a ploblem since the data should be the same? but now with empty barriers?
-        
         case SetIsFunctional_t:
             systemData.ElevatorData[localID].IsFunctional               = c.IsFunctional
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
-            systemDataChanged = true
+            elevatorDataChanged = true
 
 		case SetFloor_t:
 			systemData.ElevatorData[localID].Floor                      = c.Floor
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
-            systemDataChanged = true
+            elevatorDataChanged = true
 
 		case SetMotorDirection_t:
 			systemData.ElevatorData[localID].MotorDirection             = c.MotorDirection
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
-            systemDataChanged = true
+            elevatorDataChanged = true
 
 		case SetElevatorBehaviour_t:
 			systemData.ElevatorData[localID].ElevatorBehaviour          = c.ElevatorBehaviour
             systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
-            systemDataChanged = true
+            elevatorDataChanged = true
 
         //Settinq requests only need to take the request barrier into account
         case SetCabRequestDone_t:
             systemData.ElevatorData[localID].CabRequests[c.Floor].Value             = messageSync.CC_Done
             systemData.ElevatorData[localID].CabRequests[c.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
             systemData.ElevatorData[localID].CabRequests[c.Floor].Barrier[localID]  = true 
-            systemDataChanged = true 
+            elevatorDataChanged = true 
 
         case SetHallRequestDone_t:
             systemData.HallRequestData[c.Floor][c.Button].Value             = messageSync.CC_Done
             systemData.HallRequestData[c.Floor][c.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
             systemData.HallRequestData[c.Floor][c.Button].Barrier[localID]  = true
-            systemDataChanged = true
+
+            //send the done hall request to msg sync
+            hallRequestToMsgSync <- systemData.HallRequestData[c.Floor][c.Button]
 
         //The assigned reqests from RA
         case SetAssignedRequest_t:
             assignedRequests = c.AssignedRequests
 		}
 
-        //if data in the system state was changed from FSM, then we send the data to msgSync
-        if systemDataChanged {
-            dataToMsgSync <- systemData
+        //if data in the elevator state was changed by FSM, then we send it to msgSync
+        if elevatorDataChanged {
+            elevatorDataToMsgSync <- systemData.ElevatorData[localID]
         }
 	}
 }
 
+//using the get functionallity
 func GetElevatorData(commands chan elevator.Command_t) messageSync.ElevatorData_t {
     reply := make(chan messageSync.ElevatorData_t)
     commands <- GetElevatorData_t{Reply: reply}
@@ -161,6 +153,7 @@ func GetAssignedRequests(commands chan elevator.Command_t) elevator.AssignedRequ
     return <-reply
 }
 
+//printing and converting functions
 func ElevatorBehaviourToString(eb elevator.ElevatorBehaviour_t) string {
     switch eb {
     case elevator.EB_Idle:
@@ -170,7 +163,7 @@ func ElevatorBehaviourToString(eb elevator.ElevatorBehaviour_t) string {
     case elevator.EB_Moving:
         return "moving"
     default:
-        return "EB_UNDEFINED"
+        return "UNDEFINED"
     }
 }
 
@@ -183,7 +176,7 @@ func ElevatorDirnToString(d elevator.MotorDirection_t) string {
     case elevator.MD_Stop:
         return "stop"
     default:
-        return "D_UNDEFINED"
+        return "UNDEFINED"
     }
 }
 
