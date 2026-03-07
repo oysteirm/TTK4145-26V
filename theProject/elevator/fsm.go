@@ -43,6 +43,7 @@ func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Dura
     case EB_Moving:
         commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
         break;
+    //TODO: start IsFunctional timer
         
     case EB_Idle:    
         commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
@@ -98,6 +99,7 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
             commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
             commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
 
+            //Reset doorTimer
             doorTimerStop <- struct{}{}
             doorTimerStart <- e_state.DoorOpenDuration
         }
