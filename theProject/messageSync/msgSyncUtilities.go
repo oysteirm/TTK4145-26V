@@ -47,7 +47,7 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t){
 
 	var systemData SystemData_t = SystemData_t{ID: localID, ElevatorData: tmpElevatorData, HallRequestData: tmpHallRequestData}
 
-	return systemData, deepCopySystemData(systemData)
+	return systemData, DeepCopySystemData(systemData)
 }
 
 //Processing the fresh data and undating systemData and confirmedSystemData accordingly
@@ -55,8 +55,8 @@ func onReceivedFreshData(systemData SystemData_t,
 							confirmedSystemData SystemData_t, 
 							fresh_data SystemData_t) (SystemData_t, SystemData_t, bool){
 
-	var updatedSystemData SystemData_t = deepCopySystemData(systemData)
-	var updatedConfirmedSystemData SystemData_t = deepCopySystemData(confirmedSystemData)
+	var updatedSystemData SystemData_t = DeepCopySystemData(systemData)
+	var updatedConfirmedSystemData SystemData_t = DeepCopySystemData(confirmedSystemData)
 	var isConfirmedDataUpdated bool = false
 
 	for i := 0; i < N_ELEVATORS; i++{
@@ -319,7 +319,7 @@ func peerStrToInt(peerStr string) int {
 
 //Deep copy funtions for msg_sync_types
 //-----------------------------------------------------------
-func deepCopySystemData(src SystemData_t)SystemData_t{
+func DeepCopySystemData(src SystemData_t)SystemData_t{
 	dst := src 
 	dst.ElevatorData = deepCopyElevatordata(src.ElevatorData)
 	dst.HallRequestData = DeepCopyHallRequests(src.HallRequestData)
