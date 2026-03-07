@@ -86,16 +86,13 @@ type SystemData_t struct {
 	HallRequestData [][2]RequestCyclicCounter_t
 }
 
-type GetSystemData_t struct{
-	Reply SystemData_t
-}
 
 func MessageSyncServer(
-	getSystemData <-chan GetSystemData_t, 	//channel for other routines to get the current system data
-	dataFromFSM <-chan SystemData_t, 		//channel for recieving elevator data from elevator FSM
-	dataToFSM chan<- SystemData_t, 			//channel for sending confirmed data to FSM
-	peersReciever <-chan peers.PeerUpdate,	//channel for updating activePeers list
-	localID int,							//ID of local elevator 
+	elevatorDataFromFSM <-chan ElevatorData_t, 				//channel for recieving elevator data from elevator FSM
+	hallRequests_CC_FromFSM <-chan RequestCyclicCounter_t,	//channel for recieving done requests from elevator FSM
+	dataToFSM chan<- SystemData_t, 							//channel for sending confirmed data to FSM
+	peersReciever <-chan peers.PeerUpdate,					//channel for updating activePeers list
+	localID int,											//ID of local elevator 
 	){
 
 	// Variables used to sync data
@@ -123,9 +120,6 @@ func MessageSyncServer(
 	
 	for {
 		select{
-		//Someone needs the system data
-		case reg := <- getSystemData:
-			reg.Reply = systemData
 
 		//We recieve new data from the network
 		case freshData := <- networkReceiver:
@@ -141,9 +135,8 @@ func MessageSyncServer(
 			lightHallLights(confirmedSystemData.HallRequestData)
 
 		//We recieve data from the elevator FSM
-		case freshData := <- dataFromFSM:
-			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData.ElevatorData[localID], localID)
-			systemData.HallRequestData = updateHallRequestData(systemData.HallRequestData, freshData.HallRequestData, localID)
+		case freshData := <- elevatorDataFromFSM:
+			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:

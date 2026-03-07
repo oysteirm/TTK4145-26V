@@ -33,6 +33,28 @@ type ButtonEvent_t struct {
 	Button ButtonType_t
 }
 
+const N_FLOORS int = 4
+const N_BUTTONS ButtonType_t = 3
+const N_UP_DOWN int = 2
+
+type ElevatorBehaviour_t int
+type AssignedRequests_t [][]bool
+type Command_t interface{}
+
+const (
+    EB_Idle     ElevatorBehaviour_t = 0
+    EB_DoorOpen ElevatorBehaviour_t = 1  
+    EB_Moving   ElevatorBehaviour_t = 2
+)
+
+type ElevatorState_t struct {
+    Floor              int
+    MotorDirection     MotorDirection_t
+    Requests           AssignedRequests_t
+    ElevatorBehaviour  ElevatorBehaviour_t
+    DoorOpenDuration   time.Duration //TODO: this is no longer used, make a const?
+    IsFunctional       bool
+}
 
 
 func Init(addr string, numFloors int) {
