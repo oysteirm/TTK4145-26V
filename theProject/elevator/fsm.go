@@ -6,6 +6,7 @@ import (
 )
 
 //turns on all button lights
+//light functions!!
 func SetAllLights(e_state ElevatorState_t){ 
 	for floor := 0; floor < N_FLOORS; floor++{
 		for btn := ButtonType_t(0); btn < N_BUTTONS; btn++{
@@ -15,6 +16,7 @@ func SetAllLights(e_state ElevatorState_t){
 }
 
 //elevator moves down on init between floors
+// merge into right case
 func OnInitBetweenFloors(commands chan Command_t){
 	SetMotorDirection(MD_Down)
     commands <- SetMotorDirection_t{MotorDirection: MD_Down}
@@ -23,61 +25,58 @@ func OnInitBetweenFloors(commands chan Command_t){
 
 
 //what to do if there is a button press
-func OnRequestButtonPress(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, btnFloor int, btnType ButtonType_t){
+// name change (onRecievdDataFromsMsgSync)
+func OnRequestButtonPress(
+    commands chan Command_t, 
+    doorTimerStart chan time.Duration, 
+    doorTimerStop chan struct{}, 
+    btnFloor int, 
+    btnType ButtonType_t){
+
     var e_state ElevatorState_t = GetState(commands)
 
 	fmt.Printf("\n\n%s(%d, %s)\n", "OnRequestButtonPress",btnFloor, ElevatorButtonToString(btnType))
 	ElevatorPrint(e_state)
 
-	switch(e_state.ElevatorBehaviour){
+    //add assigned requests to RequestsCD function
+    var pair MotorDirectionBehaviourPair_t = RequestsChooseDirection(e_state );
+    //put into one (under)
+    commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
+    commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
+    switch(pair.ElevatorBehaviour){
     case EB_DoorOpen:
-        if(RequestsShouldClearImmediately(e_state, btnFloor, btnType)){
-            doorTimerStop <- struct{}{} 
-            doorTimerStart <- e_state.DoorOpenDuration
-            SetDoorOpenLamp(true)
-        } else {
-            commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
-        }
-        break;
+        SetDoorOpenLamp(true)
+        
+        doorTimerStart <- e_state.DoorOpenDuration
+        //change RequestsClearAtCurrentFloor return cleared request (in floor)
+        e_state = RequestsClearAtCurrentFloor(e_state);
+        //Set a cyclic counter to done channel...
+        // mark if cab or hall
+        commands <- SetState_t{ElevatorState: e_state}
 
     case EB_Moving:
-        commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
+        SetMotorDirection((pair.MotorDirection))
         break;
-    //TODO: start IsFunctional timer
         
-    case EB_Idle:    
-        commands <- SetRequest_t{RequestValue: true, Floor: btnFloor, Button: btnType}
-        e_state = GetState(commands)
-        var pair MotorDirectionBehaviourPair_t = RequestsChooseDirection(e_state);
-        commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
-        commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
-        switch(pair.ElevatorBehaviour){
-        case EB_DoorOpen:
-            SetDoorOpenLamp(true)
-            
-            doorTimerStart <- e_state.DoorOpenDuration
-            e_state = RequestsClearAtCurrentFloor(e_state);
-            commands <- SetState_t{ElevatorState: e_state}
-
-        case EB_Moving:
-            SetMotorDirection((pair.MotorDirection))
-            break;
-            
-        case EB_Idle:
-            break;
-        }
+    case EB_Idle:
         break;
-    }
-    e_state = GetState(commands)
-    SetAllLights(e_state);
     
+    }
+
     fmt.Printf("\nNew state:\n");
     ElevatorPrint(e_state);
 }
 
 
 //what to do if we arrive at a floor
-func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}, inactiveStart chan struct{}, inactiveStop chan struct{}, newFloor int) {
+func OnFloorArrival(
+    commands chan Command_t, 
+    doorTimerStart chan time.Duration, 
+    doorTimerStop chan struct{}, 
+    inactiveStart chan struct{}, 
+    inactiveStop chan struct{}, 
+    newFloor int) {
+
     // Update floor
     commands <- SetFloor_t{Floor: newFloor}
     //TODO: lastFloorTime = time.Now()  // Update time when reaching floor
@@ -93,9 +92,12 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
 
             SetMotorDirection(MD_Stop)
             SetDoorOpenLamp(true)
-
+//change RequestsClearAtCurrentFloor return cleared request (in floor)
             e_state = RequestsClearAtCurrentFloor(e_state) 
+            //Set a cyclic counter to done channel...
+              // mark if cab or hall
             commands <- SetState_t{ElevatorState: e_state}
+            //Use only one
             commands <- SetMotorDirection_t{MotorDirection: MD_Stop}
             commands <- SetElevatorBehaviour_t{ElevatorBehaviour: EB_DoorOpen}
 
@@ -111,27 +113,36 @@ func OnFloorArrival(commands chan Command_t, doorTimerStart chan time.Duration, 
 
 
 //what to do if the door timer runs out
-func OnDoorTimeout(commands chan Command_t, doorTimerStart chan time.Duration, doorTimerStop chan struct{}){
+func OnDoorTimeout(
+    commands chan Command_t, 
+    doorTimerStart chan time.Duration, 
+    doorTimerStop chan struct{}){
+
     var e_state ElevatorState_t = GetState(commands)
 
     switch(e_state.ElevatorBehaviour){
+
     case EB_DoorOpen:
         var pair MotorDirectionBehaviourPair_t = RequestsChooseDirection(e_state);
+        //Use only one
         commands <- SetMotorDirection_t{MotorDirection: pair.MotorDirection}
         commands <- SetElevatorBehaviour_t{ElevatorBehaviour: pair.ElevatorBehaviour}
         e_state = GetState(commands)
+
         switch(e_state.ElevatorBehaviour){
         case EB_DoorOpen:
             doorTimerStop <- struct{}{}
             doorTimerStart <- e_state.DoorOpenDuration
+            //change RequestsClearAtCurrentFloor return cleared request (in floor)
             e_state = RequestsClearAtCurrentFloor(e_state);
+            // mark if cab or hall
             commands <- SetState_t{ElevatorState: e_state}
-            SetAllLights(e_state);
+
             break;
+
         case EB_Moving, EB_Idle:
             SetDoorOpenLamp(false)
             SetMotorDirection(pair.MotorDirection);
-            SetAllLights(e_state);
             break;
         }
         

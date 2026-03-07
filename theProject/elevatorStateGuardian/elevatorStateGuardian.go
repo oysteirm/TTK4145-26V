@@ -33,6 +33,9 @@ type SetMotorDirection_t struct {
 type SetElevatorBehaviour_t struct {
 	ElevatorBehaviour elevator.ElevatorBehaviour_t
 }
+type SetRequestsDone_t struct {
+    RequestsToClear []elevator.ButtonEvent_t
+}
 type SetCabRequestDone_t struct {
     Floor int
 }
@@ -114,19 +117,22 @@ func ElevatorStateGuardian(
             elevatorDataChanged = true
 
         //Settinq requests only need to take the request barrier into account
-        case SetCabRequestDone_t:
-            systemData.ElevatorData[localID].CabRequests[c.Floor].Value             = messageSync.CC_Done
-            systemData.ElevatorData[localID].CabRequests[c.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
-            systemData.ElevatorData[localID].CabRequests[c.Floor].Barrier[localID]  = true 
-            elevatorDataChanged = true 
+        case SetRequestsDone_t:
+            for _, btnEvnt := range c.RequestsToClear{
+                if btnEvnt.Button == elevator.BT_Cab {
+                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Value             = messageSync.CC_Done
+                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
+                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier[localID]  = true 
 
-        case SetHallRequestDone_t:
-            systemData.HallRequestData[c.Floor][c.Button].Value             = messageSync.CC_Done
-            systemData.HallRequestData[c.Floor][c.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
-            systemData.HallRequestData[c.Floor][c.Button].Barrier[localID]  = true
+                    elevatorDataChanged = true 
+                } else {
+                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Value             = messageSync.CC_Done
+                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
+                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier[localID]  = true
 
-            //send the done hall request to msg sync
-            hallRequestToMsgSync <- systemData.HallRequestData[c.Floor][c.Button]
+                    hallRequestToMsgSync <- systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button]
+                }
+            }
 
         //The assigned reqests from RA
         case SetAssignedRequest_t:

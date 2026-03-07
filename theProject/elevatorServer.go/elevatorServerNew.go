@@ -48,6 +48,10 @@ func ElevatorServer(){
 
 		// Recieved data from msg sync
 		case btn := <-drv_buttons:
+			//set lights based on confirmed data
+			//Use the RA
+			//Store requests, send this and the confirmed system data
+			// do onRecievdDataFromsMsgSync
 			elevator.OnRequestButtonPress(commands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
 
 		// Floor arrival
