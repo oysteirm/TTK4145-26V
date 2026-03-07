@@ -32,11 +32,15 @@ func ElevatorServer(){
 	elevator.OnInitBetweenFloors(commands)
 
 	// Door timer
-	doorTimerStart := make(chan time.Duration)
-	doorTimerStop  := make(chan struct{})
-	doorTimeout    := make(chan struct{})
+	doorTimerStart    := make(chan time.Duration)
+	doorTimerStop     := make(chan struct{})
+	doorTimerTimeout  := make(chan struct{})
+	obstruction       := make(chan struct{})
+	resetInactive     := make(chan struct{})
+	setFunctional     := make(chan bool)
 
-	go elevator.DoorTimer(doorTimerStart, doorTimerStop, doorTimeout)
+
+	go elevator.DoorTimer(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, resetInactive, setFunctional)
     
     for {
 		select {
@@ -47,11 +51,11 @@ func ElevatorServer(){
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, floor)
+			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, resetInactive)
 			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
-		case <-doorTimeout:
+		case <-doorTimerTimeout:
 			elevator.OnDoorTimeout(commands, doorTimerStart, doorTimerStop)
 			//TODO: fix the double requests issue
 			
