@@ -7,34 +7,24 @@ import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/requests"
-	"time"
+    "theProject/converters"
+	
 )
 
 //Light functions using cyclic counter values
 func LightCabLights(CabRequests []messageSync.RequestCyclicCounter_t) {
 
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
-		elevator_IO.SetButtonLamp(elevator_IO.BT_Cab, floor, CC_ToBool(CabRequests[floor].Value))
+		elevator_IO.SetButtonLamp(elevator_IO.BT_Cab, floor, converters.CC_ToBool(CabRequests[floor].Value))
 	}
 }
-func LightHallLights(Hall_Requests [][2]messageSync.RequestCyclicCounter_t) {
+func LightHallLights(Hall_Requests [][config.N_UP_DOWN]messageSync.RequestCyclicCounter_t) {
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
-		elevator_IO.SetButtonLamp(elevator_IO.BT_HallUp, floor, CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallUp].Value))
-		elevator_IO.SetButtonLamp(elevator_IO.BT_HallDown, floor, CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallDown].Value))
+		elevator_IO.SetButtonLamp(elevator_IO.BT_HallUp, floor, converters.CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallUp].Value))
+		elevator_IO.SetButtonLamp(elevator_IO.BT_HallDown, floor, converters.CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallDown].Value))
 	}
 }
-//maybe move this?
-func CC_ToBool(CC messageSync.CyclicCounter_t) bool {
-	if (CC == messageSync.CC_Uninit || CC == messageSync.CC_No || CC == messageSync.CC_Unconfirmed) {
-		return false
-	}
-	if CC == messageSync.CC_Confirmed || CC == messageSync.CC_Done {
-		return true
-	} else {
-		print("wrong CC Value")
-		return false
-	}
-}
+
 
 //elevator moves down on init between floors
 func OnInitBetweenFloors(guardianCommands chan elevatorStateGuardian.GuardianCommands_t){
@@ -77,7 +67,7 @@ func OnReceivedDataFromMsgSync(
         isFunctionalStop <- struct{}{}
         elevator_IO.SetDoorOpenLamp(true)
 
-        doorTimerStart <- config.IS_FUNCTIONAL_TIMER_DURATION
+        doorTimerStart <- struct{}{}
 
         //change RequestsClearAtCurrentFloor return cleared request (in floor)
         requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests);
@@ -86,7 +76,7 @@ func OnReceivedDataFromMsgSync(
         guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
     case elevator_IO.EB_Moving:
-        isFunctionalStart <- config.IS_FUNCTIONAL_TIMER_DURATION
+        isFunctionalStart <- struct{}{}
         elevator_IO.SetMotorDirection((pair.MotorDirection))
         break;
 
@@ -216,8 +206,8 @@ func SystemPrint(systemData messageSync.SystemData_t) {
             "  |dirn  = %-12s|\n"+
             "  |behav = %-12s|\n",
             systemData.ElevatorData[i].Floor,
-            ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection),
-            ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour),
+            converters.ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection),
+            converters.ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour),
         )
         fmt.Println("  +--------------------+")
         fmt.Println("  |  | up  | dn  | cab |")
@@ -232,13 +222,13 @@ func SystemPrint(systemData messageSync.SystemData_t) {
                     fmt.Print("|     ")
                 } else {
                     if btn == elevator_IO.BT_Cab{
-                        if fsm.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
+                        if converters.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
                             fmt.Print("|  #  ")
                         } else {
                             fmt.Print("|  -  ")
                         }
                     } else {
-                        if fsm.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
+                        if converters.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
                             fmt.Print("|  #  ")
                         } else {
                             fmt.Print("|  -  ")
@@ -277,14 +267,14 @@ func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
     // Direction
     for i := 0; i < messageSync.N_ELEVATORS; i++ {
         fmt.Printf("  | dirn  = %-10s |",
-            ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
+            converters.ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
     }
     fmt.Println()
 
     // Behaviour
     for i := 0; i < messageSync.N_ELEVATORS; i++ {
         fmt.Printf("  | behav = %-10s |",
-            ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
+            converters.ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
     }
     fmt.Println()
 
@@ -311,13 +301,13 @@ func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
                 } else {
 
                     if btn == elevator_IO.BT_Cab {
-                        if fsm.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
+                        if converters.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
                             fmt.Print("|  #  ")
                         } else {
                             fmt.Print("|  -  ")
                         }
                     } else {
-                        if fsm.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
+                        if converters.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
                             fmt.Print("|  #  ")
                         } else {
                             fmt.Print("|  -  ")
