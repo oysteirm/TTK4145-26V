@@ -103,8 +103,8 @@ func OnFloorArrival(
     guardianCommands chan elevatorStateGuardian.GuardianCommands_t, 
     doorTimerStart chan time.Duration, 
     doorTimerStop chan struct{}, 
-    inactiveStart chan struct{}, 
-    inactiveStop chan struct{}, 
+    isFunctionalStart chan struct{}, 
+    isFunctionalStop chan struct{}, 
     newFloor int) {
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
@@ -114,7 +114,7 @@ func OnFloorArrival(
     elevator_IO.SetFloorIndicator(newFloor)
 
     //change
-    inactiveStop <- struct{}{}
+    isFunctionalStop <- struct{}{}
 
     if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
         if requests.RequestsShouldStop(elevatorState, assignedRequests) {
@@ -146,8 +146,8 @@ func OnDoorTimeout(
     guardianCommands chan elevatorStateGuardian.GuardianCommands_t, 
     doorTimerStart chan time.Duration, 
     doorTimerStop chan struct{}, 
-    inactiveStart chan struct{}, 
-    inactiveStop chan struct{}){
+    isFunctionalStart chan struct{}, 
+    isFunctionalStop chan struct{}){
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
