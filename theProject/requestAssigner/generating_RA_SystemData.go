@@ -17,41 +17,42 @@ If this list == elevatorNetworkList then we send this data to the HSA
 
 
 import (
-	"theProject/elevator"
-	"theProject/elevatorStateGuardian"
+	
+	"theProject/config"
+	"theProject/converters"
 	"theProject/messageSync"
 	"strconv"
 )
 
-func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_SystemData{
-	raSystem := RA_SystemData{}
-	raSystem.HallRequests = make([][elevator.N_UP_DOWN]bool,elevator.N_FLOORS)
-	for floor:=0; floor < elevator.N_FLOORS;floor++{
-		for button:= 0; button < elevator.N_UP_DOWN; button++{
-			raSystem.HallRequests[floor][button] = CC_ToBool(confirmedSystemData.HallRequestData[floor][button].Value)
+func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_SystemData_t{
+	RA_systemData := RA_SystemData_t{}
+	RA_systemData.HallRequests = make([][config.N_UP_DOWN]bool, config.N_FLOORS)
+	for floor:=0; floor < config.N_FLOORS;floor++{
+		for button:= 0; button < config.N_UP_DOWN; button++{
+			RA_systemData.HallRequests[floor][button] = converters.CC_ToBool(confirmedSystemData.HallRequestData[floor][button].Value)
 		}
 	}
 
-	raSystem.States = make(map[string]RA_LocalElevatorState)
-	for _,elev := range confirmedSystemData.ElevatorData{
+	RA_systemData.States = make(map[string]RA_LocalElevatorState_t)
+	for _,elevator := range confirmedSystemData.ElevatorData{
 
-		if !(elev.IsAlive) || !(elev.IsFunctional){
+		if !(elevator.IsAlive) || !(elevator.IsFunctional){
 			continue
 		}
 
-		cabBools := make([]bool,elevator.N_FLOORS)
-		for floor:= 0; floor< elevator.N_FLOORS; floor++{
-			cabBools[floor] = CC_ToBool(elev.CabRequests[floor].Value)
+		cabBools := make([]bool, config.N_FLOORS)
+		for floor:= 0; floor< config.N_FLOORS; floor++{
+			cabBools[floor] = converters.CC_ToBool(elevator.CabRequests[floor].Value)
 		}
 
-		IdStr := strconv.Itoa(elev.ID)
+		IdStr := strconv.Itoa(elevator.ID)
 
-		raSystem.States[IdStr] = RA_LocalElevatorState{
-			Behavior:    elevatorStateGuardian.ElevatorBehaviourToString(elev.ElevatorBehaviour),
-			Floor:       elev.Floor,
-			Direction:   elevatorStateGuardian.ElevatorDirnToString(elev.MotorDirection),
+		RA_systemData.States[IdStr] = RA_LocalElevatorState_t{
+			Behavior:    converters.ElevatorBehaviourToString(elevator.ElevatorBehaviour),
+			Floor:       elevator.Floor,
+			Direction:   converters.ElevatorDirnToString(elevator.MotorDirection),
 			CabRequests: cabBools,
 		}
 	}
-	return raSystem
+	return RA_systemData
 }

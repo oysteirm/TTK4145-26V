@@ -8,31 +8,31 @@ package requestAssigner
 
 
 import (
-	"theProject/elevator"
+	"theProject/config"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 )
 
-type RA_LocalElevatorState struct {
-    Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle"
+type RA_LocalElevatorState_t struct {
+    Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle" (all lowercase)
     Floor       int         `json:"floor"` 
-    Direction   string      `json:"direction"`
+    Direction   string      `json:"direction"` // "stop", "up" or "down" (all lowercase)
     CabRequests []bool      `json:"cabRequests"`
 }
 
 
-type RA_SystemData  struct {
-    HallRequests    [][elevator.N_UP_DOWN]bool                   `json:"hallRequests"`
-    States          map[string]RA_LocalElevatorState     `json:"states"`
+type RA_SystemData_t  struct {
+    HallRequests    [][config.N_UP_DOWN]bool               `json:"hallRequests"`
+    States          map[string]RA_LocalElevatorState_t     `json:"states"`
 }
 
 //GIVE BETTER NAMES?
-type RA_Output map[string][][]bool
+type RA_Output_t map[string][][]bool
 
 
 
-func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
+func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
 	//ENCODING SYSTEM
 	input, err := json.Marshal(elevatorSystem)
@@ -41,9 +41,9 @@ func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
 		return nil
 	}
 
-	//EXECUTING COMPILED "hallRequestAssigner", fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
+	//EXECUTING COMPILED "providedRequestAssigner" , fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
-		"./tools/hallRequestAssignerDir/hallRequestAssigner",
+		"./requestAssigner/providedRequestAssigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
@@ -54,7 +54,7 @@ func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
 	}
 
 	//DECODING STRING
-	var result RA_Output
+	var result RA_Output_t
 	err = json.Unmarshal(output, &result)
 	if err != nil {
 		fmt.Println("Unmarshal error in AssignRequests:", err)
