@@ -8,13 +8,13 @@ package requestAssigner
 
 
 import (
-	"theProject/elevator"
+	"theProject/config"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 )
 
-type RA_LocalElevatorState struct {
+type RA_LocalElevatorState_t struct {
     Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle"
     Floor       int         `json:"floor"` 
     Direction   string      `json:"direction"`
@@ -22,17 +22,17 @@ type RA_LocalElevatorState struct {
 }
 
 
-type RA_SystemData  struct {
-    HallRequests    [][elevator.N_UP_DOWN]bool                   `json:"hallRequests"`
-    States          map[string]RA_LocalElevatorState     `json:"states"`
+type RA_SystemData_t  struct {
+    HallRequests    [][config.N_UP_DOWN]bool                   `json:"hallRequests"`
+    States          map[string]RA_LocalElevatorState_t     `json:"states"`
 }
 
 //GIVE BETTER NAMES?
-type RA_Output map[string][][]bool
+type RA_Output_t map[string][][]bool
 
 
 
-func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
+func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
 	//ENCODING SYSTEM
 	input, err := json.Marshal(elevatorSystem)
@@ -54,7 +54,7 @@ func AssignRequests(elevatorSystem RA_SystemData) RA_Output {
 	}
 
 	//DECODING STRING
-	var result RA_Output
+	var result RA_Output_t
 	err = json.Unmarshal(output, &result)
 	if err != nil {
 		fmt.Println("Unmarshal error in AssignRequests:", err)

@@ -3,8 +3,8 @@ package testHelpers
 
 
 import (
-	"theProject/elevator"
 	"theProject/messageSync"
+	"theProject/elevator_IO"
 )
 
 // making "confirmed" SystemData_t example
@@ -59,8 +59,8 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		e.IsAlive = true
 		e.IsFunctional = true
 		e.Floor = 0
-		e.ElevatorBehaviour = elevator.EB_Idle
-		e.MotorDirection = elevator.MD_Stop
+		e.ElevatorBehaviour = elevator_IO.EB_Idle
+		e.MotorDirection = elevator_IO.MD_Stop
 		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
 
 		// cab call in floor 3 (0-indexed => 2)
@@ -84,8 +84,8 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		e.IsAlive = true
 		e.IsFunctional = true
 		e.Floor = 2
-		e.ElevatorBehaviour = elevator.EB_Moving
-		e.MotorDirection = elevator.MD_Down
+		e.ElevatorBehaviour = elevator_IO.EB_Moving
+		e.MotorDirection = elevator_IO.MD_Down
 		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
 
 	
