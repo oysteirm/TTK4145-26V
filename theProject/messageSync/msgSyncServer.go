@@ -1,23 +1,24 @@
 package messageSync
 
 import (
-	"time"
+	"theProject/config"
 	"theProject/elevator_IO"
-	"theProject/networkDriver/peers"
 	"theProject/networkDriver/bcast"
-)	
+	"theProject/networkDriver/peers"
+	"time"
+)
 
 /* map over data that is being syncronized
 -----------------------------------
 Elevator States:
 [ 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
-	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]], 
+	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]],
 	[ID		ALIVE 	IS_ABLE		FLOOR	EB		MD	Cab_Requests[N_FLOORS]]	]
 
 Hall Requests:
 HallRequestData[N_FLOORS][N_HALL_CALLS]
 
-Every piece of data have a list with the elevators who agree with the information. 
+Every piece of data have a list with the elevators who agree with the information.
 If this list == elevator_network_list then we send this data have reached consensus and is put in confirmed data which is sent to HSA
 -----------------------------------
 */
@@ -67,7 +68,7 @@ type SystemData_t struct {
 
 func MessageSyncServer(
 	elevatorDataFromFSM <-chan ElevatorData_t, 				//channel for recieving elevator data from elevator FSM
-	hallRequests_CC_FromFSM <-chan RequestCyclicCounter_t,	//channel for recieving done requests from elevator FSM
+	requestsFrom_FSM <-chan []elevator_IO.ButtonEvent_t,	//channel for recieving done requests from elevator FSM
 	dataToFSM chan<- SystemData_t, 							//channel for sending confirmed data to FSM
 	peersReciever <-chan peers.PeerUpdate,					//channel for updating activePeers list
 	localID int,											//ID of local elevator 
@@ -107,6 +108,22 @@ func MessageSyncServer(
 			if isConfirmedDataUpdated {
 				dataToFSM <- confirmedSystemData
 			}
+
+		case freshRequestsToDone:= <- requestsFrom_FSM:
+
+			for _, btnEvnt := range freshRequestsToDone{
+                if btnEvnt.Button == elevator_IO.BT_Cab {
+                    tempCabRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: make([]bool, config.N_ELEVATORS)}
+					tempCabRequests.Barrier[localID] = true
+					systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor], tempCabRequests, localID)
+
+                } else {
+                    tempHallRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: make([]bool, config.N_ELEVATORS)}
+					tempHallRequests.Barrier[localID] = true
+					systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button] = update_CC(systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button], tempHallRequests, localID)
+                }
+            }
+		
 
 		//We recieve data from the elevator FSM
 		case freshData := <- elevatorDataFromFSM:

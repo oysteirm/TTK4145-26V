@@ -54,7 +54,7 @@ type SetAssignedRequest_t struct {
 func ElevatorStateGuardian( 
     guardianCommands chan GuardianCommands_t,                               //channel for using the locally stored system state
     elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
-    requestToMsgSync chan<- messageSync.RequestCyclicCounter_t, //channel for sending done request CC to msg sync
+    requestsToMsgSync chan<- []elevator_IO.ButtonEvent_t, //channel for sending done request CC to msg sync
     localID int) {                                                  //ID of the local elevator 
 
 	requests_temp := make([][]bool, elevator_IO.N_FLOORS)
@@ -119,21 +119,22 @@ func ElevatorStateGuardian(
 
         //Settinq requests only need to take the request barrier into account
         case SetRequestsDone_t:
-            for _, btnEvnt := range c.RequestsToClear{
-                if btnEvnt.Button == elevator_IO.BT_Cab {
-                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Value             = messageSync.CC_Done
-                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
-                    systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier[localID]  = true 
+            requestsToMsgSync <- c.RequestsToClear
+            // for _, btnEvnt := range c.RequestsToClear{
+            //     if btnEvnt.Button == elevator_IO.BT_Cab {
+            //         systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Value             = messageSync.CC_Done
+            //         systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
+            //         systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier[localID]  = true 
 
-                    elevatorDataChanged = true 
-                } else {
-                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Value             = messageSync.CC_Done
-                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
-                    systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier[localID]  = true
+            //         elevatorDataChanged = true 
+            //     } else {
+            //         systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Value             = messageSync.CC_Done
+            //         systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
+            //         systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier[localID]  = true
 
-                    requestToMsgSync <- systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button]
-                }
-            }
+            //         requestToMsgSync <- systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button]
+            //     }
+            // }
 
         //The assigned reqests from RA
         case SetAssignedRequest_t:

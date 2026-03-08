@@ -1,33 +1,33 @@
 package theproject
 
-import(
+import (
+	"theProject/config"
+	"theProject/elevatorServer"
 	"theProject/fsm"
 	"theProject/messageSync"
+	"theProject/networkDriver/peers"
 	"theProject/timer"
-	"theProject/config"
+	"theProject/elevator_IO"
 )
 
 func main(){
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
-	localID := //hjelp henning
+	localID := 0//hjelp henning
 
 	//TODO: initialize all variables and constants
 	//TODO: initialize all the channels
 	//elevatorServer channels
-	elevatorDataToMsgSync := make(chan messageSync.ElevatorData_t)
-    requestToMsgSync := make(chan messageSync.RequestCyclicCounter_t)
-	systemDataFromMsgSync := make(chan messageSync.SystemData_t)
-	//messageSync channels
-	elevatorDataFromFSM := make(chan ElevatorData_t) 
-	hallRequests_CC_FromFSM := make(chan RequestCyclicCounter_t)
-	dataToFSM := make(SystemData_t)		
+	elevatorDataToMsgSyncFrom_FSM := make(chan messageSync.ElevatorData_t)
+    requestToMsgSyncFrom_FSM := make(chan []elevator_IO.ButtonEvent_t)
+	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t)	
 	peersReciever := make(chan peers.PeerUpdate)
 
-	
-
 	//TODO: launch the go routines 
+	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peersReciever, localID)
+	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, localID)
 
 	//TODO: forever loop?
+	for{}
 }
