@@ -2,34 +2,39 @@ package elevatorServer
 
 import (
 	//"fmt"
-	"theProject/elevator"
+	"theProject/elevator_IO"
+	"theProject/fsm"
 	"theProject/elevatorStateGuardian"
 	"theProject/messageSync"
-	"theProject/networkDriver/peers"
 	"theProject/requestAssigner"
 	"time"
 )
 
 
-func ElevatorServer(){
+func ElevatorServer(
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
+    requestToMsgSync chan<- messageSync.RequestCyclicCounter_t,	//channel for sending done request CC to msg sync
+	systemDataFromMsgSync <-chan messageSync.SystemData_t,				//channel for receiving confirmed system data
+	localID int,													//local ID
+){
 
-    elevator.Init("localhost:15657", elevator.N_FLOORS)
+    elevator_IO.Init("localhost:15657", elevator_IO.N_FLOORS)
 
-    commands := make(chan elevator.Command_t)
+    guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)
 
 	// Start elevator state server
-	go elevatorStateGuardian.ElevatorStateGuardian(commands)
+	go elevatorStateGuardian.ElevatorStateGuardian(guardianCommands, elevatorDataToMsgSync, requestToMsgSync, localID)
     
     drv_floors  := make(chan int)
     drv_obstr   := make(chan bool)
     drv_stop    := make(chan bool)    
     
-    go elevator.PollFloorSensor(drv_floors)
-    go elevator.PollObstructionSwitch(drv_obstr)
-    go elevator.PollStopButton(drv_stop)
+    go elevator_IO.PollFloorSensor(drv_floors)
+    go elevator_IO.PollObstructionSwitch(drv_obstr)
+    go elevator_IO.PollStopButton(drv_stop)
 
     // Init FSM (handle between floors)
-	elevator.OnInitBetweenFloors(commands)
+	fsm.OnInitBetweenFloors(guardianCommands)
 
 	// Door timer
 	doorTimerStart    := make(chan time.Duration)
@@ -41,7 +46,7 @@ func ElevatorServer(){
 	setFunctional     := make(chan bool)
 
 
-	go elevator.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, inactiveStart, inactiveStop, setFunctional)
+	go elevator_IO.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, inactiveStart, inactiveStop, setFunctional)
     
     for {
 		select {
@@ -51,25 +56,26 @@ func ElevatorServer(){
 			//set lights based on confirmed data
 			//Use the RA
 			//Store requests, send this and the confirmed system data
-			// do onRecievdDataFromsMsgSync
-			elevator.OnRequestButtonPress(commands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
+			fsm.OnReceivedDataFromsMsgSync()
+
+			elevator_IO.OnRequestButtonPress(guardianCommands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			elevator.OnFloorArrival(commands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop)
+			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop)
 			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
 		case <-doorTimerTimeout:
-			elevator.OnDoorTimeout(commands, doorTimerStart, doorTimerStop)
+			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop)
 			//TODO: fix the double requests issue
 			
 		// Stop button
 		case stop := <-drv_stop:
 			if stop {
-				elevator.SetStopLamp(true)
+				elevator_IO.SetStopLamp(true)
 			} else {
-				elevator.SetStopLamp(false)
+				elevator_IO.SetStopLamp(false)
 			}
 
 		// Obstruction
@@ -77,9 +83,8 @@ func ElevatorServer(){
 			if obstructed {
 				doorTimerStop <- struct{}{}
 			} else {
-				var e_state elevator.ElevatorState_t = elevator.GetState(commands)
 				doorTimerStop <- struct{}{}
-				doorTimerStart <- e_state.DoorOpenDuration
+				doorTimerStart <- e_state.DoorOpenDuration //USE CONST!!!!
 			}
 		}
 	}    

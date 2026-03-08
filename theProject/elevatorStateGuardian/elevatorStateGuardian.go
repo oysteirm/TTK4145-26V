@@ -6,7 +6,7 @@ import (
     "theProject/elevatorIo"
 )
 
-type Command_t interface{}
+type GuardianCommands_t interface{}
 
 //Get types
 type GetElevatorData_t struct {
@@ -53,9 +53,9 @@ type SetAssignedRequest_t struct {
 //routine that owns the local elevator data
 //responible for message passing with messageSync, FSM and RA
 func ElevatorStateGuardian( 
-    commands chan Command_t,                               //channel for using the locally stored system state
+    guardianCommands chan GuardianCommands_t,                               //channel for using the locally stored system state
     elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
-    hallRequestToMsgSync chan<- messageSync.RequestCyclicCounter_t, //channel for sending done request CC to msg sync
+    requestToMsgSync chan<- messageSync.RequestCyclicCounter_t, //channel for sending done request CC to msg sync
     localID int) {                                                  //ID of the local elevator 
 
 	requests_temp := make([][]bool, elevatorIo.N_FLOORS)
@@ -70,7 +70,7 @@ func ElevatorStateGuardian(
     var elevatorDataChanged bool = false
     
 
-	for cmd := range commands {
+	for cmd := range guardianCommands {
 		switch c := cmd.(type) {
 
 		case GetElevatorData_t:
@@ -132,7 +132,7 @@ func ElevatorStateGuardian(
                     systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier           = make([]bool, messageSync.N_ELEVATORS)
                     systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button].Barrier[localID]  = true
 
-                    hallRequestToMsgSync <- systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button]
+                    requestToMsgSync <- systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button]
                 }
             }
 
@@ -149,15 +149,15 @@ func ElevatorStateGuardian(
 }
 
 //using the get functionallity
-func GetElevatorData(commands chan Command_t) messageSync.ElevatorData_t {
+func GetElevatorData(guardianCommands chan GuardianCommands_t) messageSync.ElevatorData_t {
     reply := make(chan messageSync.ElevatorData_t)
-    commands <- GetElevatorData_t{Reply: reply}
+    guardianCommands <- GetElevatorData_t{Reply: reply}
     return <-reply
 }
 
-func GetAssignedRequests(commands chan Command_t) elevatorIo.AssignedRequests_t {
+func GetAssignedRequests(guardianCommands chan GuardianCommands_t) elevatorIo.AssignedRequests_t {
     reply := make(chan elevatorIo.AssignedRequests_t)
-    commands <- GetAssignedRequests_t{Reply: reply}
+    guardianCommands <- GetAssignedRequests_t{Reply: reply}
     return <-reply
 }
 

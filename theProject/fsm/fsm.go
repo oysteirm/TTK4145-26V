@@ -2,7 +2,7 @@ package fsm
 
 import (
 	"fmt"
-	"theProject/elevatorIo"
+	"theProject/elevator_IO"
 	"theProject/elevatorStateGuardian"
 	"theProject/messageSync"
     "theProject/requests"
@@ -12,14 +12,14 @@ import (
 //Light functions using cyclic counter values
 func lightCabLights(CabRequests []messageSync.RequestCyclicCounter_t) {
 
-	for floor := 0; floor < elevatorIo.N_FLOORS; floor++{
-		elevatorIo.SetButtonLamp(elevatorIo.BT_Cab, floor, CC_ToBool(CabRequests[floor].Value))
+	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
+		elevator_IO.SetButtonLamp(elevator_IO.BT_Cab, floor, CC_ToBool(CabRequests[floor].Value))
 	}
 }
 func lightHallLights(Hall_Requests [][2]messageSync.RequestCyclicCounter_t) {
-	for floor := 0; floor < elevatorIo.N_FLOORS; floor++{
-		elevatorIo.SetButtonLamp(elevatorIo.BT_HallUp, floor, CC_ToBool(Hall_Requests[floor][elevatorIo.BT_HallUp].Value))
-		elevatorIo.SetButtonLamp(elevatorIo.BT_HallDown, floor, CC_ToBool(Hall_Requests[floor][elevatorIo.BT_HallDown].Value))
+	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
+		elevator_IO.SetButtonLamp(elevator_IO.BT_HallUp, floor, CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallUp].Value))
+		elevator_IO.SetButtonLamp(elevator_IO.BT_HallDown, floor, CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallDown].Value))
 	}
 }
 //maybe move this?
@@ -36,13 +36,13 @@ func CC_ToBool(CC messageSync.CyclicCounter_t) bool {
 }
 
 //elevator moves down on init between floors
-func OnInitBetweenFloors(commands chan elevatorStateGuardian.Command_t){
-	elevatorIo.SetMotorDirection(elevatorIo.MD_Down)
+func OnInitBetweenFloors(commands chan elevatorStateGuardian.GuardianCommands_t){
+	elevator_IO.SetMotorDirection(elevator_IO.MD_Down)
 
     elevatorState := elevatorStateGuardian.GetElevatorData(commands)
     //Moving down
-    elevatorState.ElevatorBehaviour = elevatorIo.EB_Moving
-    elevatorState.MotorDirection    = elevatorIo.MD_Down
+    elevatorState.ElevatorBehaviour = elevator_IO.EB_Moving
+    elevatorState.MotorDirection    = elevator_IO.MD_Down
     //Save in guardian
     commands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 }
@@ -50,11 +50,11 @@ func OnInitBetweenFloors(commands chan elevatorStateGuardian.Command_t){
 
 //what to do if we recieve new data
 func OnReceivedDataFromMsgSync(
-    commands chan elevatorStateGuardian.Command_t, 
+    commands chan elevatorStateGuardian.GuardianCommands_t, 
     doorTimerStart chan time.Duration, 
     doorTimerStop chan struct{}, 
     btnFloor int, 
-    btnType elevatorIo.ButtonType_t){
+    btnType elevator_IO.ButtonType_t){
 
     elevatorState := elevatorStateGuardian.GetElevatorData(commands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(commands)
@@ -72,9 +72,9 @@ func OnReceivedDataFromMsgSync(
     commands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 
     switch(pair.ElevatorBehaviour){
-    case elevatorIo.EB_DoorOpen:
+    case elevator_IO.EB_DoorOpen:
         //stop inactive timer
-        elevatorIo.SetDoorOpenLamp(true)
+        elevator_IO.SetDoorOpenLamp(true)
         //TODO: use a const
         doorTimerStart <- elevatorState.DoorOpenDuration
 
@@ -84,12 +84,12 @@ func OnReceivedDataFromMsgSync(
         // mark if cab or hall
         commands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
-    case elevatorIo.EB_Moving:
+    case elevator_IO.EB_Moving:
         //start inactive timer
-        elevatorIo.SetMotorDirection((pair.MotorDirection))
+        elevator_IO.SetMotorDirection((pair.MotorDirection))
         break;
 
-    case elevatorIo.EB_Idle:
+    case elevator_IO.EB_Idle:
         //stop inactive timer
         break;
     
@@ -102,7 +102,7 @@ func OnReceivedDataFromMsgSync(
 
 //what to do if we arrive at a floor
 func OnFloorArrival(
-    commands chan elevatorStateGuardian.Command_t, 
+    commands chan elevatorStateGuardian.GuardianCommands_t, 
     doorTimerStart chan time.Duration, 
     doorTimerStop chan struct{}, 
     inactiveStart chan struct{}, 
@@ -113,19 +113,19 @@ func OnFloorArrival(
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(commands)
     //update floor
     elevatorState.Floor = newFloor
-    elevatorIo.SetFloorIndicator(newFloor)
+    elevator_IO.SetFloorIndicator(newFloor)
 
     //change
     inactiveStop <- struct{}{}
 
-    if elevatorState.ElevatorBehaviour == elevatorIo.EB_Moving {
+    if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
         if requests.RequestsShouldStop(elevatorState, assignedRequests) {
 
-            elevatorIo.SetMotorDirection(elevatorIo.MD_Stop)
-            elevatorIo.SetDoorOpenLamp(true)
+            elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
+            elevator_IO.SetDoorOpenLamp(true)
 
-            elevatorState.MotorDirection = elevatorIo.MD_Stop
-            elevatorState.ElevatorBehaviour = elevatorIo.EB_DoorOpen
+            elevatorState.MotorDirection = elevator_IO.MD_Stop
+            elevatorState.ElevatorBehaviour = elevator_IO.EB_DoorOpen
             
             requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests) 
             commands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
@@ -145,7 +145,7 @@ func OnFloorArrival(
 
 //what to do if the door timer runs out
 func OnDoorTimeout(
-    commands chan elevatorStateGuardian.Command_t, 
+    commands chan elevatorStateGuardian.GuardianCommands_t, 
     doorTimerStart chan time.Duration, 
     doorTimerStop chan struct{}){
 
@@ -154,7 +154,7 @@ func OnDoorTimeout(
 
     switch(elevatorState.ElevatorBehaviour){
 
-    case elevatorIo.EB_DoorOpen:
+    case elevator_IO.EB_DoorOpen:
         var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
 
         elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
@@ -163,7 +163,7 @@ func OnDoorTimeout(
         commands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 
         switch(elevatorState.ElevatorBehaviour){
-        case elevatorIo.EB_DoorOpen:
+        case elevator_IO.EB_DoorOpen:
             doorTimerStop <- struct{}{}
             doorTimerStart <- elevatorState.DoorOpenDuration //use CONST
 
@@ -173,15 +173,15 @@ func OnDoorTimeout(
             break;
 
         //add functional timer to the cases under
-        case elevatorIo.EB_Moving:
+        case elevator_IO.EB_Moving:
             //start functional timer
-            elevatorIo.SetDoorOpenLamp(false)
-            elevatorIo.SetMotorDirection(pair.MotorDirection);
+            elevator_IO.SetDoorOpenLamp(false)
+            elevator_IO.SetMotorDirection(pair.MotorDirection);
 
-        case elevatorIo.EB_Idle:
+        case elevator_IO.EB_Idle:
             //stop functional timer
-            elevatorIo.SetDoorOpenLamp(false)
-            elevatorIo.SetMotorDirection(pair.MotorDirection);
+            elevator_IO.SetDoorOpenLamp(false)
+            elevator_IO.SetMotorDirection(pair.MotorDirection);
             break;
         }
         
