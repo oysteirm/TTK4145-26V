@@ -1,12 +1,9 @@
 package theproject
 
 import (
-	"theProject/config"
 	"theProject/elevatorServer"
-	"theProject/fsm"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	"theProject/timer"
 	"theProject/elevator_IO"
 )
 
