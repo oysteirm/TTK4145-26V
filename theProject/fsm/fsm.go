@@ -49,11 +49,6 @@ func OnReceivedDataFromMsgSync(
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-
-    //TODO: how we want to print? need to decide
-	fmt.Printf("\n\n%s(%d, %s)\n", "OnReceivedDataFromMsgSync")
-	ElevatorPrint(elevatorState)
-
     
     var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
 
@@ -85,9 +80,10 @@ func OnReceivedDataFromMsgSync(
         break;
     
     }
-    //think about this
+
+    assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     fmt.Printf("\nNew state:\n");
-    ElevatorPrint(elevatorState);
+    ElevatorPrint(elevatorState, assignedRequests);
 }
 
 
@@ -135,9 +131,10 @@ func OnFloorArrival(
         isFunctionalStop <- struct{}{}
         isFunctionalStart <- struct{}{}
     }
-    //change also this to what we want
+
+    assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     fmt.Printf("\nNew state:\n");
-    ElevatorPrint(elevatorState);
+    ElevatorPrint(elevatorState, assignedRequests);
 }
 
 
@@ -190,9 +187,54 @@ func OnDoorTimeout(
     default:
         break;
     }
-    //this also
+
+    assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     fmt.Printf("\nNew state:\n");
-    ElevatorPrint(elevatorState);
+    ElevatorPrint(elevatorState, assignedRequests);
+}
+
+//printing functoins
+func ElevatorPrint(elevator messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) {
+
+    fmt.Printf("  +--------------------+")
+    fmt.Printf(
+        "  |floor = %-2d |\n"+
+        "  |dirn  = %-12s|\n"+
+        "  |behav = %-12s|\n",
+        elevator.Floor,
+        converters.ElevatorDirnToString(elevator.MotorDirection),
+        converters.ElevatorBehaviourToString(elevator.ElevatorBehaviour),
+    )
+    fmt.Println("  +--------------------+")
+    fmt.Println("  |  | up  | dn  | cab |")
+
+    for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
+        fmt.Printf("  | %d", f)
+
+        for btn := elevator_IO.ButtonType_t(0) ; btn < elevator_IO.N_BUTTONS; btn++ {
+            if (f == elevator_IO.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
+                (f == 0 && btn == elevator_IO.BT_HallDown) {
+
+                fmt.Print("|     ")
+            } else {
+                if btn == elevator_IO.BT_Cab{
+                    if converters.CC_ToBool(elevator.CabRequests[f].Value) {
+                        fmt.Print("|  #  ")
+                    } else {
+                        fmt.Print("|  -  ")
+                    }
+                } else {
+                    if assignedRequests[f][btn] {
+                        fmt.Print("|  #  ")
+                    } else {
+                        fmt.Print("|  -  ")
+                    }
+                }
+            }
+        }
+        fmt.Println("|")
+    }
+    fmt.Println("  +--------------------+")  
 }
 
 //printing functoins

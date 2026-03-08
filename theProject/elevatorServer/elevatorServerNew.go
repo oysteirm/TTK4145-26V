@@ -19,7 +19,7 @@ func ElevatorServer(
 	localID int,												//local ID
 ){
 
-    elevator_IO.Init("localhost:15657", elevator_IO.N_FLOORS)
+    elevator_IO.Init("localhost:15657", config.N_FLOORS)
 
     guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)
 
