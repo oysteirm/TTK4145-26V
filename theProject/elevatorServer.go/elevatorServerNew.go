@@ -1,12 +1,14 @@
 package elevatorServer
 
 import (
+	"strconv"
+	"theProject/elevatorStateGuardian"
 	"theProject/elevator_IO"
 	"theProject/fsm"
-	"theProject/elevatorStateGuardian"
 	"theProject/messageSync"
 	"theProject/requestAssigner"
 	"theProject/timer"
+	"theProject/config"
 	"time"
 )
 
@@ -55,9 +57,11 @@ func ElevatorServer(
 		case newSystemData := <-systemDataFromMsgSync:
 
 			//Use the RA
-			assignedRequests := RA()[intToStr(localID)]
+			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
 
-			//Store requests, send this and the confirmed system data
+			assignedRequests := requestsMap[strconv.Itoa(localID)]
+
+			//Store requests and the confirmed system data in Guardian
 			guardianCommands <- newSystemData
 			guardianCommands <- assignedRequests
 
@@ -90,7 +94,7 @@ func ElevatorServer(
 				doorTimerStop <- struct{}{}
 			} else {
 				doorTimerStop <- struct{}{}
-				doorTimerStart <- e_state.DoorOpenDuration //USE CONST!!!!
+				doorTimerStart <- config.DOOR_OPEN_DURATION //USE CONST!!!!
 			}
 		}
 	}    
