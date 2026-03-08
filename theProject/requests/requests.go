@@ -11,42 +11,42 @@ type MotorDirectionBehaviourPair_t struct {
 	ElevatorBehaviour elevator_IO.ElevatorBehaviour_t
 }
 
-// requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState e_state)
+// requests_choose_direction tilsvarer: requests_chooseDirection(ElevatorState elevatorState)
 
 //if troubles, look over what we was delivered
 func RequestsChooseDirection(
-	e_state messageSync.ElevatorData_t, 
+	elevatorState messageSync.ElevatorData_t, 
 	assignedRequests elevator_IO.AssignedRequests_t) MotorDirectionBehaviourPair_t {
 
-	switch e_state.MotorDirection {
+	switch elevatorState.MotorDirection {
 	case elevator_IO.MD_Up:
-		if requestsAbove(e_state, assignedRequests) {
+		if requestsAbove(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Up, elevator_IO.EB_Moving}
-		} else if requestsHere(e_state, assignedRequests) {
+		} else if requestsHere(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Down, elevator_IO.EB_DoorOpen}
-		} else if requestsBelow(e_state, assignedRequests) {
+		} else if requestsBelow(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Down, elevator_IO.EB_Moving}
 		} else {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Stop, elevator_IO.EB_Idle}
 		}
 
 	case elevator_IO.MD_Down:
-		if requestsBelow(e_state, assignedRequests) {
+		if requestsBelow(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Down, elevator_IO.EB_Moving}
-		} else if requestsHere(e_state, assignedRequests) {
+		} else if requestsHere(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Up, elevator_IO.EB_DoorOpen}
-		} else if requestsAbove(e_state, assignedRequests) {
+		} else if requestsAbove(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Up, elevator_IO.EB_Moving}
 		} else {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Stop, elevator_IO.EB_Idle}
 		}
 
 	case elevator_IO.MD_Stop:
-		if requestsHere(e_state, assignedRequests) {
+		if requestsHere(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Stop, elevator_IO.EB_DoorOpen}
-		} else if requestsAbove(e_state, assignedRequests) {
+		} else if requestsAbove(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Up, elevator_IO.EB_Moving}
-		} else if requestsBelow(e_state, assignedRequests) {
+		} else if requestsBelow(elevatorState, assignedRequests) {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Down, elevator_IO.EB_Moving}
 		} else {
 			return MotorDirectionBehaviourPair_t{elevator_IO.MD_Stop, elevator_IO.EB_Idle}
@@ -58,24 +58,24 @@ func RequestsChooseDirection(
 }
 
 func RequestsShouldStop(
-	e_state messageSync.ElevatorData_t, 
+	elevatorState messageSync.ElevatorData_t, 
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
 	// Requests [][]bool:
-	if e_state.Floor < 0 || e_state.Floor >= len(assignedRequests) {
+	if elevatorState.Floor < 0 || elevatorState.Floor >= len(assignedRequests) {
 		return false
 	}
 
-	switch e_state.MotorDirection {
+	switch elevatorState.MotorDirection {
 	case elevator_IO.MD_Down:
-		return assignedRequests[e_state.Floor][elevator_IO.BT_HallDown] ||
-			assignedRequests[e_state.Floor][elevator_IO.BT_Cab] ||
-			!requestsBelow(e_state, assignedRequests)
+		return assignedRequests[elevatorState.Floor][elevator_IO.BT_HallDown] ||
+			assignedRequests[elevatorState.Floor][elevator_IO.BT_Cab] ||
+			!requestsBelow(elevatorState, assignedRequests)
 
 	case elevator_IO.MD_Up:
-		return assignedRequests[e_state.Floor][elevator_IO.BT_HallUp] ||
-			assignedRequests[e_state.Floor][elevator_IO.BT_Cab] ||
-			!requestsAbove(e_state, assignedRequests)
+		return assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp] ||
+			assignedRequests[elevatorState.Floor][elevator_IO.BT_Cab] ||
+			!requestsAbove(elevatorState, assignedRequests)
 
 	case elevator_IO.MD_Stop:
 		fallthrough
@@ -87,34 +87,33 @@ func RequestsShouldStop(
 
 // SHOULD THIS BE THINNER???
 func RequestsClearAtCurrentFloor(
-	e_state messageSync.ElevatorData_t,
+	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
 	
 	var requestsToClear []elevator_IO.ButtonEvent_t
+	requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
 	
-	requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
-	
-	switch e_state.MotorDirection {
+	switch elevatorState.MotorDirection {
 
 	case elevator_IO.MD_Up:
-		if !requestsAbove(e_state, assignedRequests) && !assignedRequests[e_state.Floor][elevator_IO.BT_HallUp] {
-			requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		if !requestsAbove(elevatorState, assignedRequests) && !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp] {
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 		}
-		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
 
 	case elevator_IO.MD_Down:
-		if !requestsBelow(e_state, assignedRequests) && !assignedRequests[e_state.Floor][elevator_IO.BT_HallDown] {
-			requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		if !requestsBelow(elevatorState, assignedRequests) && !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallDown] {
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
 		}
-		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 
 	case elevator_IO.MD_Stop:
 		fallthrough
 
 	default:
 		//CLEARING BOTH UP AND DOWN; BUT ONLY SUPPOSED TO CLEAR ONE?
-		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
-		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 	}
 
 	return requestsToClear
@@ -123,9 +122,9 @@ func RequestsClearAtCurrentFloor(
 // --- “static” helpers ---
 
 func requestsAbove(
-	e_state messageSync.ElevatorData_t,
+	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
-	for f := e_state.Floor + 1; f < elevator_IO.N_FLOORS; f++ {
+	for f := elevatorState.Floor + 1; f < elevator_IO.N_FLOORS; f++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 			if assignedRequests[f][btn] {
 				return true
@@ -136,10 +135,10 @@ func requestsAbove(
 }
 
 func requestsBelow(
-	e_state messageSync.ElevatorData_t,
+	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
-	for f := 0; f < e_state.Floor; f++ {
+	for f := 0; f < elevatorState.Floor; f++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 			if assignedRequests[f][btn] {
 				return true
@@ -150,11 +149,11 @@ func requestsBelow(
 }
 
 func requestsHere(
-	e_state messageSync.ElevatorData_t,
+	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
 	for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
-		if assignedRequests[e_state.Floor][btn] {
+		if assignedRequests[elevatorState.Floor][btn] {
 			return true
 		}
 	}
@@ -163,13 +162,13 @@ func requestsHere(
 
 //GIVE BETTER NAME?
 func appendRequestsToClearIfExisting(
-	e_state messageSync.ElevatorData_t,
+	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t,
 	button elevator_IO.ButtonType_t,
 	requestsToClear []elevator_IO.ButtonEvent_t) []elevator_IO.ButtonEvent_t{
 	
-	if assignedRequests[e_state.Floor][button]{
-		requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: button})
+	if assignedRequests[elevatorState.Floor][button]{
+		requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: elevatorState.Floor, Button: button})
 	}
 	
 	return requestsToClear
