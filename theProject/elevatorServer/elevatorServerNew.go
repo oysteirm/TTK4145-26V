@@ -20,6 +20,7 @@ func ElevatorServer(
 ){
 
     elevator_IO.Init("localhost:15657", config.N_FLOORS)
+	isObstructed := false
 
     guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)
 
@@ -67,15 +68,15 @@ func ElevatorServer(
 			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
 			fsm.LightHallLights(newSystemData.HallRequestData)
 
-			fsm.OnReceivedDataFromMsgSync(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop)
+			fsm.OnReceivedDataFromMsgSync(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, isObstructed)
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, floor)
+			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, floor, isObstructed)
 
 		// Door timeout
 		case <-doorTimerTimeout:
-			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop)
+			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, isObstructed)
 			//TODO: fix the double requests issue
 
 		//isFunctional timeout
@@ -90,18 +91,16 @@ func ElevatorServer(
 				elevator_IO.SetStopLamp(false)
 			}
 
-		// Obstruction
+		// Obstruction, this does not work
+		//maybe fix: add a state, and have this functionallity outside the select case'
 		case obstructed := <-drv_obstr:
 			if obstructed {
-				doorTimerStop <- struct{}{}
-				if elevatorStateGuardian.GetElevatorData(guardianCommands).ElevatorBehaviour == elevator_IO.EB_DoorOpen{
-					guardianCommands <- elevatorStateGuardian.SetIsFunctional_t{IsFunctional: false}
-				}
+				isObstructed = true
+				guardianCommands <- elevatorStateGuardian.SetIsFunctional_t{IsFunctional: false}
 			} else {
-				doorTimerStop <- struct{}{}
-				doorTimerStart <- struct{}{}
+				isObstructed = false
+				guardianCommands <- elevatorStateGuardian.SetIsFunctional_t{IsFunctional: true}
 			}
-		}
-	}    
-} 
-
+		}	    
+	} 
+}

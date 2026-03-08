@@ -45,39 +45,42 @@ func OnReceivedDataFromMsgSync(
     doorTimerStart chan struct{}, 
     doorTimerStop chan struct{},
     isFunctionalStart chan struct{},
-    isFunctionalStop chan struct{}){
+    isFunctionalStop chan struct{},
+    isObstructed bool){
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     
-    var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
+    //obstruction is not affecting the elevator since door not open
+    if elevatorState.ElevatorBehaviour != elevator_IO.EB_DoorOpen || !isObstructed{
 
-    elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
-    elevatorState.MotorDirection    = pair.MotorDirection
-    //Save in guardian
-    guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+        var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
+        
+        elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
+        elevatorState.MotorDirection    = pair.MotorDirection
+        //Save in guardian
+        guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+    } 
 
-    switch(pair.ElevatorBehaviour){
+    switch(elevatorState.ElevatorBehaviour){
     case elevator_IO.EB_DoorOpen:
         isFunctionalStop <- struct{}{}
         elevator_IO.SetDoorOpenLamp(true)
 
+        //OBS!!
         doorTimerStart <- struct{}{}
 
         //change RequestsClearAtCurrentFloor return cleared request (in floor)
         requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests);
-        //Set a cyclic counter to done channel...
-        // mark if cab or hall
         guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
     case elevator_IO.EB_Moving:
         isFunctionalStart <- struct{}{}
-        elevator_IO.SetMotorDirection((pair.MotorDirection))
-        break;
+        elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
 
     case elevator_IO.EB_Idle:
         isFunctionalStop <- struct{}{}
-        break;
+        elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
     
     }
 
@@ -94,16 +97,18 @@ func OnFloorArrival(
     doorTimerStop chan struct{}, 
     isFunctionalStart chan struct{}, 
     isFunctionalStop chan struct{}, 
-    newFloor int) {
+    newFloor int,
+    isObstructed bool) {
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-    //update floor
-    elevatorState.IsFunctional = true
+
+    //update floor and IsFunctional
+    if !isObstructed{
+        elevatorState.IsFunctional = true
+    }
     elevatorState.Floor = newFloor
     elevator_IO.SetFloorIndicator(newFloor)
-
-    isFunctionalStop <- struct{}{}
 
     
     if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
@@ -144,7 +149,8 @@ func OnDoorTimeout(
     doorTimerStart chan struct{}, 
     doorTimerStop chan struct{}, 
     isFunctionalStart chan struct{}, 
-    isFunctionalStop chan struct{}){
+    isFunctionalStop chan struct{},
+    isObstructed bool){
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
@@ -152,12 +158,14 @@ func OnDoorTimeout(
     switch(elevatorState.ElevatorBehaviour){
 
     case elevator_IO.EB_DoorOpen:
-        var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
-
-        elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
-        elevatorState.MotorDirection    = pair.MotorDirection
-        //Save in guardian
-        guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+        if !isObstructed{
+            var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
+            
+            elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
+            elevatorState.MotorDirection    = pair.MotorDirection
+            //Save in guardian
+            guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+        }
 
         switch(elevatorState.ElevatorBehaviour){
         case elevator_IO.EB_DoorOpen:
@@ -166,24 +174,19 @@ func OnDoorTimeout(
 
             requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests) 
             guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
-
-            break;
-
+            
         case elevator_IO.EB_Moving:
 
             isFunctionalStart <- struct{}{}
             elevator_IO.SetDoorOpenLamp(false)
-            elevator_IO.SetMotorDirection(pair.MotorDirection);
+            elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
 
         case elevator_IO.EB_Idle:
 
             isFunctionalStop <- struct{}{}
             elevator_IO.SetDoorOpenLamp(false)
-            elevator_IO.SetMotorDirection(pair.MotorDirection);
-            break;
+            elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
         }
-        
-        break;
     default:
         break;
     }
