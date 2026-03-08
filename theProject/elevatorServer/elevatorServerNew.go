@@ -72,7 +72,6 @@ func ElevatorServer(
 		// Floor arrival
 		case floor := <-drv_floors:
 			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, floor)
-			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
 		case <-doorTimerTimeout:
