@@ -1,6 +1,7 @@
 package elevatorServer
 
 import (
+	"strconv"
 	"theProject/config"
 	"theProject/elevatorStateGuardian"
 	"theProject/elevator_IO"
@@ -8,7 +9,6 @@ import (
 	"theProject/messageSync"
 	"theProject/requestAssigner"
 	"theProject/timer"
-	"time"
 )
 
 
@@ -55,7 +55,10 @@ func ElevatorServer(
 		case newSystemData := <-systemDataFromMsgSync:
 
 			//Use the RA
-			assignedRequests := RA()[intToStr(localID)]
+			//Use the RA
+			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
+
+			assignedRequests := requestsMap[strconv.Itoa(localID)]
 
 			//Store requests, send this and the confirmed system data
 			guardianCommands <- newSystemData
