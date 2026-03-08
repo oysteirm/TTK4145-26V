@@ -39,7 +39,6 @@ const N_UP_DOWN int = 2
 
 type ElevatorBehaviour_t int
 type AssignedRequests_t [][]bool
-type Command_t interface{}
 
 const (
     EB_Idle     ElevatorBehaviour_t = 0
