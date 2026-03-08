@@ -3,8 +3,6 @@ package config
 import "time"
 
 const (
-	LOCAL_ID int = 0 //0 or 1 or 2 
-
 	N_ELEVATORS int = 3
 	N_FLOORS int = 4
 	N_BUTTONS int = 3
