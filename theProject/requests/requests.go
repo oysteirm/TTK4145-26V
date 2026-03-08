@@ -79,49 +79,42 @@ func RequestsShouldStop(
 
 	case elevator_IO.MD_Stop:
 		fallthrough
+
 	default:
 		return true
 	}
 }
 
-// there is a lot of ugly if statements here
-func RequestsClearAtCurrentFloor(e_state messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
+// SHOULD THIS BE THINNER???
+func RequestsClearAtCurrentFloor(
+	e_state messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
+	
 	var requestsToClear []elevator_IO.ButtonEvent_t
-
-	if assignedRequests[e_state.Floor][elevator_IO.BT_Cab]{
-		requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_Cab})
-	}
-
+	
+	requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
+	
 	switch e_state.MotorDirection {
+
 	case elevator_IO.MD_Up:
 		if !requestsAbove(e_state, assignedRequests) && !assignedRequests[e_state.Floor][elevator_IO.BT_HallUp] {
-			if assignedRequests[e_state.Floor][elevator_IO.BT_HallDown]{
-				requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallDown})
-			}
+			requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 		}
-		if assignedRequests[e_state.Floor][elevator_IO.BT_HallUp]{
-			requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallUp})
-		}
+		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+
 	case elevator_IO.MD_Down:
 		if !requestsBelow(e_state, assignedRequests) && !assignedRequests[e_state.Floor][elevator_IO.BT_HallDown] {
-			if assignedRequests[e_state.Floor][elevator_IO.BT_HallUp]{
-			requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallUp})
-			}
+			requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
 		}
-		if assignedRequests[e_state.Floor][elevator_IO.BT_HallDown]{
-				requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallDown})
-		}
+		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 
 	case elevator_IO.MD_Stop:
 		fallthrough
+
 	default:
 		//CLEARING BOTH UP AND DOWN; BUT ONLY SUPPOSED TO CLEAR ONE?
-		if assignedRequests[e_state.Floor][elevator_IO.BT_HallUp]{
-			requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallUp})
-		}
-		if assignedRequests[e_state.Floor][elevator_IO.BT_HallDown]{
-				requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: elevator_IO.BT_HallDown})
-		}
+		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		requestsToClear = appendRequestsToClearIfExisting(e_state, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 	}
 
 	return requestsToClear
@@ -129,7 +122,9 @@ func RequestsClearAtCurrentFloor(e_state messageSync.ElevatorData_t, assignedReq
 
 // --- “static” helpers ---
 
-func requestsAbove(e_state messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) bool {
+func requestsAbove(
+	e_state messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) bool {
 	for f := e_state.Floor + 1; f < elevator_IO.N_FLOORS; f++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 			if assignedRequests[f][btn] {
@@ -140,7 +135,10 @@ func requestsAbove(e_state messageSync.ElevatorData_t, assignedRequests elevator
 	return false
 }
 
-func requestsBelow(e_state messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) bool {
+func requestsBelow(
+	e_state messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) bool {
+
 	for f := 0; f < e_state.Floor; f++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 			if assignedRequests[f][btn] {
@@ -151,11 +149,29 @@ func requestsBelow(e_state messageSync.ElevatorData_t, assignedRequests elevator
 	return false
 }
 
-func requestsHere(e_state messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) bool {
+func requestsHere(
+	e_state messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) bool {
+
 	for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 		if assignedRequests[e_state.Floor][btn] {
 			return true
 		}
 	}
 	return false
+}
+
+//GIVE BETTER NAME?
+func appendRequestsToClearIfExisting(
+	e_state messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t,
+	button elevator_IO.ButtonType_t,
+	requestsToClear []elevator_IO.ButtonEvent_t) []elevator_IO.ButtonEvent_t{
+	
+	if assignedRequests[e_state.Floor][button]{
+		requestsToClear = append(requestsToClear, elevator_IO.ButtonEvent_t{Floor: e_state.Floor, Button: button})
+	}
+	
+	return requestsToClear
+
 }
