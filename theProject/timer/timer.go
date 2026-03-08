@@ -1,20 +1,21 @@
 package timer
 
-import "time"
-
-const inactiveDuration = 9 * time.Second
+import (
+	"time"
+	"theProject/config"
+)
 
 func Timers(
 	doorStart <-chan time.Duration,
 	doorStop  <-chan struct{},
 	doorTimeout chan<- struct{},
 	obstruction <- chan struct{},
-	inactiveStart <- chan struct{},
-	inactiveStop <- chan struct{},
+	isFunctionalStart <- chan struct{},
+	isFunctionalStop <- chan struct{},
 	setFunctional chan<- bool,
 ) {
 	var timer *time.Timer
-	var inactivityTimer *time.Timer = time.NewTimer(inactiveDuration)
+	var isFunctionalTimer *time.Timer = time.NewTimer(IS_FUNCTIONAL_TIMER_DURATION)
 
 	for {
 		select {
@@ -42,25 +43,25 @@ func Timers(
 		case <-obstruction:
 			setFunctional <- false
 
-		case <-inactiveStart:
-			if inactivityTimer != nil {
-				inactivityTimer.Stop()
+		case <-isFunctionalStart:
+			if isFunctionalTimer != nil {
+				isFunctionalTimer.Stop()
 			}
-			inactivityTimer = time.NewTimer(inactiveDuration)
+			isFunctionalTimer = time.NewTimer(config.IS_FUNCTIONAL_TIMER_DURATION)
 
-		case <- inactiveStop:
-			if inactivityTimer != nil {
-				inactivityTimer.Stop()
-				inactivityTimer = nil
+		case <- isFunctionalStop:
+			if isFunctionalTimer != nil {
+				isFunctionalTimer.Stop()
+				isFunctionalTimer = nil
 			}
 
 		case <-func() <- chan time.Time {
-			if inactivityTimer != nil {
-				return inactivityTimer.C
+			if isFunctionalTimer != nil {
+				return isFunctionalTimer.C
 			}
 			return nil
 		}():
-			inactivityTimer = nil
+			isFunctionalTimer = nil
 			setFunctional <- false
 		}
 	}
