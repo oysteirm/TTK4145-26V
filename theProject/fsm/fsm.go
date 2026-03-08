@@ -85,7 +85,7 @@ func OnReceivedDataFromMsgSync(
     }
 
     assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-    fmt.Printf("\nNew state:\n");
+    fmt.Printf("\nNew state from new data:\n");
     ElevatorPrint(elevatorState, assignedRequests);
 }
 
@@ -199,7 +199,7 @@ func OnDoorTimeout(
 //printing functoins
 func ElevatorPrint(elevator messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) {
 
-    fmt.Printf("  +--------------------+")
+    fmt.Printf("  +--------------------+\n")
     fmt.Printf(
         "  |floor = %-2d |\n"+
         "  |dirn  = %-12s|\n"+
@@ -243,7 +243,7 @@ func ElevatorPrint(elevator messageSync.ElevatorData_t, assignedRequests elevato
 //printing functoins
 func SystemPrint(systemData messageSync.SystemData_t) {
     fmt.Print("  +--------------------------+")
-    for i := 0; i < messageSync.N_ELEVATORS; i++{
+    for i := 0; i < config.N_ELEVATORS; i++{
         
         fmt.Printf("  +----Elevator: %-2d ----+", i)
         fmt.Printf(
@@ -292,39 +292,39 @@ func SystemPrint(systemData messageSync.SystemData_t) {
 func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
 
     // Top line
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Print("  +--------------------+")
     }
     fmt.Println()
 
     // Elevator headers
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Printf("  | Elevator: %-2d       |", i)
     }
     fmt.Println()
 
     // Floor
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Printf("  | floor = %-2d         |", systemData.ElevatorData[i].Floor)
     }
     fmt.Println()
 
     // Direction
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Printf("  | dirn  = %-10s |",
             converters.ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
     }
     fmt.Println()
 
     // Behaviour
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Printf("  | behav = %-10s |",
             converters.ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
     }
     fmt.Println()
 
     // Button header
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Print("  |  | up  | dn  | cab |")
     }
     fmt.Println()
@@ -332,7 +332,7 @@ func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
     // Floors
     for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
 
-        for i := 0; i < messageSync.N_ELEVATORS; i++ {
+        for i := 0; i < config.N_ELEVATORS; i++ {
 
             fmt.Printf("  | %d", f)
 
@@ -369,7 +369,7 @@ func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
     }
 
     // Bottom line
-    for i := 0; i < messageSync.N_ELEVATORS; i++ {
+    for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Print("  +--------------------+")
     }
     fmt.Println()

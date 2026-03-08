@@ -50,6 +50,8 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 	if err != nil {
 		fmt.Println("Exec error in AssignRequests:", err)
 		fmt.Println("AssignRequests output:", string(output))
+		fmt.Println("RA input JSON: ")
+		fmt.Println(string(input))
 		return nil
 	}
 

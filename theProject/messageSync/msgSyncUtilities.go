@@ -5,39 +5,40 @@ import (
 	"strconv"
 	"theProject/networkDriver/peers"
 	"theProject/elevator_IO"
+	"theProject/config"
 )
 
 //Initalizing the the systemData and confirmedSystemData in Message_Sync_Server
 //All values are initialized to 0, -1 (not in a floor, EB_Idle, CC_Uninit and empty barriers
 func InitSystemData(localID int) (SystemData_t, SystemData_t){
 
-    var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevator_IO.N_FLOORS)
+    var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, config.N_FLOORS)
 
-    for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
+    for floor := 0; floor < config.N_FLOORS; floor++ {
         tmpCabRequests[floor] = RequestCyclicCounter_t{
             Value:   CC_Uninit,
-            Barrier: make([]bool, N_ELEVATORS),
+            Barrier: make([]bool, config.N_ELEVATORS),
         }
     }
 
-    var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, elevator_IO.N_FLOORS)
+    var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, config.N_FLOORS)
 
-    for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
+    for floor := 0; floor < config.N_FLOORS; floor++ {
         for btn := 0; btn < 2; btn++ {
             tmpHallRequestData[floor][btn] = RequestCyclicCounter_t{
                 Value:   CC_Uninit,
-                Barrier: make([]bool, N_ELEVATORS),
+                Barrier: make([]bool, config.N_ELEVATORS),
             }
         }
     }
 	
-	var tmpElevatorData []ElevatorData_t = make([]ElevatorData_t, N_ELEVATORS)
+	var tmpElevatorData []ElevatorData_t = make([]ElevatorData_t, config.N_ELEVATORS)
 
-	for i := 0; i < N_ELEVATORS; i++ {
+	for i := 0; i < config.N_ELEVATORS; i++ {
 		tmpElevatorData[i] = ElevatorData_t{
             ID:          i,
-            IsAlive: false,
-            IsFunctional: false,
+            IsAlive: true,
+            IsFunctional: true,
             Floor: -1,
             ElevatorBehaviour: elevator_IO.EB_Idle,
             MotorDirection: elevator_IO.MD_Stop,
@@ -59,7 +60,7 @@ func onReceivedFreshData(systemData SystemData_t,
 	var updatedConfirmedSystemData SystemData_t = DeepCopySystemData(confirmedSystemData)
 	var isConfirmedDataUpdated bool = false
 
-	for i := 0; i < N_ELEVATORS; i++{
+	for i := 0; i < config.N_ELEVATORS; i++{
 
 		if systemData.ElevatorData[i].ID == fresh_data.ID {
 			updatedSystemData.ElevatorData[i] = updateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
@@ -119,7 +120,7 @@ func updateElevatorDataAboutSelf(	oldData ElevatorData_t,
 		updated_data.ElevatorBarrier[ID] = true
 	}
 
-	for i := 0; i < N_ELEVATORS; i++{
+	for i := 0; i < config.N_ELEVATORS; i++{
 		updated_data.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
 	}
 
@@ -142,7 +143,7 @@ func updateElevatorDataAboutOther(	oldData ElevatorData_t,
 		updated_data.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	}
 	
-	for i := 0; i < N_ELEVATORS; i++{
+	for i := 0; i < config.N_ELEVATORS; i++{
 		updated_data.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
 	}
 
@@ -155,7 +156,7 @@ func updateConfirmedSystemData(	unconfirmedData SystemData_t,
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 	
-	for i := 0; i < N_ELEVATORS; i++ {
+	for i := 0; i < config.N_ELEVATORS; i++ {
 		
 		if checkBarrier(unconfirmedData.ElevatorData[i].ElevatorBarrier) {
 			//If there is new data, we update
@@ -228,12 +229,12 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 	//update the CC if barriers are fulliled 
 	if (updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier)){
 		updated_CC.Value 		= CC_Confirmed
-		updated_CC.Barrier 		= make([]bool, N_ELEVATORS)
+		updated_CC.Barrier 		= make([]bool, config.N_ELEVATORS)
 		updated_CC.Barrier[ID] 	= true
 	}
 	if (updated_CC.Value == CC_Done && checkBarrier(updated_CC.Barrier)){
 		updated_CC.Value 		= CC_No
-		updated_CC.Barrier 		= make([]bool, N_ELEVATORS)
+		updated_CC.Barrier 		= make([]bool, config.N_ELEVATORS)
 		updated_CC.Barrier[ID] 	= true
 	}
 
@@ -246,7 +247,7 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 //Helper functions
 //-----------------------------------------------------------
 func checkBarrier(Barrier []bool) bool {
-	for i := 0; i < N_ELEVATORS; i++{
+	for i := 0; i < config.N_ELEVATORS; i++{
 		if Barrier[i] != activePeers[i]{
 			return false
 		}
@@ -273,8 +274,8 @@ func boolUnion(a []bool, b []bool) []bool {
     return result
 }
 
-func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) []bool { 
-	activePeers:= make([]bool, N_ELEVATORS)
+func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVATORS]bool { 
+	var activePeers [config.N_ELEVATORS]bool
 	
 	for _, peer := range peersUpdate.Peers {
 		idx := peerStrToInt(peer)

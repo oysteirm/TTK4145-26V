@@ -1,18 +1,23 @@
-package theproject
+package main
 
 import (
+	"strconv"
+	"theProject/config"
 	"theProject/elevatorServer"
+	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	"theProject/elevator_IO"
 )
 
 func main(){
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
-	localID := 0//hjelp henning
-
+	localID := 0//hjelp meg, henning
+	peerUpdateCh := make(chan peers.PeerUpdate)
+	peerTxEnable := make(chan bool)
+	go peers.Transmitter(config.PEER_UPDATE_PORT, strconv.Itoa(localID), peerTxEnable)
+	go peers.Receiver(config.PEER_UPDATE_PORT, peerUpdateCh)
 	//TODO: initialize all variables and constants
 	//TODO: initialize all the channels
 	//elevatorServer channels

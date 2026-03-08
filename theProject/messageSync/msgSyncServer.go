@@ -31,12 +31,10 @@ const (
 	CC_Done 		CyclicCounter_t	= 3
 )
 
-const N_ELEVATORS int = 3
-
 // List containing info about our network peers
 // 1: part of network
 // 0: not part of network
-var activePeers []bool
+var activePeers [config.N_ELEVATORS]bool
 
 type CyclicCounter_t int
 
@@ -62,7 +60,7 @@ type ElevatorData_t struct {
 type SystemData_t struct {
 	ID int
 	ElevatorData []ElevatorData_t
-	HallRequestData [][2]RequestCyclicCounter_t
+	HallRequestData [][config.N_UP_DOWN]RequestCyclicCounter_t
 }
 
 
@@ -83,7 +81,7 @@ func MessageSyncServer(
 	// Network channels and variable
 	networkReceiver := make(chan SystemData_t)
 	networkTransmitter := make(chan SystemData_t)
-	bcastPort := 1234 //TODO: change this to a correct value
+	bcastPort := config.B_CAST_PORT //TODO: change this to a correct value
 
 	// Go routines for communicating with other elevators
 	go bcast.Receiver(bcastPort, networkReceiver)
@@ -132,10 +130,10 @@ func MessageSyncServer(
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
 			if btn.Button == elevator_IO.BT_Cab {
-				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
+				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, config.N_ELEVATORS)}
 				systemData.ElevatorData[localID].CabRequests[btn.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btn.Floor], tmpCabRequest, localID)
 			} else {
-				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
+				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, config.N_ELEVATORS)}
 				systemData.HallRequestData[btn.Floor][btn.Button] = update_CC(systemData.HallRequestData[btn.Floor][btn.Button], tmpHallRequest, localID)
 			}
 
@@ -147,11 +145,11 @@ func MessageSyncServer(
 		//Updates on the active peers list
 		case peersUpdate := <-peersReciever:
 			activePeers = fromPeersUpdateToActivePeers(peersUpdate)
-			for i := 0; i < N_ELEVATORS; i++{
+			for i := 0; i < config.N_ELEVATORS; i++{
 				//if there is new info, new barrier
 				if systemData.ElevatorData[i].IsAlive != activePeers[i]{
 					systemData.ElevatorData[i].IsAlive = activePeers[i]
-					systemData.ElevatorData[i].ElevatorBarrier = make([]bool, N_ELEVATORS)
+					systemData.ElevatorData[i].ElevatorBarrier = make([]bool, config.N_ELEVATORS)
 					systemData.ElevatorData[i].ElevatorBarrier[localID] = true
 				}
 			}

@@ -3,6 +3,7 @@ package elevatorStateGuardian
 import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
+    "theProject/config"
 )
 
 type GuardianCommands_t interface{}
@@ -89,31 +90,31 @@ func ElevatorStateGuardian(
             systemData.ElevatorData[localID].ElevatorBehaviour  = c.ElevatorData.ElevatorBehaviour
             systemData.ElevatorData[localID].MotorDirection     = c.ElevatorData.MotorDirection
 
-            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
+            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, config.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
             elevatorDataChanged = true
 
         case SetIsFunctional_t:
             systemData.ElevatorData[localID].IsFunctional               = c.IsFunctional
-            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
+            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, config.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
             elevatorDataChanged = true
 
 		case SetFloor_t:
 			systemData.ElevatorData[localID].Floor                      = c.Floor
-            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
+            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, config.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
             elevatorDataChanged = true
 
 		case SetMotorDirection_t:
 			systemData.ElevatorData[localID].MotorDirection             = c.MotorDirection
-            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
+            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, config.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
             elevatorDataChanged = true
 
 		case SetElevatorBehaviour_t:
 			systemData.ElevatorData[localID].ElevatorBehaviour          = c.ElevatorBehaviour
-            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, messageSync.N_ELEVATORS)
+            systemData.ElevatorData[localID].ElevatorBarrier            = make([]bool, config.N_ELEVATORS)
 			systemData.ElevatorData[localID].ElevatorBarrier[localID]   = true
             elevatorDataChanged = true
 
