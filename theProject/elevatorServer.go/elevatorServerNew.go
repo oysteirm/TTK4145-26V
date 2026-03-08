@@ -1,7 +1,6 @@
 package elevatorServer
 
 import (
-	//"fmt"
 	"theProject/elevator_IO"
 	"theProject/fsm"
 	"theProject/elevatorStateGuardian"
@@ -13,10 +12,10 @@ import (
 
 
 func ElevatorServer(
-	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,    //channel for sending data to messageSyncServer
     requestToMsgSync chan<- messageSync.RequestCyclicCounter_t,	//channel for sending done request CC to msg sync
-	systemDataFromMsgSync <-chan messageSync.SystemData_t,				//channel for receiving confirmed system data
-	localID int,													//local ID
+	systemDataFromMsgSync <-chan messageSync.SystemData_t,		//channel for receiving confirmed system data
+	localID int,												//local ID
 ){
 
     elevator_IO.Init("localhost:15657", elevator_IO.N_FLOORS)
