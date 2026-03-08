@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"strconv"
 	"theProject/networkDriver/peers"
-	"theProject/elevator"
+	"theProject/elevatorIo"
 )
 
 //Initalizing the the systemData and confirmedSystemData in Message_Sync_Server
 //All values are initialized to 0, -1 (not in a floor, EB_Idle, CC_Uninit and empty barriers
 func InitSystemData(localID int) (SystemData_t, SystemData_t){
 
-    var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevator.N_FLOORS)
+    var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, elevatorIo.N_FLOORS)
 
-    for floor := 0; floor < elevator.N_FLOORS; floor++ {
+    for floor := 0; floor < elevatorIo.N_FLOORS; floor++ {
         tmpCabRequests[floor] = RequestCyclicCounter_t{
             Value:   CC_Uninit,
             Barrier: make([]bool, N_ELEVATORS),
         }
     }
 
-    var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, elevator.N_FLOORS)
+    var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, elevatorIo.N_FLOORS)
 
-    for floor := 0; floor < elevator.N_FLOORS; floor++ {
+    for floor := 0; floor < elevatorIo.N_FLOORS; floor++ {
         for btn := 0; btn < 2; btn++ {
             tmpHallRequestData[floor][btn] = RequestCyclicCounter_t{
                 Value:   CC_Uninit,
@@ -39,8 +39,8 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t){
             IsAlive: false,
             IsFunctional: false,
             Floor: -1,
-            ElevatorBehaviour: elevator.EB_Idle,
-            MotorDirection: elevator.MD_Stop,
+            ElevatorBehaviour: elevatorIo.EB_Idle,
+            MotorDirection: elevatorIo.MD_Stop,
             CabRequests: deepCopyCabRequests(tmpCabRequests),
         }
 	}
@@ -84,7 +84,7 @@ func updateHallRequestData(	oldData [][2]RequestCyclicCounter_t,
 
 	var updatedHallRequests [][2]RequestCyclicCounter_t = DeepCopyHallRequests(oldData)
 	
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < elevatorIo.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++{
 			updatedHallRequests[floor][btn] = update_CC(oldData[floor][btn], newData[floor][btn], ID)
 		}
@@ -175,7 +175,7 @@ func updateConfirmedSystemData(	unconfirmedData SystemData_t,
 		}
 
 		//Dont need Barrier check since update_CC() have Barrier checks 
-		for floor := 0; floor < elevator.N_FLOORS; floor++ {
+		for floor := 0; floor < elevatorIo.N_FLOORS; floor++ {
 			if unconfirmedData.ElevatorData[i].CabRequests[floor].Value != confirmedData.ElevatorData[i].CabRequests[floor].Value {
 				updatedConfirmedData.ElevatorData[i].CabRequests[floor].Value = unconfirmedData.ElevatorData[i].CabRequests[floor].Value
 				isUpdated = true
@@ -184,7 +184,7 @@ func updateConfirmedSystemData(	unconfirmedData SystemData_t,
 	}
 
 	//Dont need Barrier check since update_CC() have Barrier checks 
-	for floor := 0; floor < elevator.N_FLOORS; floor++ {
+	for floor := 0; floor < elevatorIo.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++{
 			if unconfirmedData.HallRequestData[floor][btn].Value != confirmedData.HallRequestData[floor][btn].Value {
 				unconfirmedData.HallRequestData[floor][btn] = confirmedData.HallRequestData[floor][btn]
@@ -241,30 +241,7 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 }
 //-----------------------------------------------------------
 
-//TODO: these do not belong here
-func lightCabLights(CabRequests []RequestCyclicCounter_t) {
 
-	for floor := 0; floor < elevator.N_FLOORS; floor++{
-		elevator.SetButtonLamp(elevator.BT_Cab, floor, CC_ToBool(CabRequests[floor].Value))
-	}
-}
-func lightHallLights(Hall_Requests [][2]RequestCyclicCounter_t) {
-	for floor := 0; floor < elevator.N_FLOORS; floor++{
-		elevator.SetButtonLamp(elevator.BT_HallUp, floor, CC_ToBool(Hall_Requests[floor][elevator.BT_HallUp].Value))
-		elevator.SetButtonLamp(elevator.BT_HallDown, floor, CC_ToBool(Hall_Requests[floor][elevator.BT_HallDown].Value))
-	}
-}
-func CC_ToBool(CC CyclicCounter_t) bool {
-	if (CC == CC_Uninit || CC == CC_No || CC == CC_Unconfirmed) {
-		return false
-	}
-	if CC == CC_Confirmed || CC == CC_Done {
-		return true
-	} else {
-		print("wrong CC Value")
-		return false
-	}
-}
 
 //Helper functions
 //-----------------------------------------------------------

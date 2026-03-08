@@ -3,7 +3,7 @@ package elevatorStateGuardian
 import (
 	"fmt"
 	"theProject/messageSync"
-    "theProject/elevator"
+    "theProject/elevatorIo"
 )
 
 //Get types
@@ -11,7 +11,7 @@ type GetElevatorData_t struct {
     Reply chan messageSync.ElevatorData_t
 }
 type GetAssignedRequests_t struct{
-    Reply chan elevator.AssignedRequests_t
+    Reply chan elevatorIo.AssignedRequests_t
 }
 
 //Set types
@@ -28,42 +28,42 @@ type SetFloor_t struct {
 	Floor int
 }
 type SetMotorDirection_t struct {
-	MotorDirection elevator.MotorDirection_t
+	MotorDirection elevatorIo.MotorDirection_t
 }
 type SetElevatorBehaviour_t struct {
-	ElevatorBehaviour elevator.ElevatorBehaviour_t
+	ElevatorBehaviour elevatorIo.ElevatorBehaviour_t
 }
 type SetRequestsDone_t struct {
-    RequestsToClear []elevator.ButtonEvent_t
+    RequestsToClear []elevatorIo.ButtonEvent_t
 }
 type SetCabRequestDone_t struct {
     Floor int
 }
 type SetHallRequestDone_t struct {
     Floor int
-    Button elevator.ButtonType_t
+    Button elevatorIo.ButtonType_t
 }
 type SetAssignedRequest_t struct {
-    AssignedRequests elevator.AssignedRequests_t
+    AssignedRequests elevatorIo.AssignedRequests_t
 }
 
 
 //routine that owns the local elevator data
 //responible for message passing with messageSync, FSM and RA
 func ElevatorStateGuardian( 
-    commands chan elevator.Command_t,                               //channel for using the locally stored system state
+    commands chan elevatorIo.Command_t,                               //channel for using the locally stored system state
     elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,        //channel for sending data to messageSyncServer
     hallRequestToMsgSync chan<- messageSync.RequestCyclicCounter_t, //channel for sending done request CC to msg sync
     localID int) {                                                  //ID of the local elevator 
 
-	requests_temp := make([][]bool, elevator.N_FLOORS)
+	requests_temp := make([][]bool, elevatorIo.N_FLOORS)
     for i := range requests_temp {
-        requests_temp[i] = make([]bool, elevator.N_BUTTONS)
+        requests_temp[i] = make([]bool, elevatorIo.N_BUTTONS)
     }
 
     //Initialize the system data 
     var systemData messageSync.SystemData_t
-    var assignedRequests elevator.AssignedRequests_t = requests_temp
+    var assignedRequests elevatorIo.AssignedRequests_t = requests_temp
 	systemData, _ = messageSync.InitSystemData(localID)
     var elevatorDataChanged bool = false
     
@@ -119,7 +119,7 @@ func ElevatorStateGuardian(
         //Settinq requests only need to take the request barrier into account
         case SetRequestsDone_t:
             for _, btnEvnt := range c.RequestsToClear{
-                if btnEvnt.Button == elevator.BT_Cab {
+                if btnEvnt.Button == elevatorIo.BT_Cab {
                     systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Value             = messageSync.CC_Done
                     systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier           = make([]bool, messageSync.N_ELEVATORS)
                     systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor].Barrier[localID]  = true 
@@ -147,52 +147,52 @@ func ElevatorStateGuardian(
 }
 
 //using the get functionallity
-func GetElevatorData(commands chan elevator.Command_t) messageSync.ElevatorData_t {
+func GetElevatorData(commands chan elevatorIo.Command_t) messageSync.ElevatorData_t {
     reply := make(chan messageSync.ElevatorData_t)
     commands <- GetElevatorData_t{Reply: reply}
     return <-reply
 }
 
-func GetAssignedRequests(commands chan elevator.Command_t) elevator.AssignedRequests_t {
-    reply := make(chan elevator.AssignedRequests_t)
+func GetAssignedRequests(commands chan elevatorIo.Command_t) elevatorIo.AssignedRequests_t {
+    reply := make(chan elevatorIo.AssignedRequests_t)
     commands <- GetAssignedRequests_t{Reply: reply}
     return <-reply
 }
 
 //printing and converting functions
-func ElevatorBehaviourToString(eb elevator.ElevatorBehaviour_t) string {
+func ElevatorBehaviourToString(eb elevatorIo.ElevatorBehaviour_t) string {
     switch eb {
-    case elevator.EB_Idle:
+    case elevatorIo.EB_Idle:
         return "idle"
-    case elevator.EB_DoorOpen:
+    case elevatorIo.EB_DoorOpen:
         return "doorOpen"
-    case elevator.EB_Moving:
+    case elevatorIo.EB_Moving:
         return "moving"
     default:
         return "UNDEFINED"
     }
 }
 
-func ElevatorDirnToString(d elevator.MotorDirection_t) string {
+func ElevatorDirnToString(d elevatorIo.MotorDirection_t) string {
     switch d {
-    case elevator.MD_Up:
+    case elevatorIo.MD_Up:
         return "up"
-    case elevator.MD_Down:
+    case elevatorIo.MD_Down:
         return "down"
-    case elevator.MD_Stop:
+    case elevatorIo.MD_Stop:
         return "stop"
     default:
         return "UNDEFINED"
     }
 }
 
-func ElevatorButtonToString(b elevator.ButtonType_t) string {
+func ElevatorButtonToString(b elevatorIo.ButtonType_t) string {
     switch b {
-    case elevator.BT_HallUp:
+    case elevatorIo.BT_HallUp:
         return "B_HallUp"
-    case elevator.BT_HallDown:
+    case elevatorIo.BT_HallDown:
         return "B_HallDown"
-    case elevator.BT_Cab:
+    case elevatorIo.BT_Cab:
         return "B_Cab"
     default:
         return "B_UNDEFINED"
@@ -216,16 +216,16 @@ func SystemPrint(systemData messageSync.SystemData_t) {
         fmt.Println("  +--------------------+")
         fmt.Println("  |  | up  | dn  | cab |")
 
-        for f := elevator.N_FLOORS - 1; f >= 0; f-- {
+        for f := elevatorIo.N_FLOORS - 1; f >= 0; f-- {
             fmt.Printf("  | %d", f)
 
-            for btn := elevator.ButtonType_t(0) ; btn < elevator.N_BUTTONS; btn++ {
-                if (f == elevator.N_FLOORS-1 && btn == elevator.BT_HallUp) ||
-                    (f == 0 && btn == elevator.BT_HallDown) {
+            for btn := elevatorIo.ButtonType_t(0) ; btn < elevatorIo.N_BUTTONS; btn++ {
+                if (f == elevatorIo.N_FLOORS-1 && btn == elevatorIo.BT_HallUp) ||
+                    (f == 0 && btn == elevatorIo.BT_HallDown) {
 
                     fmt.Print("|     ")
                 } else {
-                    if btn == elevator.BT_Cab{
+                    if btn == elevatorIo.BT_Cab{
                         if messageSync.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
                             fmt.Print("|  #  ")
                         } else {
@@ -289,22 +289,22 @@ func ChatGPT_SystemPrint(systemData messageSync.SystemData_t) {
     fmt.Println()
 
     // Floors
-    for f := elevator.N_FLOORS - 1; f >= 0; f-- {
+    for f := elevatorIo.N_FLOORS - 1; f >= 0; f-- {
 
         for i := 0; i < messageSync.N_ELEVATORS; i++ {
 
             fmt.Printf("  | %d", f)
 
-            for btn := elevator.ButtonType_t(0); btn <elevator.N_BUTTONS; btn++ {
+            for btn := elevatorIo.ButtonType_t(0); btn <elevatorIo.N_BUTTONS; btn++ {
 
-                if (f == elevator.N_FLOORS-1 && btn == elevator.BT_HallUp) ||
-                    (f == 0 && btn == elevator.BT_HallDown) {
+                if (f == elevatorIo.N_FLOORS-1 && btn == elevatorIo.BT_HallUp) ||
+                    (f == 0 && btn == elevatorIo.BT_HallDown) {
 
                     fmt.Print("|     ")
 
                 } else {
 
-                    if btn == elevator.BT_Cab {
+                    if btn == elevatorIo.BT_Cab {
                         if messageSync.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
                             fmt.Print("|  #  ")
                         } else {

@@ -2,7 +2,7 @@ package messageSync
 
 import (
 	"time"
-	"theProject/elevator"
+	"theProject/elevatorIo"
 	"theProject/networkDriver/peers"
 	"theProject/networkDriver/bcast"
 )	
@@ -51,8 +51,8 @@ type ElevatorData_t struct {
 	IsAlive bool
 	IsFunctional bool
 	Floor int
-	ElevatorBehaviour elevator.ElevatorBehaviour_t
-	MotorDirection elevator.MotorDirection_t
+	ElevatorBehaviour elevatorIo.ElevatorBehaviour_t
+	MotorDirection elevatorIo.MotorDirection_t
 	ElevatorBarrier []bool
 	CabRequests []RequestCyclicCounter_t
 }
@@ -93,8 +93,8 @@ func MessageSyncServer(
 	defer ticker.Stop()
 
 	// Go routine for button polling
-	drvButtons := make(chan elevator.ButtonEvent_t)
-	go elevator.PollButtons(drvButtons)
+	drvButtons := make(chan elevatorIo.ButtonEvent_t)
+	go elevatorIo.PollButtons(drvButtons)
 	
 	for {
 		select{
@@ -108,17 +108,13 @@ func MessageSyncServer(
 				dataToFSM <- confirmedSystemData
 			}
 
-			//TODO: place them in elev_server
-			lightCabLights(confirmedSystemData.ElevatorData[localID].CabRequests)
-			lightHallLights(confirmedSystemData.HallRequestData)
-
 		//We recieve data from the elevator FSM
 		case freshData := <- elevatorDataFromFSM:
 			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
-			if btn.Button == elevator.BT_Cab {
+			if btn.Button == elevatorIo.BT_Cab {
 				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, N_ELEVATORS)}
 				systemData.ElevatorData[localID].CabRequests[btn.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btn.Floor], tmpCabRequest, localID)
 			} else {

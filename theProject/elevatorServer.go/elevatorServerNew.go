@@ -2,11 +2,11 @@ package elevatorServer
 
 import (
 	//"fmt"
-	"os"
+	"theProject/elevator"
+	"theProject/elevatorStateGuardian"
+	"theProject/messageSync"
 	"theProject/networkDriver/peers"
 	"theProject/requestAssigner"
-	"theProject/messageSync"
-	"theProject/elevator"
 	"time"
 )
 
@@ -18,7 +18,7 @@ func ElevatorServer(){
     commands := make(chan elevator.Command_t)
 
 	// Start elevator state server
-	go elevator.ElevatorStateGuardian(commands)
+	go elevatorStateGuardian.ElevatorStateGuardian(commands)
     
     drv_floors  := make(chan int)
     drv_obstr   := make(chan bool)
@@ -84,3 +84,4 @@ func ElevatorServer(){
 		}
 	}    
 } 
+
