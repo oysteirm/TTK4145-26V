@@ -15,15 +15,15 @@ import (
 )
 
 type RA_LocalElevatorState_t struct {
-    Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle"
+    Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle" (all lowercase)
     Floor       int         `json:"floor"` 
-    Direction   string      `json:"direction"`
+    Direction   string      `json:"direction"` // "stop", "up" or "down" (all lowercase)
     CabRequests []bool      `json:"cabRequests"`
 }
 
 
 type RA_SystemData_t  struct {
-    HallRequests    [][config.N_UP_DOWN]bool                   `json:"hallRequests"`
+    HallRequests    [][config.N_UP_DOWN]bool               `json:"hallRequests"`
     States          map[string]RA_LocalElevatorState_t     `json:"states"`
 }
 
@@ -41,9 +41,9 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 		return nil
 	}
 
-	//EXECUTING COMPILED "hallRequestAssigner", fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
+	//EXECUTING COMPILED "providedRequestAssigner" , fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
-		"./tools/hallRequestAssignerDir/hallRequestAssigner",
+		"./requestAssigner/providedRequestAssigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
