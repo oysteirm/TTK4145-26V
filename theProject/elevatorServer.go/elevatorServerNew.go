@@ -7,6 +7,7 @@ import (
 	"theProject/elevatorStateGuardian"
 	"theProject/messageSync"
 	"theProject/requestAssigner"
+	"theProject/timer"
 	"time"
 )
 
@@ -36,7 +37,7 @@ func ElevatorServer(
     // Init FSM (handle between floors)
 	fsm.OnInitBetweenFloors(guardianCommands)
 
-	// Door timer
+	// Timers
 	doorTimerStart    := make(chan time.Duration)
 	doorTimerStop     := make(chan struct{})
 	doorTimerTimeout  := make(chan struct{})
@@ -45,29 +46,35 @@ func ElevatorServer(
 	inactiveStop      := make(chan struct{})
 	setFunctional     := make(chan bool)
 
-
-	go elevator_IO.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, inactiveStart, inactiveStop, setFunctional)
+	//work in progress
+	go timer.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, obstruction, inactiveStart, inactiveStop, setFunctional)
     
     for {
 		select {
 
 		// Recieved data from msg sync
-		case btn := <-drv_buttons:
-			//set lights based on confirmed data
-			//Use the RA
-			//Store requests, send this and the confirmed system data
-			fsm.OnReceivedDataFromsMsgSync()
+		case newSystemData := <-systemDataFromMsgSync:
 
-			elevator_IO.OnRequestButtonPress(guardianCommands, doorTimerStart, doorTimerStop, btn.Floor, btn.Button)
+			//Use the RA
+			assignedRequests := RA()[intToStr(localID)]
+
+			//Store requests, send this and the confirmed system data
+			guardianCommands <- newSystemData
+			guardianCommands <- assignedRequests
+
+			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
+			fsm.LightHallLights(newSystemData.HallRequestData)
+
+			fsm.OnReceivedDataFromMsgSync(guardianCommands, doorTimerStart, doorTimerStop)
 
 		// Floor arrival
 		case floor := <-drv_floors:
-			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop)
+			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop, floor)
 			//TODO: add functionallity for updating IsFunctional
 
 		// Door timeout
 		case <-doorTimerTimeout:
-			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop)
+			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop, inactiveStart, inactiveStop)
 			//TODO: fix the double requests issue
 			
 		// Stop button
