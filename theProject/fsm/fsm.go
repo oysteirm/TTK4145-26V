@@ -2,10 +2,11 @@ package fsm
 
 import (
 	"fmt"
-	"theProject/elevator_IO"
+	"theProject/config"
 	"theProject/elevatorStateGuardian"
+	"theProject/elevator_IO"
 	"theProject/messageSync"
-    "theProject/requests"
+	"theProject/requests"
 	"time"
 )
 
@@ -51,8 +52,10 @@ func OnInitBetweenFloors(guardianCommands chan elevatorStateGuardian.GuardianCom
 //what to do if we recieve new data
 func OnReceivedDataFromMsgSync(
     guardianCommands chan elevatorStateGuardian.GuardianCommands_t, 
-    doorTimerStart chan time.Duration, 
-    doorTimerStop chan struct{}){
+    doorTimerStart chan struct{}, 
+    doorTimerStop chan struct{},
+    isFunctionalStart chan struct{},
+    isFunctionalStop chan struct{}){
 
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
@@ -71,10 +74,10 @@ func OnReceivedDataFromMsgSync(
 
     switch(pair.ElevatorBehaviour){
     case elevator_IO.EB_DoorOpen:
-        //stop inactive timer
+        isFunctionalStop <- struct{}{}
         elevator_IO.SetDoorOpenLamp(true)
-        //TODO: use a const
-        doorTimerStart <- elevatorState.DoorOpenDuration
+
+        doorTimerStart <- config.IS_FUNCTIONAL_TIMER_DURATION
 
         //change RequestsClearAtCurrentFloor return cleared request (in floor)
         requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests);
@@ -83,12 +86,12 @@ func OnReceivedDataFromMsgSync(
         guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
     case elevator_IO.EB_Moving:
-        //start inactive timer
+        isFunctionalStart <- config.IS_FUNCTIONAL_TIMER_DURATION
         elevator_IO.SetMotorDirection((pair.MotorDirection))
         break;
 
     case elevator_IO.EB_Idle:
-        //stop inactive timer
+        isFunctionalStop <- struct{}{}
         break;
     
     }
@@ -101,7 +104,7 @@ func OnReceivedDataFromMsgSync(
 //what to do if we arrive at a floor
 func OnFloorArrival(
     guardianCommands chan elevatorStateGuardian.GuardianCommands_t, 
-    doorTimerStart chan time.Duration, 
+    doorTimerStart chan struct{}, 
     doorTimerStop chan struct{}, 
     isFunctionalStart chan struct{}, 
     isFunctionalStop chan struct{}, 
@@ -110,12 +113,13 @@ func OnFloorArrival(
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     //update floor
+    elevatorState.IsFunctional = true
     elevatorState.Floor = newFloor
     elevator_IO.SetFloorIndicator(newFloor)
 
-    //change
     isFunctionalStop <- struct{}{}
 
+    
     if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
         if requests.RequestsShouldStop(elevatorState, assignedRequests) {
 
@@ -130,10 +134,16 @@ func OnFloorArrival(
 
             guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 
-            //Reset doorTimer
+            //RESET doorTimer
             doorTimerStop <- struct{}{}
-            doorTimerStart <- elevatorState.DoorOpenDuration //use CONST!
+            doorTimerStart <- struct{}{}
+            
+            //STOP isFunctional timer
+            isFunctionalStop <- struct{}{}
         }
+        //RESET isFunctionsl timer
+        isFunctionalStop <- struct{}{}
+        isFunctionalStart <- struct{}{}
     }
     //change also this to what we want
     fmt.Printf("\nNew state:\n");
@@ -144,7 +154,7 @@ func OnFloorArrival(
 //what to do if the door timer runs out
 func OnDoorTimeout(
     guardianCommands chan elevatorStateGuardian.GuardianCommands_t, 
-    doorTimerStart chan time.Duration, 
+    doorTimerStart chan struct{}, 
     doorTimerStop chan struct{}, 
     isFunctionalStart chan struct{}, 
     isFunctionalStop chan struct{}){
@@ -165,21 +175,22 @@ func OnDoorTimeout(
         switch(elevatorState.ElevatorBehaviour){
         case elevator_IO.EB_DoorOpen:
             doorTimerStop <- struct{}{}
-            doorTimerStart <- elevatorState.DoorOpenDuration //use CONST
+            doorTimerStart <- struct{}{}
 
             requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests) 
             guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
             break;
 
-        //add functional timer to the cases under
         case elevator_IO.EB_Moving:
-            //start functional timer
+
+            isFunctionalStart <- struct{}{}
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(pair.MotorDirection);
 
         case elevator_IO.EB_Idle:
-            //stop functional timer
+
+            isFunctionalStop <- struct{}{}
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(pair.MotorDirection);
             break;
