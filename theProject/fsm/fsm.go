@@ -122,9 +122,7 @@ func OnFloorArrival(
             
             requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests) 
             guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
-
-            guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
-
+            
             //RESET doorTimer
             doorTimerStop <- struct{}{}
             doorTimerStart <- struct{}{}
@@ -132,6 +130,8 @@ func OnFloorArrival(
             //STOP isFunctional timer
             isFunctionalStop <- struct{}{}
         }
+        //update the data
+        guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
         //RESET isFunctionsl timer
         isFunctionalStop <- struct{}{}
         isFunctionalStart <- struct{}{}

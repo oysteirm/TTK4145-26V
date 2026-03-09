@@ -164,7 +164,7 @@ func updateConfirmedSystemData(	unconfirmedData SystemData_t,
 				unconfirmedData.ElevatorData[i].IsFunctional 		!= confirmedData.ElevatorData[i].IsFunctional ||
 				unconfirmedData.ElevatorData[i].Floor 				!= confirmedData.ElevatorData[i].Floor ||
 				unconfirmedData.ElevatorData[i].ElevatorBehaviour	!= confirmedData.ElevatorData[i].ElevatorBehaviour ||
-				unconfirmedData.ElevatorData[i].MotorDirection 	!= confirmedData.ElevatorData[i].MotorDirection ){
+				unconfirmedData.ElevatorData[i].MotorDirection 		!= confirmedData.ElevatorData[i].MotorDirection ){
 
 					updatedConfirmedData.ElevatorData[i].IsAlive 			= unconfirmedData.ElevatorData[i].IsAlive
 					updatedConfirmedData.ElevatorData[i].IsFunctional 		= unconfirmedData.ElevatorData[i].IsFunctional
@@ -188,13 +188,13 @@ func updateConfirmedSystemData(	unconfirmedData SystemData_t,
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++{
 			if unconfirmedData.HallRequestData[floor][btn].Value != confirmedData.HallRequestData[floor][btn].Value {
-				unconfirmedData.HallRequestData[floor][btn] = confirmedData.HallRequestData[floor][btn]
+				updatedConfirmedData.HallRequestData[floor][btn] = confirmedData.HallRequestData[floor][btn]
 				isUpdated = true
 			}
 		}
 	}
 
-	return confirmedData, isUpdated
+	return updatedConfirmedData, isUpdated
 }
 
 func update_CC(	old_CC RequestCyclicCounter_t, 

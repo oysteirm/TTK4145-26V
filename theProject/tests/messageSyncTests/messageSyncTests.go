@@ -73,7 +73,7 @@ func testUpdateElevatorDataAboutSelf(){
 		MotorDirection: elevator_IO.MD_Up,
 		ElevatorBehaviour: elevator_IO.EB_Moving,
 		ElevatorBarrier: []bool{true, false, false},
-		CabRequests: make([]RequestCyclicCounter_t{},
+		//CabRequests: make([]RequestCyclicCounter_t{}, config.N_ELEVATORS),
 	}
 
 	assignedRequests := make([][]bool, elevator_IO.N_FLOORS)
