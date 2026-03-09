@@ -44,7 +44,7 @@ type CyclicCounter_t int
 //Data type structs that include the data and a Barrier
 type RequestCyclicCounter_t struct{
 	Value CyclicCounter_t
-	Barrier []bool
+	Barrier [config.N_ELEVATORS]bool
 }
 
 //Datatype for elevator states with barrier
@@ -55,15 +55,15 @@ type ElevatorData_t struct {
 	Floor int
 	ElevatorBehaviour elevator_IO.ElevatorBehaviour_t
 	MotorDirection elevator_IO.MotorDirection_t
-	ElevatorBarrier []bool
-	CabRequests []RequestCyclicCounter_t
+	ElevatorBarrier [config.N_ELEVATORS]bool
+	CabRequests [config.N_FLOORS]RequestCyclicCounter_t
 }
 
 //Datatype for multi elevator states and hall requests
 type SystemData_t struct {
 	ID int
-	ElevatorData []ElevatorData_t
-	HallRequestData [][config.N_UP_DOWN]RequestCyclicCounter_t
+	ElevatorData [config.N_ELEVATORS]ElevatorData_t
+	HallRequestData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t
 }
 
 
@@ -116,11 +116,11 @@ func MessageSyncServer(
 
 			for _, btnEvnt := range freshRequestsToDone{
                 if btnEvnt.Button == elevator_IO.BT_Cab {
-                    tempCabRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: make([]bool, config.N_ELEVATORS)}
+                    tempCabRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: [config.N_ELEVATORS]bool{}}
 					tempCabRequests.Barrier[localID] = true
 					systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btnEvnt.Floor], tempCabRequests, localID)
                 } else {
-                    tempHallRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: make([]bool, config.N_ELEVATORS)}
+                    tempHallRequests := RequestCyclicCounter_t{Value: CC_Done, Barrier: [config.N_ELEVATORS]bool{}}
 					tempHallRequests.Barrier[localID] = true
 					systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button] = update_CC(systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button], tempHallRequests, localID)
                 }
@@ -134,10 +134,10 @@ func MessageSyncServer(
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
 			if btn.Button == elevator_IO.BT_Cab {
-				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, config.N_ELEVATORS)}
+				var tmpCabRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: [config.N_ELEVATORS]bool{}}
 				systemData.ElevatorData[localID].CabRequests[btn.Floor] = update_CC(systemData.ElevatorData[localID].CabRequests[btn.Floor], tmpCabRequest, localID)
 			} else {
-				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: make([]bool, config.N_ELEVATORS)}
+				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: [config.N_ELEVATORS]bool{}}
 				systemData.HallRequestData[btn.Floor][btn.Button] = update_CC(systemData.HallRequestData[btn.Floor][btn.Button], tmpHallRequest, localID)
 			}
 
@@ -153,7 +153,7 @@ func MessageSyncServer(
 				//if there is new info, new barrier
 				if systemData.ElevatorData[i].IsAlive != ActivePeers[i]{
 					systemData.ElevatorData[i].IsAlive = ActivePeers[i]
-					systemData.ElevatorData[i].ElevatorBarrier = make([]bool, config.N_ELEVATORS)
+					systemData.ElevatorData[i].ElevatorBarrier = [config.N_ELEVATORS]bool{}
 					systemData.ElevatorData[i].ElevatorBarrier[localID] = true
 				}
 			}

@@ -12,13 +12,13 @@ import (
 )
 
 //Light functions using cyclic counter values
-func LightCabLights(CabRequests []messageSync.RequestCyclicCounter_t) {
+func LightCabLights(CabRequests [config.N_FLOORS]messageSync.RequestCyclicCounter_t) {
 
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
 		elevator_IO.SetButtonLamp(elevator_IO.BT_Cab, floor, converters.CC_ToBool(CabRequests[floor].Value))
 	}
 }
-func LightHallLights(Hall_Requests [][config.N_UP_DOWN]messageSync.RequestCyclicCounter_t) {
+func LightHallLights(Hall_Requests [config.N_FLOORS][config.N_UP_DOWN]messageSync.RequestCyclicCounter_t) {
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++{
 		elevator_IO.SetButtonLamp(elevator_IO.BT_HallUp, floor, converters.CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallUp].Value))
 		elevator_IO.SetButtonLamp(elevator_IO.BT_HallDown, floor, converters.CC_ToBool(Hall_Requests[floor][elevator_IO.BT_HallDown].Value))

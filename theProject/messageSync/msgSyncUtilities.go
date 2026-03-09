@@ -12,27 +12,27 @@ import (
 // All values are initialized to 0, -1 (not in a floor, EB_Idle, CC_Uninit and empty barriers
 func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
-	var tmpCabRequests []RequestCyclicCounter_t = make([]RequestCyclicCounter_t, config.N_FLOORS)
+	var tmpCabRequests [config.N_FLOORS]RequestCyclicCounter_t 
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		tmpCabRequests[floor] = RequestCyclicCounter_t{
 			Value:   CC_Uninit,
-			Barrier: make([]bool, config.N_ELEVATORS),
+			Barrier: [config.N_ELEVATORS]bool{},
 		}
 	}
 
-	var tmpHallRequestData [][2]RequestCyclicCounter_t = make([][2]RequestCyclicCounter_t, config.N_FLOORS)
+	var tmpHallRequestData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
 			tmpHallRequestData[floor][btn] = RequestCyclicCounter_t{
 				Value:   CC_Uninit,
-				Barrier: make([]bool, config.N_ELEVATORS),
+				Barrier: [config.N_ELEVATORS]bool{},
 			}
 		}
 	}
 
-	var tmpElevatorData []ElevatorData_t = make([]ElevatorData_t, config.N_ELEVATORS)
+	var tmpElevatorData [config.N_ELEVATORS]ElevatorData_t
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 		tmpElevatorData[i] = ElevatorData_t{
@@ -42,13 +42,13 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 			Floor:             -1,
 			ElevatorBehaviour: elevator_IO.EB_Idle,
 			MotorDirection:    elevator_IO.MD_Stop,
-			CabRequests:       deepCopyCabRequests(tmpCabRequests),
+			CabRequests:       tmpCabRequests,
 		}
 	}
 
 	var systemData SystemData_t = SystemData_t{ID: localID, ElevatorData: tmpElevatorData, HallRequestData: tmpHallRequestData}
 
-	return systemData, DeepCopySystemData(systemData)
+	return systemData, systemData
 }
 
 // Processing the fresh data and undating systemData and confirmedSystemData accordingly
@@ -56,8 +56,8 @@ func OnReceivedFreshData(systemData SystemData_t,
 	confirmedSystemData SystemData_t,
 	fresh_data SystemData_t) (SystemData_t, SystemData_t, bool) {
 
-	var updatedSystemData SystemData_t = DeepCopySystemData(systemData)
-	var updatedConfirmedSystemData SystemData_t = DeepCopySystemData(confirmedSystemData)
+	var updatedSystemData SystemData_t = systemData
+	var updatedConfirmedSystemData SystemData_t = confirmedSystemData
 	var isConfirmedDataUpdated bool = false
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
@@ -79,14 +79,14 @@ func OnReceivedFreshData(systemData SystemData_t,
 
 // Functions for safely updating the system data
 // -----------------------------------------------------------
-func UpdateHallRequestData(oldData [][2]RequestCyclicCounter_t,
-	newData [][2]RequestCyclicCounter_t,
-	ID int) [][2]RequestCyclicCounter_t {
+func UpdateHallRequestData(oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
+	newData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
+	ID int) [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t {
 
-	var updatedHallRequests [][2]RequestCyclicCounter_t = DeepCopyHallRequests(oldData)
+	var updatedHallRequests [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t = oldData
 
-	for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
-		for btn := 0; btn < 2; btn++ {
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+		for btn := 0; btn < config.N_UP_DOWN; btn++ {
 			updatedHallRequests[floor][btn] = update_CC(oldData[floor][btn], newData[floor][btn], ID)
 		}
 	}
@@ -100,7 +100,7 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 	newData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	var updated_data ElevatorData_t = deepCopySingleElevatorData(oldData)
+	var updated_data ElevatorData_t = oldData
 
 	if oldData.IsAlive        			== newData.IsAlive &&
 		oldData.IsFunctional      		== newData.IsFunctional &&
@@ -115,8 +115,7 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 		updated_data.Floor 				 = newData.Floor
 		updated_data.ElevatorBehaviour   = newData.ElevatorBehaviour
 		updated_data.MotorDirection 	 = newData.MotorDirection
-
-		updated_data.ElevatorBarrier 	 = DeepCopyBarrier(newData.ElevatorBarrier)
+		updated_data.ElevatorBarrier 	 = newData.ElevatorBarrier
 		updated_data.ElevatorBarrier[ID] = true
 	}
 
@@ -133,7 +132,7 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 	newData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	var updated_data ElevatorData_t = deepCopySingleElevatorData(oldData)
+	var updated_data ElevatorData_t = oldData
 
 	if oldData.IsAlive                 == newData.IsAlive &&
 		oldData.IsFunctional           == newData.IsFunctional &&
@@ -210,13 +209,13 @@ func update_CC(old_CC RequestCyclicCounter_t,
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No {
 		//Accept new value
 		updated_CC.Value        = new_CC.Value
-		updated_CC.Barrier      = DeepCopyBarrier(new_CC.Barrier)
+		updated_CC.Barrier      = new_CC.Barrier
 		updated_CC.Barrier[ID]  = true
 
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done {
 		//Keep old value
 		updated_CC.Value   = old_CC.Value
-		updated_CC.Barrier = DeepCopyBarrier(old_CC.Barrier)
+		updated_CC.Barrier = old_CC.Barrier
 
 	} else if old_CC.Value == new_CC.Value {
 		//They are the same, only update Barrier
@@ -225,19 +224,19 @@ func update_CC(old_CC RequestCyclicCounter_t,
 	} else if old_CC.Value < new_CC.Value {
 		//Accept bigger value
 		updated_CC.Value       = new_CC.Value
-		updated_CC.Barrier     = DeepCopyBarrier(new_CC.Barrier)
+		updated_CC.Barrier     = new_CC.Barrier
 		updated_CC.Barrier[ID] = true
 	}
 
 	//update the CC if barriers are fulliled
 	if updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier) {
 		updated_CC.Value       = CC_Confirmed
-		updated_CC.Barrier     = make([]bool, config.N_ELEVATORS)
+		updated_CC.Barrier     = [config.N_ELEVATORS]bool{}
 		updated_CC.Barrier[ID] = true
 	}
 	if updated_CC.Value == CC_Done && checkBarrier(updated_CC.Barrier) {
 		updated_CC.Value       = CC_No
-		updated_CC.Barrier     = make([]bool, config.N_ELEVATORS)
+		updated_CC.Barrier     = [config.N_ELEVATORS]bool{}
 		updated_CC.Barrier[ID] = true
 	}
 
@@ -248,7 +247,7 @@ func update_CC(old_CC RequestCyclicCounter_t,
 
 // Helper functions
 // -----------------------------------------------------------
-func checkBarrier(Barrier []bool) bool {
+func checkBarrier(Barrier [config.N_ELEVATORS]bool) bool {
 	for i := 0; i < config.N_ELEVATORS; i++ {
 		if Barrier[i] != ActivePeers[i] {
 			return false
@@ -257,13 +256,10 @@ func checkBarrier(Barrier []bool) bool {
 	return true
 }
 
-func boolUnion(a []bool, b []bool) []bool {
-	n := len(a)
-	if len(b) > n {
-		n = len(b)
-	}
-	result := make([]bool, n)
-	for i := 0; i < n; i++ {
+func boolUnion(a [config.N_ELEVATORS]bool, b [config.N_ELEVATORS]bool) [config.N_ELEVATORS]bool {
+
+	var result [config.N_ELEVATORS]bool
+	for i := 0; i < config.N_ELEVATORS; i++ {
 		var valA, valB bool
 		if i < len(a) {
 			valA = a[i]
@@ -299,62 +295,62 @@ func peerStrToInt(peerStr string) int {
 
 // Deep copy funtions for msg_sync_types
 // -----------------------------------------------------------
-func DeepCopySystemData(src SystemData_t) SystemData_t {
-	dst                := src
-	dst.ElevatorData    = deepCopyElevatordata(src.ElevatorData)
-	dst.HallRequestData = DeepCopyHallRequests(src.HallRequestData)
-	return dst
-}
+// func DeepCopySystemData(src SystemData_t) SystemData_t {
+// 	dst                := src
+// 	dst.ElevatorData    = deepCopyElevatordata(src.ElevatorData)
+// 	dst.HallRequestData = DeepCopyHallRequests(src.HallRequestData)
+// 	return dst
+// }
 
-func deepCopyElevatordata(src []ElevatorData_t) []ElevatorData_t {
-	dst := make([]ElevatorData_t, len(src))
+// func deepCopyElevatordata(src []ElevatorData_t) []ElevatorData_t {
+// 	dst := make([]ElevatorData_t, len(src))
 
-	for i := range src {
-		dst[i] = deepCopySingleElevatorData(src[i])
-	}
-	return dst
-}
+// 	for i := range src {
+// 		dst[i] = deepCopySingleElevatorData(src[i])
+// 	}
+// 	return dst
+// }
 
-func deepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
-	dst                := src
-	dst.ElevatorBarrier = DeepCopyBarrier(src.ElevatorBarrier)
-	dst.CabRequests     = deepCopyCabRequests(src.CabRequests)
+// func deepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
+// 	dst                := src
+// 	dst.ElevatorBarrier = DeepCopyBarrier(src.ElevatorBarrier)
+// 	dst.CabRequests     = deepCopyCabRequests(src.CabRequests)
 
-	return dst
-}
+// 	return dst
+// }
 
-func DeepCopyHallRequests(src [][2]RequestCyclicCounter_t) [][2]RequestCyclicCounter_t {
-	dst := make([][2]RequestCyclicCounter_t, len(src))
+// func DeepCopyHallRequests(src [][2]RequestCyclicCounter_t) [][2]RequestCyclicCounter_t {
+// 	dst := make([][2]RequestCyclicCounter_t, len(src))
 
-	for floor := range src {
-		for btn := 0; btn < 2; btn++ {
-			dst[floor][btn] = src[floor][btn]
+// 	for floor := range src {
+// 		for btn := 0; btn < 2; btn++ {
+// 			dst[floor][btn] = src[floor][btn]
 
-			barrierCopy := make([]bool, len(src[floor][btn].Barrier))
-			copy(barrierCopy, src[floor][btn].Barrier)
-			dst[floor][btn].Barrier = barrierCopy
-		}
-	}
-	return dst
-}
+// 			barrierCopy := make([]bool, len(src[floor][btn].Barrier))
+// 			copy(barrierCopy, src[floor][btn].Barrier)
+// 			dst[floor][btn].Barrier = barrierCopy
+// 		}
+// 	}
+// 	return dst
+// }
 
-func deepCopyCabRequests(src []RequestCyclicCounter_t) []RequestCyclicCounter_t {
-	dst := make([]RequestCyclicCounter_t, len(src))
-	for i := range src {
-		dst[i] = src[i]
-		if src[i].Barrier != nil {
-			barrierCopy   := make([]bool, len(src[i].Barrier))
-			copy(barrierCopy, src[i].Barrier)
-			dst[i].Barrier = barrierCopy
-		}
-	}
-	return dst
-}
+// func deepCopyCabRequests(src []RequestCyclicCounter_t) []RequestCyclicCounter_t {
+// 	dst := make([]RequestCyclicCounter_t, len(src))
+// 	for i := range src {
+// 		dst[i] = src[i]
+// 		if src[i].Barrier != nil {
+// 			barrierCopy   := make([]bool, len(src[i].Barrier))
+// 			copy(barrierCopy, src[i].Barrier)
+// 			dst[i].Barrier = barrierCopy
+// 		}
+// 	}
+// 	return dst
+// }
 
-func DeepCopyBarrier(src []bool) []bool {
-	dst := make([]bool, len(src))
-	copy(dst, src)
-	return dst
-}
+// func DeepCopyBarrier(src []bool) []bool {
+// 	dst := make([]bool, len(src))
+// 	copy(dst, src)
+// 	return dst
+// }
 
-//-----------------------------------------------------------
+// //-----------------------------------------------------------
