@@ -73,6 +73,6 @@ func testUpdateElevatorDataAboutSelf(){
 		ElevatorBarrier: []bool{true, true, true},
 	}
 
-	oldData = messageSync.U
+	oldData = messageSync.UpdateElevatorDataAboutSelf(oldData, newData, localID)
 }
 

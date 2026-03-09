@@ -63,7 +63,7 @@ func onReceivedFreshData(systemData SystemData_t,
 	for i := 0; i < config.N_ELEVATORS; i++{
 
 		if systemData.ElevatorData[i].ID == fresh_data.ID {
-			updatedSystemData.ElevatorData[i] = updateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
+			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
 		} else {
 			updatedSystemData.ElevatorData[i] = updateElevatorDataAboutOther(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
 		}
@@ -96,7 +96,7 @@ func UpdateHallRequestData(	oldData [][2]RequestCyclicCounter_t,
 //We trust info an elevator tells about itself. 
 //If the data is the same: update barrier
 //If the data is not the same: accept new data and sign the barrier
-func updateElevatorDataAboutSelf(	oldData ElevatorData_t, 
+func UpdateElevatorDataAboutSelf(	oldData ElevatorData_t, 
 										newData ElevatorData_t, 
 										ID int) ElevatorData_t { 
 

@@ -90,7 +90,7 @@ func MessageSyncServer(
 	go bcast.Transmitter(bcastPort, networkTransmitter)
 	
 	// Ticker for periodic broadcasting 100Hz
-	ticker := time.NewTicker(10 * time.Millisecond)
+	ticker := time.NewTicker(config.B_CAST_PERIOD)
 	defer ticker.Stop()
 
 	// Go routine for button polling
@@ -106,6 +106,7 @@ func MessageSyncServer(
 
 			//If we have new confirmed data, we sent it to the elevator FSM
 			if isConfirmedDataUpdated {
+				println("Sending Updated Data To FSM")
 				dataToFSM <- confirmedSystemData
 			}
 
@@ -127,7 +128,7 @@ func MessageSyncServer(
 
 		//We recieve data from the elevator FSM
 		case freshData := <- elevatorDataFromFSM:
-			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
+			systemData.ElevatorData[localID] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
@@ -159,4 +160,140 @@ func MessageSyncServer(
 	}
 }
 
+/*
 
+//printing functoins
+func SystemPrint(systemData SystemData_t) {
+    fmt.Print("  +--------------------------+")
+    for i := 0; i < config.N_ELEVATORS; i++{
+        
+        fmt.Printf("  +----Elevator: %-2d ----+", i)
+        fmt.Printf(
+            "  |floor = %-2d |\n"+
+            "  |dirn  = %-12s|\n"+
+            "  |behav = %-12s|\n",
+            systemData.ElevatorData[i].Floor,
+            converters.ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection),
+            converters.ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour),
+        )
+        fmt.Println("  +--------------------+")
+        fmt.Println("  |  | up  | dn  | cab |")
+
+        for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
+            fmt.Printf("  | %d", f)
+
+            for btn := elevator_IO.ButtonType_t(0) ; btn < elevator_IO.N_BUTTONS; btn++ {
+                if (f == elevator_IO.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
+                    (f == 0 && btn == elevator_IO.BT_HallDown) {
+
+                    fmt.Print("|     ")
+                } else {
+                    if btn == elevator_IO.BT_Cab{
+                        if converters.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
+                            fmt.Print("|  #  ")
+                        } else {
+                            fmt.Print("|  -  ")
+                        }
+                    } else {
+                        if converters.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
+                            fmt.Print("|  #  ")
+                        } else {
+                            fmt.Print("|  -  ")
+                        }
+                    }
+                }
+            }
+            fmt.Println("|")
+        }
+        fmt.Println("  +--------------------+")
+    }
+    fmt.Print("  +--------------------------+")    
+}
+
+//print from chatGPT 
+func ChatGPT_SystemPrint(systemData SystemData_t) {
+
+    // Top line
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Print("  +--------------------+")
+    }
+    fmt.Println()
+
+    // Elevator headers
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf("  | Elevator: %-2d       |", i)
+    }
+    fmt.Println()
+
+    // Floor
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf("  | floor = %-2d         |", systemData.ElevatorData[i].Floor)
+    }
+    fmt.Println()
+
+    // Direction
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf("  | dirn  = %-10s |",
+            converters.ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
+    }
+    fmt.Println()
+
+    // Behaviour
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf("  | behav = %-10s |",
+            converters.ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
+    }
+    fmt.Println()
+
+    // Button header
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Print("  |  | up  | dn  | cab |")
+    }
+    fmt.Println()
+
+    // Floors
+    for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
+
+        for i := 0; i < config.N_ELEVATORS; i++ {
+
+            fmt.Printf("  | %d", f)
+
+            for btn := elevator_IO.ButtonType_t(0); btn <elevator_IO.N_BUTTONS; btn++ {
+
+                if (f == elevator_IO.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
+                    (f == 0 && btn == elevator_IO.BT_HallDown) {
+
+                    fmt.Print("|     ")
+
+                } else {
+
+                    if btn == elevator_IO.BT_Cab {
+                        if converters.CC_ToBool(systemData.ElevatorData[i].CabRequests[f].Value) {
+                            fmt.Print("|  #  ")
+                        } else {
+                            fmt.Print("|  -  ")
+                        }
+                    } else {
+                        if converters.CC_ToBool(systemData.HallRequestData[f][btn].Value) {
+                            fmt.Print("|  #  ")
+                        } else {
+                            fmt.Print("|  -  ")
+                        }
+                    }
+
+                }
+            }
+
+            fmt.Print("|")
+        }
+
+        fmt.Println()
+    }
+
+    // Bottom line
+    for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Print("  +--------------------+")
+    }
+    fmt.Println()
+}
+	*/
