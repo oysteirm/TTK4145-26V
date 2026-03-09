@@ -169,12 +169,23 @@ func testonReceivedFreshData(){
 	
 	oldData := messageSync.ElevatorData_t{
 		ID: 0,
-		IsAlive: false,
-		IsFunctional: false,
-		Floor: 2,
-		MotorDirection: elevator_IO.MD_Stop,
-		ElevatorBehaviour: elevator_IO.EB_Idle,
+		IsAlive: true,
+		IsFunctional: true,
+		Floor: 3,
+		MotorDirection: elevator_IO.MD_Up,
+		ElevatorBehaviour: elevator_IO.EB_Moving,
 		ElevatorBarrier: []bool{true, false, true},
+		CabRequests: make([]messageSync.RequestCyclicCounter_t, config.N_FLOORS),
+	}
+
+	conData := messageSync.ElevatorData_t{
+		ID: 0,
+		IsAlive: true,
+		IsFunctional: true,
+		Floor: 2,
+		MotorDirection: elevator_IO.MD_Down,
+		ElevatorBehaviour: elevator_IO.EB_Moving,
+		ElevatorBarrier: []bool{true, true, true},
 		CabRequests: make([]messageSync.RequestCyclicCounter_t, config.N_FLOORS),
 	}
 
@@ -198,7 +209,7 @@ func testonReceivedFreshData(){
 			oldHallRequests[floor][btn].Value = messageSync.CC_No
 			oldHallRequests[floor][btn].Barrier = messageSync.DeepCopyBarrier(fullBarrier)
 
-			newHallRequests[floor][btn].Value = messageSync.CC_Unconfirmed
+			newHallRequests[floor][btn].Value = messageSync.CC_Confirmed
 			newHallRequests[floor][btn].Barrier = messageSync.DeepCopyBarrier(fullBarrier)
 		}
 	}
@@ -211,12 +222,12 @@ func testonReceivedFreshData(){
 
 	conFirmedSystemData := messageSync.SystemData_t{
 		ID: 0,
-		ElevatorData: []messageSync.ElevatorData_t{oldData, oldData, oldData},
+		ElevatorData: []messageSync.ElevatorData_t{conData, conData, conData},
 		HallRequestData: oldHallRequests,
 	}
 
 	freshData := messageSync.SystemData_t{
-		ID: 0,
+		ID: 1,
 		ElevatorData: []messageSync.ElevatorData_t{newData, newData, newData},
 		HallRequestData: newHallRequests,
 	}

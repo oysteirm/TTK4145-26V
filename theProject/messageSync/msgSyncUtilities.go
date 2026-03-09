@@ -72,7 +72,7 @@ func OnReceivedFreshData(systemData SystemData_t,
 	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, fresh_data.HallRequestData, systemData.ID)
 
 	//update the confirmed data that have recieved consensus
-	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
+	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(updatedSystemData, confirmedSystemData)
 
 	return updatedSystemData, updatedConfirmedSystemData, isConfirmedDataUpdated
 }
