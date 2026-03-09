@@ -4,11 +4,12 @@ import (
 	"theProject/config"
 	"theProject/elevator_IO"
 	"theProject/messageSync"
+	"theProject/fsm"
 )
 
 
 func main(){
-
+	testUpdateElevatorDataAboutSelf()
 	
 }
 
@@ -54,6 +55,7 @@ func testUpdateHallRequests(){
 func testUpdateElevatorDataAboutSelf(){
 
 	localID := 0
+
 	oldData := messageSync.ElevatorData_t{
 		ID: 0,
 		IsAlive: true,
@@ -67,12 +69,21 @@ func testUpdateElevatorDataAboutSelf(){
 		ID: 0,
 		IsAlive: true,
 		IsFunctional: true,
-		Floor: 2,
-		MotorDirection: elevator_IO.MD_Stop,
-		ElevatorBehaviour: elevator_IO.EB_Idle,
-		ElevatorBarrier: []bool{true, true, true},
+		Floor: 3,
+		MotorDirection: elevator_IO.MD_Up,
+		ElevatorBehaviour: elevator_IO.EB_Moving,
+		ElevatorBarrier: []bool{true, false, false},
+		CabRequests: make([]RequestCyclicCounter_t{},
 	}
 
+	assignedRequests := make([][]bool, elevator_IO.N_FLOORS)
+    for i := range assignedRequests {
+        assignedRequests[i] = make([]bool, elevator_IO.N_BUTTONS)
+    }
+
 	oldData = messageSync.UpdateElevatorDataAboutSelf(oldData, newData, localID)
+
+	fsm.ElevatorPrint(oldData, assignedRequests)
+
 }
 
