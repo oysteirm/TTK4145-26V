@@ -15,5 +15,9 @@ const (
 
 
 	B_CAST_PERIOD time.Duration = 10 * time.Millisecond
-)
 
+	PP_PORT = 30000
+	PP_SERVER_IP = "127.0.0.1"
+	PP_TIMEOUT = 100 * time.Millisecond
+	PP_INTERVAL = 10 * time.Millisecond
+)
