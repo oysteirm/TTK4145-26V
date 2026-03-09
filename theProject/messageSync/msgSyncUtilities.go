@@ -102,26 +102,26 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 
 	var updated_data ElevatorData_t = deepCopySingleElevatorData(oldData)
 
-	if oldData.IsAlive == newData.IsAlive &&
-		oldData.IsFunctional == newData.IsFunctional &&
-		oldData.Floor == newData.Floor &&
-		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
-		oldData.MotorDirection == newData.MotorDirection {
+	if oldData.IsAlive        			== newData.IsAlive &&
+		oldData.IsFunctional      		== newData.IsFunctional &&
+		oldData.Floor   				== newData.Floor &&
+		oldData.ElevatorBehaviour 		== newData.ElevatorBehaviour &&
+		oldData.MotorDirection 		    == newData.MotorDirection {
 
 		updated_data.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	} else {
-		updated_data.IsAlive = newData.IsAlive
-		updated_data.IsFunctional = newData.IsFunctional
-		updated_data.Floor = newData.Floor
-		updated_data.ElevatorBehaviour = newData.ElevatorBehaviour
-		updated_data.MotorDirection = newData.MotorDirection
+		updated_data.IsAlive 			 = newData.IsAlive
+		updated_data.IsFunctional 		 = newData.IsFunctional
+		updated_data.Floor 				 = newData.Floor
+		updated_data.ElevatorBehaviour   = newData.ElevatorBehaviour
+		updated_data.MotorDirection 	 = newData.MotorDirection
 
-		updated_data.ElevatorBarrier = DeepCopyBarrier(newData.ElevatorBarrier)
+		updated_data.ElevatorBarrier 	 = DeepCopyBarrier(newData.ElevatorBarrier)
 		updated_data.ElevatorBarrier[ID] = true
 	}
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
-		updated_data.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+		updated_data.CabRequests[i] 	 = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
 	}
 
 	return updated_data
@@ -134,17 +134,17 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 
 	var updated_data ElevatorData_t = deepCopySingleElevatorData(oldData)
 
-	if oldData.IsAlive == newData.IsAlive &&
-		oldData.IsFunctional == newData.IsFunctional &&
-		oldData.Floor == newData.Floor &&
-		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
-		oldData.MotorDirection == newData.MotorDirection {
+	if oldData.IsAlive                 == newData.IsAlive &&
+		oldData.IsFunctional           == newData.IsFunctional &&
+		oldData.Floor                  == newData.Floor &&
+		oldData.ElevatorBehaviour      == newData.ElevatorBehaviour &&
+		oldData.MotorDirection         == newData.MotorDirection {
 
-		updated_data.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
+		updated_data.ElevatorBarrier    = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	}
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
-		updated_data.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+		updated_data.CabRequests[i]     = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
 	}
 
 	return updated_data
@@ -160,17 +160,17 @@ func updateConfirmedSystemData(unconfirmedData SystemData_t,
 
 		if checkBarrier(unconfirmedData.ElevatorData[i].ElevatorBarrier) {
 			//If there is new data, we update
-			if unconfirmedData.ElevatorData[i].IsAlive != confirmedData.ElevatorData[i].IsAlive ||
-				unconfirmedData.ElevatorData[i].IsFunctional != confirmedData.ElevatorData[i].IsFunctional ||
-				unconfirmedData.ElevatorData[i].Floor != confirmedData.ElevatorData[i].Floor ||
-				unconfirmedData.ElevatorData[i].ElevatorBehaviour != confirmedData.ElevatorData[i].ElevatorBehaviour ||
-				unconfirmedData.ElevatorData[i].MotorDirection != confirmedData.ElevatorData[i].MotorDirection {
+			if unconfirmedData.ElevatorData[i].IsAlive                 != confirmedData.ElevatorData[i].IsAlive ||
+				unconfirmedData.ElevatorData[i].IsFunctional           != confirmedData.ElevatorData[i].IsFunctional ||
+				unconfirmedData.ElevatorData[i].Floor                  != confirmedData.ElevatorData[i].Floor ||
+				unconfirmedData.ElevatorData[i].ElevatorBehaviour      != confirmedData.ElevatorData[i].ElevatorBehaviour ||
+				unconfirmedData.ElevatorData[i].MotorDirection         != confirmedData.ElevatorData[i].MotorDirection {
 
-				updatedConfirmedData.ElevatorData[i].IsAlive = unconfirmedData.ElevatorData[i].IsAlive
-				updatedConfirmedData.ElevatorData[i].IsFunctional = unconfirmedData.ElevatorData[i].IsFunctional
-				updatedConfirmedData.ElevatorData[i].Floor = unconfirmedData.ElevatorData[i].Floor
-				updatedConfirmedData.ElevatorData[i].ElevatorBehaviour = unconfirmedData.ElevatorData[i].ElevatorBehaviour
-				updatedConfirmedData.ElevatorData[i].MotorDirection = unconfirmedData.ElevatorData[i].MotorDirection
+				updatedConfirmedData.ElevatorData[i].IsAlive            = unconfirmedData.ElevatorData[i].IsAlive
+				updatedConfirmedData.ElevatorData[i].IsFunctional       = unconfirmedData.ElevatorData[i].IsFunctional
+				updatedConfirmedData.ElevatorData[i].Floor              = unconfirmedData.ElevatorData[i].Floor
+				updatedConfirmedData.ElevatorData[i].ElevatorBehaviour  = unconfirmedData.ElevatorData[i].ElevatorBehaviour
+				updatedConfirmedData.ElevatorData[i].MotorDirection     = unconfirmedData.ElevatorData[i].MotorDirection
 				isUpdated = true
 			}
 		}
@@ -206,35 +206,35 @@ func update_CC(old_CC RequestCyclicCounter_t,
 	//update the CC based on rules
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No {
 		//Accept new value
-		updated_CC.Value = new_CC.Value
-		updated_CC.Barrier = DeepCopyBarrier(new_CC.Barrier)
-		updated_CC.Barrier[ID] = true
+		updated_CC.Value        = new_CC.Value
+		updated_CC.Barrier      = DeepCopyBarrier(new_CC.Barrier)
+		updated_CC.Barrier[ID]  = true
 
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done {
 		//Keep old value
-		updated_CC.Value = old_CC.Value
+		updated_CC.Value   = old_CC.Value
 		updated_CC.Barrier = DeepCopyBarrier(old_CC.Barrier)
 
 	} else if old_CC.Value == new_CC.Value {
 		//They are the same, only update Barrier
-		updated_CC.Barrier = boolUnion(old_CC.Barrier, new_CC.Barrier)
+		updated_CC.Barrier     = boolUnion(old_CC.Barrier, new_CC.Barrier)
 
 	} else if old_CC.Value < new_CC.Value {
 		//Accept bigger value
-		updated_CC.Value = new_CC.Value
-		updated_CC.Barrier = DeepCopyBarrier(new_CC.Barrier)
+		updated_CC.Value       = new_CC.Value
+		updated_CC.Barrier     = DeepCopyBarrier(new_CC.Barrier)
 		updated_CC.Barrier[ID] = true
 	}
 
 	//update the CC if barriers are fulliled
 	if updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier) {
-		updated_CC.Value = CC_Confirmed
-		updated_CC.Barrier = make([]bool, config.N_ELEVATORS)
+		updated_CC.Value       = CC_Confirmed
+		updated_CC.Barrier     = make([]bool, config.N_ELEVATORS)
 		updated_CC.Barrier[ID] = true
 	}
 	if updated_CC.Value == CC_Done && checkBarrier(updated_CC.Barrier) {
-		updated_CC.Value = CC_No
-		updated_CC.Barrier = make([]bool, config.N_ELEVATORS)
+		updated_CC.Value       = CC_No
+		updated_CC.Barrier     = make([]bool, config.N_ELEVATORS)
 		updated_CC.Barrier[ID] = true
 	}
 
@@ -277,7 +277,7 @@ func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVAT
 	var ActivePeers [config.N_ELEVATORS]bool
 
 	for _, peer := range peersUpdate.Peers {
-		idx := peerStrToInt(peer)
+		idx              := peerStrToInt(peer)
 		ActivePeers[idx] = true
 	}
 	return ActivePeers
@@ -297,8 +297,8 @@ func peerStrToInt(peerStr string) int {
 // Deep copy funtions for msg_sync_types
 // -----------------------------------------------------------
 func DeepCopySystemData(src SystemData_t) SystemData_t {
-	dst := src
-	dst.ElevatorData = deepCopyElevatordata(src.ElevatorData)
+	dst                := src
+	dst.ElevatorData    = deepCopyElevatordata(src.ElevatorData)
 	dst.HallRequestData = DeepCopyHallRequests(src.HallRequestData)
 	return dst
 }
@@ -313,9 +313,9 @@ func deepCopyElevatordata(src []ElevatorData_t) []ElevatorData_t {
 }
 
 func deepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
-	dst := src
+	dst                := src
 	dst.ElevatorBarrier = DeepCopyBarrier(src.ElevatorBarrier)
-	dst.CabRequests = deepCopyCabRequests(src.CabRequests)
+	dst.CabRequests     = deepCopyCabRequests(src.CabRequests)
 
 	return dst
 }
@@ -340,7 +340,7 @@ func deepCopyCabRequests(src []RequestCyclicCounter_t) []RequestCyclicCounter_t 
 	for i := range src {
 		dst[i] = src[i]
 		if src[i].Barrier != nil {
-			barrierCopy := make([]bool, len(src[i].Barrier))
+			barrierCopy   := make([]bool, len(src[i].Barrier))
 			copy(barrierCopy, src[i].Barrier)
 			dst[i].Barrier = barrierCopy
 		}
