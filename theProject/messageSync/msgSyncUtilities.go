@@ -52,7 +52,7 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 }
 
 // Processing the fresh data and undating systemData and confirmedSystemData accordingly
-func onReceivedFreshData(systemData SystemData_t,
+func OnReceivedFreshData(systemData SystemData_t,
 	confirmedSystemData SystemData_t,
 	fresh_data SystemData_t) (SystemData_t, SystemData_t, bool) {
 
