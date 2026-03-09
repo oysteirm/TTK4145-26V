@@ -201,9 +201,13 @@ func ElevatorPrint(elevator messageSync.ElevatorData_t, assignedRequests elevato
 
     fmt.Printf("  +--------------------+\n")
     fmt.Printf(
-        "  |floor = %-2d |\n"+
+        "  |IsAlive = %-9t |\n"+
+        "  |IsFunctional = %-2t |\n"+
+        "  |floor = %-11d |\n"+
         "  |dirn  = %-12s|\n"+
         "  |behav = %-12s|\n",
+        elevator.IsAlive,
+        elevator.IsFunctional,
         elevator.Floor,
         converters.ElevatorDirnToString(elevator.MotorDirection),
         converters.ElevatorBehaviourToString(elevator.ElevatorBehaviour),

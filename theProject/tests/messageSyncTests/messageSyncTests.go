@@ -55,16 +55,20 @@ func testUpdateHallRequests(){
 func testUpdateElevatorDataAboutSelf(){
 
 	localID := 0
+	fullBarrier := []bool{true, true, true}
+	messageSync.ActivePeers = [config.N_ELEVATORS]bool{true, true, true}
 
 	oldData := messageSync.ElevatorData_t{
 		ID: 0,
-		IsAlive: true,
-		IsFunctional: true,
+		IsAlive: false,
+		IsFunctional: false,
 		Floor: 2,
 		MotorDirection: elevator_IO.MD_Stop,
 		ElevatorBehaviour: elevator_IO.EB_Idle,
-		ElevatorBarrier: []bool{true, true, true},
+		ElevatorBarrier: []bool{true, false, true},
+		CabRequests: make([]messageSync.RequestCyclicCounter_t, config.N_FLOORS),
 	}
+
 	newData := messageSync.ElevatorData_t{
 		ID: 0,
 		IsAlive: true,
@@ -73,7 +77,16 @@ func testUpdateElevatorDataAboutSelf(){
 		MotorDirection: elevator_IO.MD_Up,
 		ElevatorBehaviour: elevator_IO.EB_Moving,
 		ElevatorBarrier: []bool{true, false, false},
-		//CabRequests: make([]RequestCyclicCounter_t{}, config.N_ELEVATORS),
+		CabRequests: make([]messageSync.RequestCyclicCounter_t, config.N_FLOORS),
+	}
+
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+	
+			oldData.CabRequests[floor].Value = messageSync.CC_No
+			oldData.CabRequests[floor].Barrier = messageSync.DeepCopyBarrier(fullBarrier)
+
+			newData.CabRequests[floor].Value = messageSync.CC_Unconfirmed
+			newData.CabRequests[floor].Barrier = messageSync.DeepCopyBarrier(fullBarrier)
 	}
 
 	assignedRequests := make([][]bool, elevator_IO.N_FLOORS)
@@ -81,8 +94,10 @@ func testUpdateElevatorDataAboutSelf(){
         assignedRequests[i] = make([]bool, elevator_IO.N_BUTTONS)
     }
 
+	println("OldData:")
+	fsm.ElevatorPrint(oldData, assignedRequests)
 	oldData = messageSync.UpdateElevatorDataAboutSelf(oldData, newData, localID)
-
+	println("UpdatedData:")
 	fsm.ElevatorPrint(oldData, assignedRequests)
 
 }
