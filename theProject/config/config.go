@@ -14,6 +14,6 @@ const (
 	PEER_UPDATE_PORT int = 20015
 
 
-	B_CAST_PERIOD time.Duration = 500 * time.Millisecond
+	B_CAST_PERIOD time.Duration = 10 * time.Millisecond
 )
 
