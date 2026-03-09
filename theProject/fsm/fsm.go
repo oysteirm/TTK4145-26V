@@ -116,9 +116,12 @@ func OnFloorArrival(
 
             elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
             elevator_IO.SetDoorOpenLamp(true)
-
-            elevatorState.MotorDirection = elevator_IO.MD_Stop
+            
             elevatorState.ElevatorBehaviour = elevator_IO.EB_DoorOpen
+            
+            //removing this for keeping the previous direction, to avoid clearing both up and down in single floor when not supposed to
+            //elevatorState.MotorDirection = elevator_IO.MD_Stop
+            
             
             requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests) 
             guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
