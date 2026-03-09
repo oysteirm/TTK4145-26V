@@ -55,15 +55,12 @@ func ElevatorServer(
 		// Recieved data from msg sync
 		case newSystemData := <-systemDataFromMsgSync:
 
-			//Use the RA
-			//Use the RA
 			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
-
 			assignedRequests := requestsMap[strconv.Itoa(localID)]
 
 			//Store requests, send this and the confirmed system data
-			guardianCommands <- newSystemData
-			guardianCommands <- assignedRequests
+			guardianCommands <- elevatorStateGuardian.SetSystemData_t{SystemData: newSystemData}
+			guardianCommands <- elevatorStateGuardian.SetAssignedRequest_t{AssignedRequests: assignedRequests}
 
 			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
 			fsm.LightHallLights(newSystemData.HallRequestData)

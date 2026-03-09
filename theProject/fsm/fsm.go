@@ -52,7 +52,7 @@ func OnReceivedDataFromMsgSync(
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
     
     //obstruction is not affecting the elevator since door not open
-    if elevatorState.ElevatorBehaviour != elevator_IO.EB_DoorOpen || !isObstructed{
+    if  elevatorState.ElevatorBehaviour != elevator_IO.EB_DoorOpen{
 
         var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests);
         
@@ -141,7 +141,7 @@ func OnFloorArrival(
     }
 
     assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-    fmt.Printf("\nNew state:\n");
+    fmt.Printf("\nNew state from FloorArrival:\n");
     ElevatorPrint(elevatorState, assignedRequests);
 }
 
@@ -181,12 +181,14 @@ func OnDoorTimeout(
         case elevator_IO.EB_Moving:
 
             isFunctionalStart <- struct{}{}
+            println("SKRU AV LAMPA!")
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
 
         case elevator_IO.EB_Idle:
 
             isFunctionalStop <- struct{}{}
+            println("SKRU AV LAMPA!")
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
         }
@@ -195,7 +197,7 @@ func OnDoorTimeout(
     }
 
     assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-    fmt.Printf("\nNew state:\n");
+    fmt.Printf("\nNew state from DoorTimeout:\n");
     ElevatorPrint(elevatorState, assignedRequests);
 }
 

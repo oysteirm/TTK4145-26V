@@ -120,9 +120,10 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 		updated_data.ElevatorBarrier[ID] = true
 	}
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		updated_data.CabRequests[i] 	 = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
-	}
+	// for i := 0; i < config.N_FLOORS; i++ {
+	// 	updated_data.CabRequests[i] 	 = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+	// 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// }
 
 	return updated_data
 }
@@ -143,8 +144,10 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 		updated_data.ElevatorBarrier    = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	}
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		updated_data.CabRequests[i]     = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+	for i := 0; i < config.N_FLOORS; i++ {
+		if oldData.CabRequests[i].Value == CC_Uninit{
+			updated_data.CabRequests[i]     = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+		}
 	}
 
 	return updated_data
@@ -178,7 +181,7 @@ func updateConfirmedSystemData(unconfirmedData SystemData_t,
 		//Dont need Barrier check since update_CC() have Barrier checks
 		for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
 			if unconfirmedData.ElevatorData[i].CabRequests[floor].Value != confirmedData.ElevatorData[i].CabRequests[floor].Value {
-				updatedConfirmedData.ElevatorData[i].CabRequests[floor].Value = unconfirmedData.ElevatorData[i].CabRequests[floor].Value
+				updatedConfirmedData.ElevatorData[i].CabRequests[floor] = unconfirmedData.ElevatorData[i].CabRequests[floor]
 				isUpdated = true
 			}
 		}
