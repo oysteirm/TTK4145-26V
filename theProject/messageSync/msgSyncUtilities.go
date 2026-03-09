@@ -69,7 +69,7 @@ func onReceivedFreshData(systemData SystemData_t,
 		}
 	}
 	//update hall requests with the cyclic counter 
-	updatedSystemData.HallRequestData = updateHallRequestData(systemData.HallRequestData, fresh_data.HallRequestData, systemData.ID)
+	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, fresh_data.HallRequestData, systemData.ID)
 
 	//update the confirmed data that have recieved consensus
 	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
@@ -79,7 +79,7 @@ func onReceivedFreshData(systemData SystemData_t,
 
 //Functions for safely updating the system data
 //-----------------------------------------------------------
-func updateHallRequestData(	oldData [][2]RequestCyclicCounter_t, 
+func UpdateHallRequestData(	oldData [][2]RequestCyclicCounter_t, 
 								newData [][2]RequestCyclicCounter_t, 
 								ID int) [][2]RequestCyclicCounter_t {
 
@@ -116,7 +116,7 @@ func updateElevatorDataAboutSelf(	oldData ElevatorData_t,
 		updated_data.ElevatorBehaviour	= newData.ElevatorBehaviour
 		updated_data.MotorDirection 	= newData.MotorDirection
 
-		updated_data.ElevatorBarrier = deepCopyBarrier(newData.ElevatorBarrier)
+		updated_data.ElevatorBarrier = DeepCopyBarrier(newData.ElevatorBarrier)
 		updated_data.ElevatorBarrier[ID] = true
 	}
 
@@ -207,13 +207,13 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No{
 		//Accept new value
 		updated_CC.Value 		= new_CC.Value
-		updated_CC.Barrier 		= deepCopyBarrier(new_CC.Barrier)
+		updated_CC.Barrier 		= DeepCopyBarrier(new_CC.Barrier)
 		updated_CC.Barrier[ID] 	= true
 
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done{
 		//Keep old value
 		updated_CC.Value 	= old_CC.Value
-		updated_CC.Barrier 	= deepCopyBarrier(old_CC.Barrier)
+		updated_CC.Barrier 	= DeepCopyBarrier(old_CC.Barrier)
 
 	} else if old_CC.Value == new_CC.Value{
 		//They are the same, only update Barrier
@@ -222,7 +222,7 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 	} else if old_CC.Value < new_CC.Value {
 		//Accept bigger value
 		updated_CC.Value 		= new_CC.Value
-		updated_CC.Barrier 		= deepCopyBarrier(new_CC.Barrier)
+		updated_CC.Barrier 		= DeepCopyBarrier(new_CC.Barrier)
 		updated_CC.Barrier[ID] 	= true
 	}
 
@@ -315,7 +315,7 @@ func deepCopyElevatordata(src []ElevatorData_t) []ElevatorData_t {
 
 func deepCopySingleElevatorData(src ElevatorData_t) ElevatorData_t {
 	dst := src
-	dst.ElevatorBarrier = deepCopyBarrier(src.ElevatorBarrier)
+	dst.ElevatorBarrier = DeepCopyBarrier(src.ElevatorBarrier)
 	dst.CabRequests = deepCopyCabRequests(src.CabRequests)
 
 	return dst
@@ -349,7 +349,7 @@ func deepCopyCabRequests(src []RequestCyclicCounter_t) []RequestCyclicCounter_t 
 	return dst
 }
 
-func deepCopyBarrier(src []bool) []bool {
+func DeepCopyBarrier(src []bool) []bool {
 	dst := make([]bool, len(src))
 	copy(dst, src)
 	return dst
