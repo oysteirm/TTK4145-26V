@@ -34,7 +34,9 @@ const (
 // List containing info about our network peers
 // 1: part of network
 // 0: not part of network
-var activePeers [config.N_ELEVATORS]bool
+
+var ActivePeers [config.N_ELEVATORS]bool
+
 
 type CyclicCounter_t int
 
@@ -68,7 +70,7 @@ func MessageSyncServer(
 	elevatorDataFromFSM <-chan ElevatorData_t, 				//channel for recieving elevator data from elevator FSM
 	requestsFrom_FSM <-chan []elevator_IO.ButtonEvent_t,	//channel for recieving done requests from elevator FSM
 	dataToFSM chan<- SystemData_t, 							//channel for sending confirmed data to FSM
-	peersReciever <-chan peers.PeerUpdate,					//channel for updating activePeers list
+	peersReciever <-chan peers.PeerUpdate,					//channel for updating ActivePeers list
 	localID int,											//ID of local elevator 
 	){
 
@@ -143,17 +145,17 @@ func MessageSyncServer(
 			networkTransmitter <- systemData 
 
 		//Updates on the active peers list
-		case peersUpdate := <-peersReciever:
-			activePeers = fromPeersUpdateToActivePeers(peersUpdate)
-			for i := 0; i < config.N_ELEVATORS; i++{
-				//if there is new info, new barrier
-				if systemData.ElevatorData[i].IsAlive != activePeers[i]{
-					systemData.ElevatorData[i].IsAlive = activePeers[i]
-					systemData.ElevatorData[i].ElevatorBarrier = make([]bool, config.N_ELEVATORS)
-					systemData.ElevatorData[i].ElevatorBarrier[localID] = true
-				}
-			}
-		}
+		// case peersUpdate := <-peersReciever:
+		// 	ActivePeers = fromPeersUpdateToActivePeers(peersUpdate)
+		// 	for i := 0; i < config.N_ELEVATORS; i++{
+		// 		//if there is new info, new barrier
+		// 		if systemData.ElevatorData[i].IsAlive != ActivePeers[i]{
+		// 			systemData.ElevatorData[i].IsAlive = ActivePeers[i]
+		// 			systemData.ElevatorData[i].ElevatorBarrier = make([]bool, config.N_ELEVATORS)
+		// 			systemData.ElevatorData[i].ElevatorBarrier[localID] = true
+		// 		}
+		// 	}
+		 }
 	}
 }
 

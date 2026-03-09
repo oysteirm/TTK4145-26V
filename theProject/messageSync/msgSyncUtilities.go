@@ -248,7 +248,7 @@ func update_CC(	old_CC RequestCyclicCounter_t,
 //-----------------------------------------------------------
 func checkBarrier(Barrier []bool) bool {
 	for i := 0; i < config.N_ELEVATORS; i++{
-		if Barrier[i] != activePeers[i]{
+		if Barrier[i] != ActivePeers[i]{
 			return false
 		}
 	}
@@ -275,13 +275,13 @@ func boolUnion(a []bool, b []bool) []bool {
 }
 
 func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVATORS]bool { 
-	var activePeers [config.N_ELEVATORS]bool
+	var ActivePeers [config.N_ELEVATORS]bool
 	
 	for _, peer := range peersUpdate.Peers {
 		idx := peerStrToInt(peer)
-		activePeers[idx] = true
+		ActivePeers[idx] = true
 	}
-	return activePeers
+	return ActivePeers
 }
 
 func peerStrToInt(peerStr string) int {

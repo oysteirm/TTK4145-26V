@@ -33,3 +33,6 @@ func main(){
 	//TODO: forever loop?
 	for{}
 }
+
+//NOTES: barrier to wait for the initalization to be done before starting program
+//check the book on semafores for example
