@@ -65,7 +65,7 @@ func onReceivedFreshData(systemData SystemData_t,
 		if systemData.ElevatorData[i].ID == fresh_data.ID {
 			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
 		} else {
-			updatedSystemData.ElevatorData[i] = updateElevatorDataAboutOther(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
+			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutOther(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
 		}
 	}
 	//update hall requests with the cyclic counter
@@ -128,7 +128,7 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 }
 
 // Only update cab requests CC and update barrier
-func updateElevatorDataAboutOther(oldData ElevatorData_t,
+func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 	newData ElevatorData_t,
 	ID int) ElevatorData_t {
 
