@@ -163,6 +163,7 @@ func testUpdateElevatorDataAboutOther(){
 }
 
 func testonReceivedFreshData(){
+
 	fullBarrier := []bool{true, true, true}
 	messageSync.ActivePeers = [config.N_ELEVATORS]bool{true, true, true}
 	isUpdated := false
@@ -196,7 +197,7 @@ func testonReceivedFreshData(){
 		Floor: 3,
 		MotorDirection: elevator_IO.MD_Up,
 		ElevatorBehaviour: elevator_IO.EB_Moving,
-		ElevatorBarrier: []bool{true, false, false},
+		ElevatorBarrier: []bool{true, true, false},
 		CabRequests: make([]messageSync.RequestCyclicCounter_t, config.N_FLOORS),
 	}
 
