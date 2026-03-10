@@ -80,14 +80,14 @@ func OnReceivedFreshData(systemData SystemData_t,
 // Functions for safely updating the system data
 // -----------------------------------------------------------
 func UpdateHallRequestData(oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
-	newData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
+	freshData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
 	ID int) [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t {
 
 	var updatedHallRequests [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t = oldData
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		for btn := 0; btn < config.N_UP_DOWN; btn++ {
-			updatedHallRequests[floor][btn] = update_CC(oldData[floor][btn], newData[floor][btn], ID)
+			updatedHallRequests[floor][btn] = update_CC(oldData[floor][btn], freshData[floor][btn], ID)
 		}
 	}
 	return updatedHallRequests
@@ -97,60 +97,60 @@ func UpdateHallRequestData(oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyc
 // If the data is the same: update barrier
 // If the data is not the same: accept new data and sign the barrier
 func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
-	newData ElevatorData_t,
+	freshData ElevatorData_t,
 	ID int) ElevatorData_t {
 
 	var updatedData ElevatorData_t = oldData
 
-	if oldData.IsAlive == newData.IsAlive &&
-		oldData.IsFunctional == newData.IsFunctional &&
-		oldData.Floor == newData.Floor &&
-		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
-		oldData.MotorDirection == newData.MotorDirection {
+	if oldData.IsAlive == freshData.IsAlive &&
+		oldData.IsFunctional == freshData.IsFunctional &&
+		oldData.Floor == freshData.Floor &&
+		oldData.ElevatorBehaviour == freshData.ElevatorBehaviour &&
+		oldData.MotorDirection == freshData.MotorDirection {
 
-		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	} else {
-		updatedData.IsAlive = newData.IsAlive
-		updatedData.IsFunctional = newData.IsFunctional
-		updatedData.Floor = newData.Floor
-		updatedData.ElevatorBehaviour = newData.ElevatorBehaviour
-		updatedData.MotorDirection = newData.MotorDirection
-		updatedData.ElevatorBarrier = newData.ElevatorBarrier
+		updatedData.IsAlive = freshData.IsAlive
+		updatedData.IsFunctional = freshData.IsFunctional
+		updatedData.Floor = freshData.Floor
+		updatedData.ElevatorBehaviour = freshData.ElevatorBehaviour
+		updatedData.MotorDirection = freshData.MotorDirection
+		updatedData.ElevatorBarrier = freshData.ElevatorBarrier
 		updatedData.ElevatorBarrier[ID] = true
 	}
 
 	for i := 0; i < config.N_FLOORS; i++ {
-    fmt.Println("Old:", oldData.CabRequests[i])
-    fmt.Println("New:", newData.CabRequests[i])
-
-    updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
-
-    fmt.Println("Updated:", updatedData.CabRequests[i])
-}
+    	updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], freshData.CabRequests[i], ID)
+	}
 
 	return updatedData
 }
 
 // Only update cab requests CC and update barrier
 func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
-	newData ElevatorData_t,
-	ID int) ElevatorData_t {
+	freshData ElevatorData_t,
+	localID int) ElevatorData_t {
 
 	var updatedData ElevatorData_t = oldData
 
-	if oldData.IsAlive == newData.IsAlive &&
-		oldData.IsFunctional == newData.IsFunctional &&
-		oldData.Floor == newData.Floor &&
-		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
-		oldData.MotorDirection == newData.MotorDirection {
+	if oldData.IsAlive == freshData.IsAlive &&
+		oldData.IsFunctional == freshData.IsFunctional &&
+		oldData.Floor == freshData.Floor &&
+		oldData.ElevatorBehaviour == freshData.ElevatorBehaviour &&
+		oldData.MotorDirection == freshData.MotorDirection {
 
-		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	}
 
-	for i := 0; i < config.N_FLOORS; i++ {
-		if oldData.CabRequests[i].Value == CC_Uninit {
-			updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
-		}
+	//Updating cab requests
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+
+		if oldData.CabRequests[floor].Value == CC_Uninit {
+			updatedData.CabRequests[floor] = update_CC(oldData.CabRequests[floor], freshData.CabRequests[floor], localID)
+
+		} else if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
+			updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
+		}	
 	}
 
 	return updatedData
