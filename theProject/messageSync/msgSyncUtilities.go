@@ -64,7 +64,7 @@ func OnReceivedFreshData(
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 
-		if systemData.ElevatorData[i].ID == freshSystemData.ID {
+		if i == freshSystemData.ID {
 			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
 
 		} else {
@@ -179,7 +179,7 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 // Checking the Barrier
 func updateConfirmedSystemData(unconfirmedData SystemData_t,
 	confirmedData SystemData_t) (SystemData_t, bool) {
-		
+
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 
@@ -274,7 +274,8 @@ func update_CC(old_CC RequestCyclicCounter_t,
 // -----------------------------------------------------------
 func checkBarrier(Barrier [config.N_ELEVATORS]bool) bool {
 	for i := 0; i < config.N_ELEVATORS; i++ {
-		if Barrier[i] != ActivePeers[i] {
+		//if Barrier[i] != ActivePeers[i] {
+		if ActivePeers[i] && !Barrier[i]{
 			return false
 		}
 	}
@@ -303,7 +304,12 @@ func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVAT
 	for _, peer := range peersUpdate.Peers {
 		idx := peerStrToInt(peer)
 		ActivePeers[idx] = true
+
+		if idx >= 0 && idx < config.N_ELEVATORS{
+			ActivePeers[idx] = true
+		}
 	}
+
 	return ActivePeers
 }
 

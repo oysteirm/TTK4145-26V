@@ -109,6 +109,7 @@ func OnFloorArrival(
     newFloor int,
     isObstructed bool) {
 
+    println("Arriving at a floor")
     elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
     assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
 
@@ -127,7 +128,7 @@ func OnFloorArrival(
             elevator_IO.SetDoorOpenLamp(true)
             
             elevatorState.ElevatorBehaviour = elevator_IO.EB_DoorOpen
-            
+
             //removing this for keeping the previous direction, to avoid clearing both up and down in single floor when not supposed to
             //elevatorState.MotorDirection = elevator_IO.MD_Stop
             
