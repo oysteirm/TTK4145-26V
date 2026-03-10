@@ -15,7 +15,7 @@ import (
 func main(){
 	//Start Process pairs
 	//processPairs.RunProcessPair()
-	
+
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
