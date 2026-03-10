@@ -25,6 +25,7 @@ func Transmitter(port int, chans ...interface{}) {
 	}
 
 	conn := conn.DialBroadcastUDP(port)
+	fmt.Println("Broadcast socket bound to:", conn.LocalAddr())
 	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("255.255.255.255:%d", port))
 	for {
 		chosen, value, _ := reflect.Select(selectCases)
@@ -39,7 +40,12 @@ func Transmitter(port int, chans ...interface{}) {
 		        "Either send smaller packets, or go to network/bcast/bcast.go and increase the buffer size",
 		        len(ttj), bufSize, string(ttj)))
 		}
-		conn.WriteTo(ttj, addr)
+		n, err := conn.WriteTo(ttj, addr)
+		if err != nil{
+			fmt.Println("Bcast send error:", err)
+		} else {
+			fmt.Printf("Bcast sent %d bytes to %v\n", n, addr)
+		}
     		
 	}
 }
@@ -55,8 +61,15 @@ func Receiver(port int, chans ...interface{}) {
 
 	var buf [bufSize]byte
 	conn := conn.DialBroadcastUDP(port)
+	fmt.Println("Broadcast socket bound to:", conn.LocalAddr())
 	for {
-		n, _, e := conn.ReadFrom(buf[0:])
+		n, addr, e := conn.ReadFrom(buf[0:])
+		if e != nil{
+			fmt.Printf("bcast.receiver(%d): ReadFrom() failes: %+v+n", port, e)
+		} else{
+			fmt.Printf("packet received from %v (%d bytes)\n", addr, n)
+		}
+
 		if e != nil {
 			fmt.Printf("bcast.Receiver(%d, ...):ReadFrom() failed: \"%+v\"\n", port, e)
 		}
