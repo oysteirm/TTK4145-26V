@@ -12,7 +12,7 @@ import (
 // All values are initialized to 0, -1 (not in a floor, EB_Idle, CC_Uninit and empty barriers
 func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
-	var tmpCabRequests [config.N_FLOORS]RequestCyclicCounter_t 
+	var tmpCabRequests [config.N_FLOORS]RequestCyclicCounter_t
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		tmpCabRequests[floor] = RequestCyclicCounter_t{
@@ -100,31 +100,35 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 	newData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	var updated_data ElevatorData_t = oldData
+	var updatedData ElevatorData_t = oldData
 
-	if oldData.IsAlive        			== newData.IsAlive &&
-		oldData.IsFunctional      		== newData.IsFunctional &&
-		oldData.Floor   				== newData.Floor &&
-		oldData.ElevatorBehaviour 		== newData.ElevatorBehaviour &&
-		oldData.MotorDirection 		    == newData.MotorDirection {
+	if oldData.IsAlive == newData.IsAlive &&
+		oldData.IsFunctional == newData.IsFunctional &&
+		oldData.Floor == newData.Floor &&
+		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
+		oldData.MotorDirection == newData.MotorDirection {
 
-		updated_data.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	} else {
-		updated_data.IsAlive 			 = newData.IsAlive
-		updated_data.IsFunctional 		 = newData.IsFunctional
-		updated_data.Floor 				 = newData.Floor
-		updated_data.ElevatorBehaviour   = newData.ElevatorBehaviour
-		updated_data.MotorDirection 	 = newData.MotorDirection
-		updated_data.ElevatorBarrier 	 = newData.ElevatorBarrier
-		updated_data.ElevatorBarrier[ID] = true
+		updatedData.IsAlive = newData.IsAlive
+		updatedData.IsFunctional = newData.IsFunctional
+		updatedData.Floor = newData.Floor
+		updatedData.ElevatorBehaviour = newData.ElevatorBehaviour
+		updatedData.MotorDirection = newData.MotorDirection
+		updatedData.ElevatorBarrier = newData.ElevatorBarrier
+		updatedData.ElevatorBarrier[ID] = true
 	}
 
-	// for i := 0; i < config.N_FLOORS; i++ {
-	// 	updated_data.CabRequests[i] 	 = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
-	// 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// }
+	for i := 0; i < config.N_FLOORS; i++ {
+    fmt.Println("Old:", oldData.CabRequests[i])
+    fmt.Println("New:", newData.CabRequests[i])
 
-	return updated_data
+    updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+
+    fmt.Println("Updated:", updatedData.CabRequests[i])
+}
+
+	return updatedData
 }
 
 // Only update cab requests CC and update barrier
@@ -132,24 +136,24 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 	newData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	var updated_data ElevatorData_t = oldData
+	var updatedData ElevatorData_t = oldData
 
-	if oldData.IsAlive                 == newData.IsAlive &&
-		oldData.IsFunctional           == newData.IsFunctional &&
-		oldData.Floor                  == newData.Floor &&
-		oldData.ElevatorBehaviour      == newData.ElevatorBehaviour &&
-		oldData.MotorDirection         == newData.MotorDirection {
+	if oldData.IsAlive == newData.IsAlive &&
+		oldData.IsFunctional == newData.IsFunctional &&
+		oldData.Floor == newData.Floor &&
+		oldData.ElevatorBehaviour == newData.ElevatorBehaviour &&
+		oldData.MotorDirection == newData.MotorDirection {
 
-		updated_data.ElevatorBarrier    = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, newData.ElevatorBarrier)
 	}
 
 	for i := 0; i < config.N_FLOORS; i++ {
-		if oldData.CabRequests[i].Value == CC_Uninit{
-			updated_data.CabRequests[i]     = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
+		if oldData.CabRequests[i].Value == CC_Uninit {
+			updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], newData.CabRequests[i], ID)
 		}
 	}
 
-	return updated_data
+	return updatedData
 }
 
 // Checking the Barrier
@@ -162,17 +166,17 @@ func updateConfirmedSystemData(unconfirmedData SystemData_t,
 
 		if checkBarrier(unconfirmedData.ElevatorData[i].ElevatorBarrier) {
 			//If there is new data, we update
-			if unconfirmedData.ElevatorData[i].IsAlive                 != confirmedData.ElevatorData[i].IsAlive ||
-				unconfirmedData.ElevatorData[i].IsFunctional           != confirmedData.ElevatorData[i].IsFunctional ||
-				unconfirmedData.ElevatorData[i].Floor                  != confirmedData.ElevatorData[i].Floor ||
-				unconfirmedData.ElevatorData[i].ElevatorBehaviour      != confirmedData.ElevatorData[i].ElevatorBehaviour ||
-				unconfirmedData.ElevatorData[i].MotorDirection         != confirmedData.ElevatorData[i].MotorDirection {
+			if unconfirmedData.ElevatorData[i].IsAlive != confirmedData.ElevatorData[i].IsAlive ||
+				unconfirmedData.ElevatorData[i].IsFunctional != confirmedData.ElevatorData[i].IsFunctional ||
+				unconfirmedData.ElevatorData[i].Floor != confirmedData.ElevatorData[i].Floor ||
+				unconfirmedData.ElevatorData[i].ElevatorBehaviour != confirmedData.ElevatorData[i].ElevatorBehaviour ||
+				unconfirmedData.ElevatorData[i].MotorDirection != confirmedData.ElevatorData[i].MotorDirection {
 
-				updatedConfirmedData.ElevatorData[i].IsAlive            = unconfirmedData.ElevatorData[i].IsAlive
-				updatedConfirmedData.ElevatorData[i].IsFunctional       = unconfirmedData.ElevatorData[i].IsFunctional
-				updatedConfirmedData.ElevatorData[i].Floor              = unconfirmedData.ElevatorData[i].Floor
-				updatedConfirmedData.ElevatorData[i].ElevatorBehaviour  = unconfirmedData.ElevatorData[i].ElevatorBehaviour
-				updatedConfirmedData.ElevatorData[i].MotorDirection     = unconfirmedData.ElevatorData[i].MotorDirection
+				updatedConfirmedData.ElevatorData[i].IsAlive = unconfirmedData.ElevatorData[i].IsAlive
+				updatedConfirmedData.ElevatorData[i].IsFunctional = unconfirmedData.ElevatorData[i].IsFunctional
+				updatedConfirmedData.ElevatorData[i].Floor = unconfirmedData.ElevatorData[i].Floor
+				updatedConfirmedData.ElevatorData[i].ElevatorBehaviour = unconfirmedData.ElevatorData[i].ElevatorBehaviour
+				updatedConfirmedData.ElevatorData[i].MotorDirection = unconfirmedData.ElevatorData[i].MotorDirection
 				isUpdated = true
 			}
 		}
@@ -208,35 +212,35 @@ func update_CC(old_CC RequestCyclicCounter_t,
 	//update the CC based on rules
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No {
 		//Accept new value
-		updated_CC.Value        = new_CC.Value
-		updated_CC.Barrier      = new_CC.Barrier
-		updated_CC.Barrier[ID]  = true
+		updated_CC.Value = new_CC.Value
+		updated_CC.Barrier = new_CC.Barrier
+		updated_CC.Barrier[ID] = true
 
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done {
 		//Keep old value
-		updated_CC.Value   = old_CC.Value
+		updated_CC.Value = old_CC.Value
 		updated_CC.Barrier = old_CC.Barrier
 
 	} else if old_CC.Value == new_CC.Value {
 		//They are the same, only update Barrier
-		updated_CC.Barrier     = boolUnion(old_CC.Barrier, new_CC.Barrier)
+		updated_CC.Barrier = boolUnion(old_CC.Barrier, new_CC.Barrier)
 
 	} else if old_CC.Value < new_CC.Value {
 		//Accept bigger value
-		updated_CC.Value       = new_CC.Value
-		updated_CC.Barrier     = new_CC.Barrier
+		updated_CC.Value = new_CC.Value
+		updated_CC.Barrier = new_CC.Barrier
 		updated_CC.Barrier[ID] = true
 	}
 
 	//update the CC if barriers are fulliled
 	if updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier) {
-		updated_CC.Value       = CC_Confirmed
-		updated_CC.Barrier     = [config.N_ELEVATORS]bool{}
+		updated_CC.Value = CC_Confirmed
+		updated_CC.Barrier = [config.N_ELEVATORS]bool{}
 		updated_CC.Barrier[ID] = true
 	}
 	if updated_CC.Value == CC_Done && checkBarrier(updated_CC.Barrier) {
-		updated_CC.Value       = CC_No
-		updated_CC.Barrier     = [config.N_ELEVATORS]bool{}
+		updated_CC.Value = CC_No
+		updated_CC.Barrier = [config.N_ELEVATORS]bool{}
 		updated_CC.Barrier[ID] = true
 	}
 
@@ -276,7 +280,7 @@ func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVAT
 	var ActivePeers [config.N_ELEVATORS]bool
 
 	for _, peer := range peersUpdate.Peers {
-		idx              := peerStrToInt(peer)
+		idx := peerStrToInt(peer)
 		ActivePeers[idx] = true
 	}
 	return ActivePeers
