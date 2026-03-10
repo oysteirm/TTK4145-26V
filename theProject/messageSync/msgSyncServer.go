@@ -179,6 +179,16 @@ func ChatGPT_SystemPrint(systemData SystemData_t) {
     }
     fmt.Println()
 
+	for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf("  |IsAlive = %-9t |", systemData.ElevatorData[i].IsAlive)
+    }
+    fmt.Println()
+
+	for i := 0; i < config.N_ELEVATORS; i++ {
+        fmt.Printf(   "  |IsFunctional = %-2t |", systemData.ElevatorData[i].IsFunctional)
+    }
+    fmt.Println()
+
     // Floor
     for i := 0; i < config.N_ELEVATORS; i++ {
         fmt.Printf("  | floor = %-2d         |", systemData.ElevatorData[i].Floor)

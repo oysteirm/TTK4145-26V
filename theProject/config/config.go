@@ -14,7 +14,7 @@ const (
 	PEER_UPDATE_PORT int = 20015
 
 
-	B_CAST_PERIOD time.Duration = 1000 * time.Millisecond
+	B_CAST_PERIOD time.Duration = 10 * time.Millisecond
 
 	PP_PORT = 30000
 	PP_SERVER_IP = "127.0.0.1"

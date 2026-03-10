@@ -9,12 +9,12 @@ import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	"theProject/processPairs"
+	//"theProject/processPairs"
 )
 
 func main(){
 	//Start Process pairs
-	processPairs.RunProcessPair()
+	//processPairs.RunProcessPair()
 
 	//TODO: make process pairs with primary-backup topology
 
