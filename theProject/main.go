@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"strconv"
 	"theProject/config"
 	"theProject/elevatorServer"
@@ -13,11 +15,14 @@ func main(){
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
-	var localID int //hjelp meg, henning
+	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)") 
+	flag.Parse()
+
+	fmt.Println("Starting elevator with localID = ", localID)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
-	go peers.Transmitter(config.PEER_UPDATE_PORT, strconv.Itoa(localID), peerTxEnable)
+	go peers.Transmitter(config.PEER_UPDATE_PORT, strconv.Itoa(*localID), peerTxEnable)
 	go peers.Receiver(config.PEER_UPDATE_PORT, peerUpdateCh)
 
 	//TODO: initialize all variables and constants
@@ -28,8 +33,8 @@ func main(){
 	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t)	
 
 	//TODO: launch the go routines 
-	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, localID)
-	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, localID)
+	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, *localID)
+	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *localID)
 
 	//TODO: forever loop?
 	for{}
