@@ -9,14 +9,13 @@ import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	"theProject/prcessPairs"
 	"theProject/processPairs"
 )
 
 func main(){
 	//Start Process pairs
-	//processPairs.RunProcessPair()
-	
+	processPairs.RunProcessPair()
+
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
