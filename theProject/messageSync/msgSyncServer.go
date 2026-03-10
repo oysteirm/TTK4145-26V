@@ -105,7 +105,7 @@ func MessageSyncServer(
 		case freshSystemData := <- networkReceiver:
 			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
 
-			//If we have new confirmed data, we sent it to the elevator FSM
+			//If we have new confirmed data, we sent it toupdate_CC the elevator FSM
 			if isConfirmedDataUpdated {
 				if (confirmedSystemData.ElevatorData[localID].Floor != -1){
 					fmt.Println("Sending new confirmed data to FSM")
@@ -127,6 +127,7 @@ func MessageSyncServer(
 					systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button] = update_CC(systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button], tempHallRequests, localID)
                 }
             }
+			
 		
 
 		//We recieve data from the elevator FSM
