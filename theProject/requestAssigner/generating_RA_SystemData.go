@@ -36,7 +36,7 @@ func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_S
 	RA_systemData.States = make(map[string]RA_LocalElevatorState_t)
 	for _,elevator := range confirmedSystemData.ElevatorData{
 
-		if !(elevator.IsAlive) || !(elevator.IsFunctional){
+		if !(elevator.IsAlive) || !(elevator.IsFunctional) || (elevator.Floor == -1){
 			continue
 		}
 
