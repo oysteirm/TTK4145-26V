@@ -29,8 +29,8 @@ func main() {
 	//  `go run main.go -id=our_id`
 	
 	//defined in usage example: peerPort was 15647 and bcastPort 16569
-	peerPort := 20011
-	bcastPort := 20012
+	peerPort := 20021
+	bcastPort := 20022
 
 	var id string
 	flag.StringVar(&id, "id", "", "id of this peer")
@@ -56,6 +56,8 @@ func main() {
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(peerPort, id, peerTxEnable)
 	go peers.Receiver(peerPort, peerUpdateCh)
+
+	peerTxEnable <- true
 
 	// We make channels for sending and receiving our custom data types
 
@@ -92,6 +94,8 @@ func main() {
 
 
 	fmt.Println("Started")
+	ip, _ := localip.LocalIP()
+	println("Local ip: ", ip)
 	for {
 		select {
 		case p := <-peerUpdateCh:

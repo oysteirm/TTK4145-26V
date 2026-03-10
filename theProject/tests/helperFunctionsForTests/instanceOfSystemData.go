@@ -1,10 +1,9 @@
 package testHelpers
 
-
-
 import (
-	"theProject/messageSync"
+	"theProject/config"
 	"theProject/elevator_IO"
+	"theProject/messageSync"
 )
 
 // making "confirmed" SystemData_t example
@@ -14,7 +13,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 	var confirmed messageSync.SystemData_t
 
 	// ---- Hall requests: [floors][2] ----
-	confirmed.HallRequestData = make([][2]messageSync.RequestCyclicCounter_t, floors)
+	confirmed.HallRequestData  = [config.N_FLOORS][config.N_UP_DOWN]messageSync.RequestCyclicCounter_t{}
 
 	setHall := func(floor int, btn int) {
 		if floor < 0 || floor >= floors {
@@ -36,7 +35,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 	if nElev < 0 {
 		nElev = 0
 	}
-	confirmed.ElevatorData = make([]messageSync.ElevatorData_t, nElev)
+	confirmed.ElevatorData = [config.N_ELEVATORS]messageSync.ElevatorData_t{}
 
 
 	setCab := func(eIdx int, floor int) {
@@ -46,9 +45,8 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		if floor < 0 || floor >= floors {
 			return
 		}
-		if confirmed.ElevatorData[eIdx].CabRequests == nil {
-			confirmed.ElevatorData[eIdx].CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
-		}
+		confirmed.ElevatorData[eIdx].CabRequests = [config.N_FLOORS]messageSync.RequestCyclicCounter_t{}
+	
 		confirmed.ElevatorData[eIdx].CabRequests[floor].Value = messageSync.CC_Confirmed
 	}
 
@@ -61,7 +59,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		e.Floor = 0
 		e.ElevatorBehaviour = elevator_IO.EB_Idle
 		e.MotorDirection = elevator_IO.MD_Stop
-		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
+		e.CabRequests = [config.N_FLOORS]messageSync.RequestCyclicCounter_t{}
 
 		// cab call in floor 3 (0-indexed => 2)
 		setCab(0, 2)
@@ -74,7 +72,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		e.IsAlive = true
 		e.IsFunctional = false
 		e.Floor = 2
-		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
+		e.CabRequests = [config.N_FLOORS]messageSync.RequestCyclicCounter_t{}
 	}
 
 	// Elevator 3
@@ -86,7 +84,7 @@ func MakeFakeConfirmedSystemData(floors int, nElev int) messageSync.SystemData_t
 		e.Floor = 2
 		e.ElevatorBehaviour = elevator_IO.EB_Moving
 		e.MotorDirection = elevator_IO.MD_Down
-		e.CabRequests = make([]messageSync.RequestCyclicCounter_t, floors)
+		e.CabRequests = [config.N_FLOORS]messageSync.RequestCyclicCounter_t{}
 
 	
 		setCab(2, 0)

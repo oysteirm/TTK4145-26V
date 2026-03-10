@@ -1,12 +1,12 @@
 package messageSync
 
 import (
+	"fmt"
 	"theProject/config"
 	"theProject/elevator_IO"
 	"theProject/networkDriver/bcast"
 	"theProject/networkDriver/peers"
 	"time"
-	"fmt"
 )
 
 /* map over data that is being syncronized
@@ -84,7 +84,7 @@ func MessageSyncServer(
 	// Network channels and variable
 	networkReceiver := make(chan SystemData_t)
 	networkTransmitter := make(chan SystemData_t)
-	bcastPort := config.B_CAST_PORT //TODO: change this to a correct value
+	bcastPort := config.B_CAST_PORT
 
 	// Go routines for communicating with other elevators
 	go bcast.Receiver(bcastPort, networkReceiver)
@@ -103,6 +103,7 @@ func MessageSyncServer(
 
 		//We recieve new data from the network
 		case freshData := <- networkReceiver:
+			println("REVEIVED DATA")
 			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshData)
 
 			//If we have new confirmed data, we sent it to the elevator FSM

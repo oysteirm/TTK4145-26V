@@ -36,15 +36,9 @@ func ElevatorServer(
     go elevator_IO.PollStopButton(drv_stop)
 
     // Init FSM (handle between floors)
-	fsm.OnInitBetweenFloors(guardianCommands)
+	fsm.OnInitBetweenFloors(guardianCommands, drv_floors)
 
-	for { 
-		floor := <- drv_floors
-		if floor != -1 {
-			guardianCommands <- elevatorStateGuardian.SetFloor_t{Floor: floor}
-			break
-		}
-	}
+	
 	// Timers
 	doorTimerStart       := make(chan struct{})
 	doorTimerStop        := make(chan struct{})
