@@ -18,7 +18,7 @@ func main(){
 	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)") 
 	flag.Parse()
 
-	fmt.Println("Starting elevator with localID = ", localID)
+	fmt.Println("Starting elevator with localID = ", *localID)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
