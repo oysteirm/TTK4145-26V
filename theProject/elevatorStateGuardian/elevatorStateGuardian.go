@@ -147,8 +147,8 @@ func ElevatorStateGuardian(
         //if data in the elevator state was changed by FSM, then we send it to msgSync
         if elevatorDataChanged {
             elevatorDataToMsgSync <- systemData.ElevatorData[localID]
-            println("Sending data to msg sync from FSM")
-            ElevatorPrint(systemData.ElevatorData[localID], assignedRequests)
+            // println("Sending data to msg sync from FSM")
+            // ElevatorPrint(systemData.ElevatorData[localID], assignedRequests)
         }
 	}
 }
