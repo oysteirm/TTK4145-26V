@@ -72,12 +72,13 @@ func OnReceivedFreshData(
 		}
 	}
 
-	senderID := freshSystemData.ID
-	for floor := 0; floor < config.N_FLOORS; floor++ {
-		updatedSystemData.ElevatorData[senderID].CabRequests[floor] = update_CC(
-			systemData.ElevatorData[senderID].CabRequests[floor],
-			freshSystemData.ElevatorData[senderID].CabRequests[floor],
-			systemData.ID)
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		for floor := 0; floor < config.N_FLOORS; floor++ {
+			updatedSystemData.ElevatorData[elevatorID].CabRequests[floor] = update_CC(
+				systemData.ElevatorData[elevatorID].CabRequests[floor],
+				freshSystemData.ElevatorData[elevatorID].CabRequests[floor],
+				systemData.ID)
+		}
 	}
 
 	//update hall requests with the cyclic counter
