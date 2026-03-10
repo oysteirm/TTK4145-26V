@@ -103,14 +103,19 @@ func MessageSyncServer(
 
 		//We recieve new data from the network
 		case freshSystemData := <- networkReceiver:
-			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
 
-			//If we have new confirmed data, we sent it toupdate_CC the elevator FSM
-			if isConfirmedDataUpdated {
-				if (confirmedSystemData.ElevatorData[localID].Floor != -1){
-					fmt.Println("Sending new confirmed data to FSM")
-					ChatGPT_SystemPrint(confirmedSystemData)
-					dataToFSM <- confirmedSystemData
+			if freshSystemData.ID != localID {
+
+				systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
+				
+				//If we have new confirmed data, we sent it toupdate_CC the elevator FSM
+				if isConfirmedDataUpdated {
+					if (confirmedSystemData.ElevatorData[localID].Floor != -1){
+						fmt.Println("Sending new confirmed data to FSM")
+						ChatGPT_SystemPrint(confirmedSystemData)
+						dataToFSM <- confirmedSystemData
+						isConfirmedDataUpdated = false
+					}
 				}
 			}
 
@@ -127,12 +132,29 @@ func MessageSyncServer(
 					systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button] = update_CC(systemData.HallRequestData[btnEvnt.Floor][btnEvnt.Button], tempHallRequests, localID)
                 }
             }
+			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
+
+			if isConfirmedDataUpdated{
+				fmt.Println("Sending new confirmed data to FSM")
+				ChatGPT_SystemPrint(confirmedSystemData)
+				dataToFSM <- confirmedSystemData
+				isConfirmedDataUpdated = false
+			}
 			
 		
 
 		//We recieve data from the elevator FSM
 		case freshData := <- elevatorDataFromFSM:
 			systemData.ElevatorData[localID] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
+
+			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
+
+			if isConfirmedDataUpdated{
+				fmt.Println("Sending new confirmed data to FSM")
+				ChatGPT_SystemPrint(confirmedSystemData)
+				dataToFSM <- confirmedSystemData
+				isConfirmedDataUpdated = false
+			}
 			
 		//new buttonpress tries to change the CC to unconfirmed
 		case btn := <-drvButtons:
@@ -142,6 +164,15 @@ func MessageSyncServer(
 			} else {
 				var tmpHallRequest RequestCyclicCounter_t = RequestCyclicCounter_t{Value: CC_Unconfirmed, Barrier: [config.N_ELEVATORS]bool{}}
 				systemData.HallRequestData[btn.Floor][btn.Button] = update_CC(systemData.HallRequestData[btn.Floor][btn.Button], tmpHallRequest, localID)
+			}
+
+			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
+
+			if isConfirmedDataUpdated{
+				fmt.Println("Sending new confirmed data to FSM")
+				ChatGPT_SystemPrint(confirmedSystemData)
+				dataToFSM <- confirmedSystemData
+				isConfirmedDataUpdated = false
 			}
 
 		//broadcast timer timeout
@@ -159,6 +190,14 @@ func MessageSyncServer(
 					systemData.ElevatorData[i].ElevatorBarrier = [config.N_ELEVATORS]bool{}
 					systemData.ElevatorData[i].ElevatorBarrier[localID] = true
 				}
+			}
+			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
+
+			if isConfirmedDataUpdated{
+				fmt.Println("Sending new confirmed data to FSM")
+				ChatGPT_SystemPrint(confirmedSystemData)
+				dataToFSM <- confirmedSystemData
+				isConfirmedDataUpdated = false
 			}
 		 }
 	}

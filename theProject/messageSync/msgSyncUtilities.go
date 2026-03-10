@@ -179,6 +179,7 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 // Checking the Barrier
 func updateConfirmedSystemData(unconfirmedData SystemData_t,
 	confirmedData SystemData_t) (SystemData_t, bool) {
+		
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 
