@@ -15,10 +15,11 @@ func ElevatorServer(
 	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, //channel for sending data to messageSyncServer
 	requestToMsgSync chan<- []elevator_IO.ButtonEvent_t, //channel for sending done request CC to msg sync
 	systemDataFromMsgSync <-chan messageSync.SystemData_t, //channel for receiving confirmed system data
+	ioAddr string,
 	localID int, //local ID
 ) {
 
-	elevator_IO.Init("localhost:15657", config.N_FLOORS)
+	elevator_IO.Init(ioAddr, config.N_FLOORS)
 	isObstructed := false
 
 	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)

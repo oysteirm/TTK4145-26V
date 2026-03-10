@@ -12,17 +12,23 @@ import (
 	//"theProject/processPairs"
 )
 
-func main(){
+func main() {
 	//Start Process pairs
 	//processPairs.RunProcessPair()
 
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
-	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)") 
+	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)")
+	ioAddr := flag.String("addr", "", "Elevator IO TCP address (e.g. localhost:15657)")
 	flag.Parse()
 
+	if *ioAddr == "" {
+		*ioAddr = fmt.Sprintf("localhost:%d", 15657+*localID)
+	}
+
 	fmt.Println("Starting elevator with localID = ", *localID)
+	fmt.Println("Using IO address = ", *ioAddr)
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
@@ -33,15 +39,16 @@ func main(){
 	//TODO: initialize all the channels
 	//elevatorServer channels
 	elevatorDataToMsgSyncFrom_FSM := make(chan messageSync.ElevatorData_t)
-    requestToMsgSyncFrom_FSM := make(chan []elevator_IO.ButtonEvent_t)
-	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t)	
+	requestToMsgSyncFrom_FSM := make(chan []elevator_IO.ButtonEvent_t)
+	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t)
 
-	//TODO: launch the go routines 
+	//TODO: launch the go routines
 	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, *localID)
-	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *localID)
+	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *ioAddr, *localID)
 
 	//TODO: forever loop?
-	for{}
+	for {
+	}
 }
 
 //NOTES: barrier to wait for the initalization to be done before starting program
