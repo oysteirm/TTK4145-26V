@@ -181,14 +181,12 @@ func OnDoorTimeout(
         case elevator_IO.EB_Moving:
 
             isFunctionalStart <- struct{}{}
-            println("SKRU AV LAMPA!")
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
 
         case elevator_IO.EB_Idle:
 
             isFunctionalStop <- struct{}{}
-            println("SKRU AV LAMPA!")
             elevator_IO.SetDoorOpenLamp(false)
             elevator_IO.SetMotorDirection(elevatorState.MotorDirection);
         }
