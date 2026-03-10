@@ -102,8 +102,8 @@ func MessageSyncServer(
 		select{
 
 		//We recieve new data from the network
-		case freshData := <- networkReceiver:
-			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshData)
+		case freshSystemData := <- networkReceiver:
+			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
 
 			//If we have new confirmed data, we sent it to the elevator FSM
 			if isConfirmedDataUpdated {

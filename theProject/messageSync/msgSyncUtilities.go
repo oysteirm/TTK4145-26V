@@ -52,24 +52,27 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 }
 
 // Processing the fresh data and undating systemData and confirmedSystemData accordingly
-func OnReceivedFreshData(systemData SystemData_t,
+func OnReceivedFreshData(
+	systemData SystemData_t,
 	confirmedSystemData SystemData_t,
-	fresh_data SystemData_t) (SystemData_t, SystemData_t, bool) {
+	freshSystemData SystemData_t) (SystemData_t, SystemData_t, bool) {
 
+	//Starting with no changes in the data
 	var updatedSystemData SystemData_t = systemData
 	var updatedConfirmedSystemData SystemData_t = confirmedSystemData
 	var isConfirmedDataUpdated bool = false
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 
-		if systemData.ElevatorData[i].ID == fresh_data.ID {
-			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
+		if systemData.ElevatorData[i].ID == freshSystemData.ID {
+			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
+
 		} else {
-			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutOther(systemData.ElevatorData[i], fresh_data.ElevatorData[i], systemData.ID)
+			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutOther(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
 		}
 	}
 	//update hall requests with the cyclic counter
-	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, fresh_data.HallRequestData, systemData.ID)
+	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, freshSystemData.HallRequestData, systemData.ID)
 
 	//update the confirmed data that have recieved consensus
 	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(updatedSystemData, confirmedSystemData)
@@ -96,7 +99,8 @@ func UpdateHallRequestData(oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyc
 // We trust info an elevator tells about itself.
 // If the data is the same: update barrier
 // If the data is not the same: accept new data and sign the barrier
-func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
+func UpdateElevatorDataAboutSelf(
+	oldData ElevatorData_t,
 	freshData ElevatorData_t,
 	ID int) ElevatorData_t {
 
@@ -119,8 +123,15 @@ func UpdateElevatorDataAboutSelf(oldData ElevatorData_t,
 		updatedData.ElevatorBarrier[ID] = true
 	}
 
-	for i := 0; i < config.N_FLOORS; i++ {
-    	updatedData.CabRequests[i] = update_CC(oldData.CabRequests[i], freshData.CabRequests[i], ID)
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+
+		if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
+			oldData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
+
+		} else if freshData.CabRequests[floor].Value != CC_Uninit {
+			updatedData.CabRequests[floor] = freshData.CabRequests[floor]
+			updatedData.CabRequests[floor].Barrier[ID] = true
+		}
 	}
 
 	return updatedData
