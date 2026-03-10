@@ -75,9 +75,9 @@ func OnReceivedFreshData(
 	senderID := freshSystemData.ID
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		updatedSystemData.ElevatorData[senderID].CabRequests[floor] = update_CC(
-																				systemData.ElevatorData[senderID].CabRequests[floor], 
-																				freshSystemData.ElevatorData[senderID].CabRequests[floor], 
-																				systemData.ID)
+			systemData.ElevatorData[senderID].CabRequests[floor],
+			freshSystemData.ElevatorData[senderID].CabRequests[floor],
+			systemData.ID)
 	}
 
 	//update hall requests with the cyclic counter
@@ -170,7 +170,7 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 
 	// 	} else if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
 	// 		updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
-	// 	}	
+	// 	}
 	// }
 
 	return updatedData
@@ -179,7 +179,7 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 // Checking the Barrier
 func updateConfirmedSystemData(unconfirmedData SystemData_t,
 	confirmedData SystemData_t) (SystemData_t, bool) {
-		
+
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 
@@ -314,6 +314,26 @@ func peerStrToInt(peerStr string) int {
 		return -1
 	}
 	return num
+}
+
+func normalizeCCForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
+	updated := systemData
+
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		for floor := 0; floor < config.N_FLOORS; floor++ {
+			cc := updated.ElevatorData[elevatorID].CabRequests[floor]
+			updated.ElevatorData[elevatorID].CabRequests[floor] = update_CC(cc, cc, localID)
+		}
+	}
+
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+		for btn := 0; btn < config.N_UP_DOWN; btn++ {
+			cc := updated.HallRequestData[floor][btn]
+			updated.HallRequestData[floor][btn] = update_CC(cc, cc, localID)
+		}
+	}
+
+	return updated
 }
 
 //-----------------------------------------------------------
