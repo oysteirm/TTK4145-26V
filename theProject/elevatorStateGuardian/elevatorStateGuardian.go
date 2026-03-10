@@ -1,9 +1,11 @@
 package elevatorStateGuardian
 
 import (
+	"theProject/config"
 	"theProject/elevator_IO"
 	"theProject/messageSync"
-    "theProject/config"
+    "fmt"
+    "theProject/converters"
 )
 
 type GuardianCommands_t interface{}
@@ -145,6 +147,8 @@ func ElevatorStateGuardian(
         //if data in the elevator state was changed by FSM, then we send it to msgSync
         if elevatorDataChanged {
             elevatorDataToMsgSync <- systemData.ElevatorData[localID]
+            println("Sending data to msg sync from FSM")
+            ElevatorPrint(systemData.ElevatorData[localID], assignedRequests)
         }
 	}
 }
@@ -160,6 +164,55 @@ func GetAssignedRequests(guardianCommands chan GuardianCommands_t) elevator_IO.A
     reply := make(chan elevator_IO.AssignedRequests_t)
     guardianCommands <- GetAssignedRequests_t{Reply: reply}
     return <-reply
+}
+
+
+//printing functoins
+func ElevatorPrint(elevator messageSync.ElevatorData_t, assignedRequests elevator_IO.AssignedRequests_t) {
+
+    fmt.Printf("  +--------------------+\n")
+    fmt.Printf(
+        "  |IsAlive = %-9t |\n"+
+        "  |IsFunctional = %-2t |\n"+
+        "  |floor = %-11d |\n"+
+        "  |dirn  = %-12s|\n"+
+        "  |behav = %-12s|\n",
+        elevator.IsAlive,
+        elevator.IsFunctional,
+        elevator.Floor,
+        converters.ElevatorDirnToString(elevator.MotorDirection),
+        converters.ElevatorBehaviourToString(elevator.ElevatorBehaviour),
+    )
+    fmt.Println("  +--------------------+")
+    fmt.Println("  |  | up  | dn  | cab |")
+
+    for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
+        fmt.Printf("  | %d", f)
+
+        for btn := elevator_IO.ButtonType_t(0) ; btn < elevator_IO.N_BUTTONS; btn++ {
+            if (f == elevator_IO.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
+                (f == 0 && btn == elevator_IO.BT_HallDown) {
+
+                fmt.Print("|     ")
+            } else {
+                if btn == elevator_IO.BT_Cab{
+                    if converters.CC_ToBool(elevator.CabRequests[f].Value) {
+                        fmt.Print("|  #  ")
+                    } else {
+                        fmt.Print("|  -  ")
+                    }
+                } else {
+                    if assignedRequests[f][btn] {
+                        fmt.Print("|  #  ")
+                    } else {
+                        fmt.Print("|  -  ")
+                    }
+                }
+            }
+        }
+        fmt.Println("|")
+    }
+    fmt.Println("  +--------------------+")  
 }
 
 

@@ -103,14 +103,15 @@ func MessageSyncServer(
 
 		//We recieve new data from the network
 		case freshData := <- networkReceiver:
-			println("REVEIVED DATA")
 			systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshData)
 
 			//If we have new confirmed data, we sent it to the elevator FSM
 			if isConfirmedDataUpdated {
-				println("Sending Updated Data To FSM")
-				ChatGPT_SystemPrint(confirmedSystemData)
-				dataToFSM <- confirmedSystemData
+				if (confirmedSystemData.ElevatorData[localID].Floor != -1){
+					println("Sending Updated Data To FSM")
+					ChatGPT_SystemPrint(confirmedSystemData)
+					dataToFSM <- confirmedSystemData
+				}
 			}
 
 		case freshRequestsToDone:= <- requestsFrom_FSM:

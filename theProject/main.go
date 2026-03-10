@@ -13,7 +13,7 @@ func main(){
 	//TODO: make process pairs with primary-backup topology
 
 	//TODO: get the local ID from terminal command
-	localID := 0//hjelp meg, henning
+	var localID int //hjelp meg, henning
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
 	peerTxEnable := make(chan bool)
@@ -37,13 +37,3 @@ func main(){
 
 //NOTES: barrier to wait for the initalization to be done before starting program
 //check the book on semafores for example
-
-student@NTNU24604:~/Documents/gruppe_14/TTK4145-26V/theProject/tests/networkTests$ go run networktester.go -id=1
-Started
-Broadcast socket bound to: 0.0.0.0:20022
-Broadcast socket bound to: 0.0.0.0:20022
-Bcast sent 1839 bytes to 255.255.255.255:20022
-Local ip:  10.100.23.172
-Bcast sent 1839 bytes to 255.255.255.255:20022
-Bcast sent 1839 bytes to 255.255.255.255:20022
-Bcast sent 1839 bytes to 255.255.255.255:20022
