@@ -55,6 +55,10 @@ func ElevatorServer(
 
 		// Recieved data from msg sync
 		case newSystemData := <-systemDataFromMsgSync:
+			
+			if newSystemData.ElevatorData[localID].Floor == -1{
+				break
+			}
 
 			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
 			assignedRequests := requestsMap[strconv.Itoa(localID)]
