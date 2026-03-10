@@ -18,9 +18,13 @@ const (
 	HEARTBEAT = config.PP_INTERVAL
 )
 
-// RunProcessPair listens for heartbeats from the backup.
-// If the backup stops sending, this process becomes the backup,
-// spawns a new primary, and starts sending heartbeats to it.
+// RunProcessPair ensures only the current PRIMARY continues with main startup.
+//
+// Behaviour:
+// - Initial primary: spawns backup, starts heartbeat sender, returns.
+// - Backup: blocks waiting for heartbeats.
+// - On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
+//   then returns as the new primary.
 func RunProcessPair() {
 	role := roleFromArgs() // "primary" or "backup"
 
@@ -43,14 +47,18 @@ func roleFromArgs() string {
 }
 
 // runPrimary is the ACTIVE role.
-// It sends a heartbeat to the backup on PP_PORT every HEARTBEAT interval.
-// It never returns.
+// It spawns a backup, starts heartbeats in a goroutine, then returns.
 func runPrimary() {
 	fmt.Println("[ProcessPair] Running as PRIMARY")
 
 	// Spawn the backup process headlessly, then start sending packets.
 	spawnBackup()
 	time.Sleep(200 * time.Millisecond) // give the backup time to start listening
+
+	go heartbeatLoop()
+}
+
+func heartbeatLoop() {
 
 	sendSocket, err := net.ListenUDP("udp", nil)
 	if err != nil {
