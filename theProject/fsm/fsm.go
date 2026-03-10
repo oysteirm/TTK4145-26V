@@ -93,9 +93,9 @@ func OnReceivedDataFromMsgSync(
     
     }
 
-    assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-    fmt.Printf("\nNew state from new data:\n");
-    ElevatorPrint(elevatorState, assignedRequests);
+    // assignedRequests = elevatorStateGuardian.GetAssignedRequests(guardianCommands)
+    // fmt.Printf("\nNew state from new data:\n");
+    // ElevatorPrint(elevatorState, assignedRequests);
 }
 
 
