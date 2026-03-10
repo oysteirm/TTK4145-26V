@@ -71,6 +71,15 @@ func OnReceivedFreshData(
 			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutOther(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
 		}
 	}
+
+	senderID := freshSystemData.ID
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+		updatedSystemData.ElevatorData[senderID].CabRequests[floor] = update_CC(
+																				systemData.ElevatorData[senderID].CabRequests[floor], 
+																				freshSystemData.ElevatorData[senderID].CabRequests[floor], 
+																				systemData.ID)
+	}
+
 	//update hall requests with the cyclic counter
 	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, freshSystemData.HallRequestData, systemData.ID)
 
@@ -123,16 +132,16 @@ func UpdateElevatorDataAboutSelf(
 		updatedData.ElevatorBarrier[ID] = true
 	}
 
-	for floor := 0; floor < config.N_FLOORS; floor++ {
+	// for floor := 0; floor < config.N_FLOORS; floor++ {
 
-		if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
-			oldData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
+	// 	if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
+	// 		updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
 
-		} else if freshData.CabRequests[floor].Value != CC_Uninit {
-			updatedData.CabRequests[floor] = freshData.CabRequests[floor]
-			updatedData.CabRequests[floor].Barrier[ID] = true
-		}
-	}
+	// 	} else if freshData.CabRequests[floor].Value != CC_Uninit {
+	// 		updatedData.CabRequests[floor] = freshData.CabRequests[floor]
+	// 		updatedData.CabRequests[floor].Barrier[ID] = true
+	// 	}
+	// }
 
 	return updatedData
 }
@@ -153,16 +162,16 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	}
 
-	//Updating cab requests
-	for floor := 0; floor < config.N_FLOORS; floor++ {
+	// //Updating cab requests
+	// for floor := 0; floor < config.N_FLOORS; floor++ {
 
-		if oldData.CabRequests[floor].Value == CC_Uninit {
-			updatedData.CabRequests[floor] = update_CC(oldData.CabRequests[floor], freshData.CabRequests[floor], localID)
+	// 	if oldData.CabRequests[floor].Value == CC_Uninit {
+	// 		updatedData.CabRequests[floor] = update_CC(oldData.CabRequests[floor], freshData.CabRequests[floor], localID)
 
-		} else if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
-			updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
-		}	
-	}
+	// 	} else if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
+	// 		updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
+	// 	}	
+	// }
 
 	return updatedData
 }
