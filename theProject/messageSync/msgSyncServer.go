@@ -113,7 +113,7 @@ func MessageSyncServer(
 					if confirmedSystemData.ElevatorData[localID].Floor != -1 {
 						fmt.Println("Sending new confirmed data to FSM")
 						ChatGPT_SystemPrint(confirmedSystemData)
-						dataToFSM <updated_CC.Barrier = boolUnion(old_CC.Barrier, new_CC.Barrier)- confirmedSystemData
+						dataToFSM <- confirmedSystemData
 						isConfirmedDataUpdated = false
 					}
 				}
