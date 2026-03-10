@@ -108,6 +108,8 @@ func MessageSyncServer(
 			//If we have new confirmed data, we sent it to the elevator FSM
 			if isConfirmedDataUpdated {
 				if (confirmedSystemData.ElevatorData[localID].Floor != -1){
+					fmt.Println("Sending new confirmed data to FSM")
+					ChatGPT_SystemPrint(confirmedSystemData)
 					dataToFSM <- confirmedSystemData
 				}
 			}
