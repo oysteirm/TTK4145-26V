@@ -21,10 +21,10 @@ const (
 // RunProcessPair ensures only the current PRIMARY continues with main startup.
 //
 // Behaviour:
-// - Initial primary: spawns backup, starts heartbeat sender, returns.
-// - Backup: blocks waiting for heartbeats.
-// - On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
-//   then returns as the new primary.
+//   - Initial primary: spawns backup, starts heartbeat sender, returns.
+//   - Backup: blocks waiting for heartbeats.
+//   - On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
+//     then returns as the new primary.
 func RunProcessPair() {
 	role := roleFromArgs() // "primary" or "backup"
 
