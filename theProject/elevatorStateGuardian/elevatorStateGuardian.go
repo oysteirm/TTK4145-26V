@@ -87,14 +87,14 @@ func ElevatorStateGuardian(
 		case SetElevatorData_t:
 			old := systemData.ElevatorData[localID]
 
-			elevatorDataChanged  := 
+			changed  := 
 					old.IsFunctional != c.ElevatorData.IsFunctional ||
         			old.Floor != c.ElevatorData.Floor ||
         			old.ElevatorBehaviour != c.ElevatorData.ElevatorBehaviour ||
         			old.MotorDirection != c.ElevatorData.MotorDirection
 
 					
-			if elevatorDataChanged {
+			if changed {
 			systemData.ElevatorData[localID].IsFunctional = c.ElevatorData.IsFunctional
 			systemData.ElevatorData[localID].Floor = c.ElevatorData.Floor
 			systemData.ElevatorData[localID].ElevatorBehaviour = c.ElevatorData.ElevatorBehaviour
@@ -102,6 +102,7 @@ func ElevatorStateGuardian(
 
 			systemData.ElevatorData[localID].ElevatorBarrier = [config.N_ELEVATORS]bool{}
 			systemData.ElevatorData[localID].ElevatorBarrier[localID] = true
+			elevatorDataChanged = true
 			}
 
 		case SetIsFunctional_t:
