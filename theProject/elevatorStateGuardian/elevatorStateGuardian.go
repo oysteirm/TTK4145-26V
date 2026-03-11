@@ -80,8 +80,19 @@ func ElevatorStateGuardian(
 			c.Reply <- assignedRequests
 
 		//Used by msg sync to set the new confirmed system data
+		//Not letting potentially old data overwrite the local state
 		case SetSystemData_t:
+			tmpFloor := systemData.ElevatorData[localID].Floor
+			tmpElevatorBehaviour := systemData.ElevatorData[localID].ElevatorBehaviour
+			tmpMotorDirection := systemData.ElevatorData[localID].MotorDirection
+			tmpIsFunctional := systemData.ElevatorData[localID].IsFunctional
+
 			systemData = c.SystemData
+
+			systemData.ElevatorData[localID].Floor = tmpFloor
+			systemData.ElevatorData[localID].MotorDirection = tmpMotorDirection
+			systemData.ElevatorData[localID].ElevatorBehaviour = tmpElevatorBehaviour
+			systemData.ElevatorData[localID].IsFunctional = tmpIsFunctional
 
 		//Used by the FSM to set the local elevator state
 		case SetElevatorData_t:

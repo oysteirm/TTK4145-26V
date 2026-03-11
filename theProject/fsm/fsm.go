@@ -26,6 +26,8 @@ func LightHallLights(Hall_Requests [config.N_FLOORS][config.N_UP_DOWN]messageSyn
 
 // elevator moves down on init between floors
 func OnInitBetweenFloors(guardianCommands chan elevatorStateGuardian.GuardianCommands_t, drv_floors chan int) {
+	
+	elevator_IO.SetDoorOpenLamp(false)
 	elevator_IO.SetMotorDirection(elevator_IO.MD_Down)
 
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
@@ -83,10 +85,12 @@ func OnReceivedDataFromMsgSync(
 	case elevator_IO.EB_Moving:
 		isFunctionalStart <- struct{}{}
 		elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
+		elevator_IO.SetDoorOpenLamp(false)
 
 	case elevator_IO.EB_Idle:
 		isFunctionalStop <- struct{}{}
 		elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
+		elevator_IO.SetDoorOpenLamp(false)
 
 	}
 
