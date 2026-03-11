@@ -121,12 +121,18 @@ func RequestsClearAtCurrentFloor(
 
 // --- “static” helpers ---
 
+func validFloor(floor int)bool{
+	return floor>=0 && floor <elevator_IO.N_FLOORS
+}
+
 func requestsAbove(
 	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
-	for f := elevatorState.Floor + 1; f < elevator_IO.N_FLOORS; f++ {
+
+	
+	for floor := elevatorState.Floor + 1; floor < elevator_IO.N_FLOORS; floor++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
-			if assignedRequests[f][btn] {
+			if assignedRequests[floor][btn] {
 				return true
 			}
 		}
@@ -138,9 +144,9 @@ func requestsBelow(
 	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
-	for f := 0; f < elevatorState.Floor; f++ {
+	for floor := 0; floor < elevatorState.Floor; floor++ {
 		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
-			if assignedRequests[f][btn] {
+			if assignedRequests[floor][btn] {
 				return true
 			}
 		}
@@ -151,6 +157,10 @@ func requestsBelow(
 func requestsHere(
 	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
+	
+	if !validFloor(elevatorState.Floor){
+		return false
+	}
 
 	for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
 		if assignedRequests[elevatorState.Floor][btn] {
