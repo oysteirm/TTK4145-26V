@@ -186,7 +186,8 @@ func MessageSyncServer(
 		case peersUpdate := <-peersReciever:
 			ActivePeers = fromPeersUpdateToActivePeers(peersUpdate)
 			ActivePeers[localID] = true
-			systemData = normalizeCCForCurrentPeers(systemData, localID)
+			fmt.Println("New peer update!!")
+			systemData = update_CC_ForCurrentPeers(systemData, localID)
 			for i := 0; i < config.N_ELEVATORS; i++ {
 				//if there is new info, new barrier
 				if systemData.ElevatorData[i].IsAlive != ActivePeers[i] {

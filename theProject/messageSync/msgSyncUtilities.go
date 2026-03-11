@@ -275,7 +275,7 @@ func update_CC(old_CC RequestCyclicCounter_t,
 // -----------------------------------------------------------
 func checkBarrier(Barrier [config.N_ELEVATORS]bool) bool {
 	for i := 0; i < config.N_ELEVATORS; i++ {
-		if Barrier[i] != ActivePeers[i] {
+		if ActivePeers[i] && !Barrier[i] {
 			return false
 		}
 	}
@@ -317,24 +317,24 @@ func peerStrToInt(peerStr string) int {
 	return num
 }
 
-func normalizeCCForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
-	updated := systemData
+func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
+	updatedSystemData := systemData
 
 	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
 		for floor := 0; floor < config.N_FLOORS; floor++ {
-			cc := updated.ElevatorData[elevatorID].CabRequests[floor]
-			updated.ElevatorData[elevatorID].CabRequests[floor] = update_CC(cc, cc, localID)
+		request_CC := updatedSystemData.ElevatorData[elevatorID].CabRequests[floor]
+			updatedSystemData.ElevatorData[elevatorID].CabRequests[floor] = update_CC(request_CC, request_CC, localID)
 		}
 	}
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
 		for btn := 0; btn < config.N_UP_DOWN; btn++ {
-			cc := updated.HallRequestData[floor][btn]
-			updated.HallRequestData[floor][btn] = update_CC(cc, cc, localID)
+			request_CC := updatedSystemData.HallRequestData[floor][btn]
+			updatedSystemData.HallRequestData[floor][btn] = update_CC(request_CC, request_CC, localID)
 		}
 	}
 
-	return updated
+	return updatedSystemData
 }
 
 //-----------------------------------------------------------
