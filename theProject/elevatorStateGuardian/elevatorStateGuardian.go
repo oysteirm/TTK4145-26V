@@ -85,6 +85,16 @@ func ElevatorStateGuardian(
 
 		//Used by the FSM to set the local elevator state
 		case SetElevatorData_t:
+			old := systemData.ElevatorData[localID]
+
+			elevatorDataChanged  := 
+					old.IsFunctional != c.ElevatorData.IsFunctional ||
+        			old.Floor != c.ElevatorData.Floor ||
+        			old.ElevatorBehaviour != c.ElevatorData.ElevatorBehaviour ||
+        			old.MotorDirection != c.ElevatorData.MotorDirection
+
+					
+			if elevatorDataChanged {
 			systemData.ElevatorData[localID].IsFunctional = c.ElevatorData.IsFunctional
 			systemData.ElevatorData[localID].Floor = c.ElevatorData.Floor
 			systemData.ElevatorData[localID].ElevatorBehaviour = c.ElevatorData.ElevatorBehaviour
@@ -92,7 +102,7 @@ func ElevatorStateGuardian(
 
 			systemData.ElevatorData[localID].ElevatorBarrier = [config.N_ELEVATORS]bool{}
 			systemData.ElevatorData[localID].ElevatorBarrier[localID] = true
-			elevatorDataChanged = true
+			}
 
 		case SetIsFunctional_t:
 			systemData.ElevatorData[localID].IsFunctional = c.IsFunctional

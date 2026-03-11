@@ -38,9 +38,9 @@ func main() {
 	//TODO: initialize all variables and constants
 	//TODO: initialize all the channels
 	//elevatorServer channels
-	elevatorDataToMsgSyncFrom_FSM := make(chan messageSync.ElevatorData_t)
-	requestToMsgSyncFrom_FSM := make(chan []elevator_IO.ButtonEvent_t)
-	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t)
+	elevatorDataToMsgSyncFrom_FSM := make(chan messageSync.ElevatorData_t,16)
+	requestToMsgSyncFrom_FSM := make(chan []elevator_IO.ButtonEvent_t,16)
+	systemDataTo_FSM_FromMsgSync := make(chan messageSync.SystemData_t,16)
 
 	//TODO: launch the go routines
 	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, *localID)

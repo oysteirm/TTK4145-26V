@@ -22,7 +22,7 @@ func ElevatorServer(
 	elevator_IO.Init(ioAddr, config.N_FLOORS)
 	isObstructed := false
 
-	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)
+	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t,32)
 
 	// Start elevator state server
 	go elevatorStateGuardian.ElevatorStateGuardian(guardianCommands, elevatorDataToMsgSync, requestToMsgSync, localID)
