@@ -79,7 +79,7 @@ func OnReceivedDataFromMsgSync(
 		doorTimerStart <- struct{}{}
 
 		//change RequestsClearAtCurrentFloor return cleared request (in floor)
-		requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+		requestsToClear := requests.RequestsClearOnNewData(elevatorState, assignedRequests)
 		guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 	case elevator_IO.EB_Moving:
@@ -137,7 +137,7 @@ func OnFloorArrival(
 			//removing this for keeping the previous direction, to avoid clearing both up and down in single floor when not supposed to
 			//elevatorState.MotorDirection = elevator_IO.MD_Stop
 
-			requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+			requestsToClear := requests.RequestsClearOnFloorArrival(elevatorState, assignedRequests)
 			guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 			//RESET doorTimer
@@ -192,7 +192,7 @@ func OnDoorTimeout(
 			doorTimerStop <- struct{}{}
 			doorTimerStart <- struct{}{}
 
-			requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+			requestsToClear := requests.RequestsClearOnDoorTimeout(elevatorState, assignedRequests)
 			guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 		case elevator_IO.EB_Moving:

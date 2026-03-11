@@ -186,3 +186,90 @@ func appendRequestsToClearIfExisting(
 	return requestsToClear
 
 }
+
+//in progess below
+
+func RequestsClearOnFloorArrival(
+	elevatorState messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
+	
+	var requestsToClear []elevator_IO.ButtonEvent_t
+	requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
+	
+	switch elevatorState.MotorDirection {
+
+	case elevator_IO.MD_Up:
+		
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+
+	case elevator_IO.MD_Down:
+		
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+
+	case elevator_IO.MD_Stop:
+		fallthrough
+	default:
+	}
+
+	return requestsToClear
+}
+
+func RequestsClearOnDoorTimeout(
+	elevatorState messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
+	
+	var requestsToClear []elevator_IO.ButtonEvent_t
+	requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
+	
+	switch elevatorState.MotorDirection {
+
+	case elevator_IO.MD_Up:
+		if !requestsAbove(elevatorState, assignedRequests) && !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp] {
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		}
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+
+	case elevator_IO.MD_Down:
+		if !requestsBelow(elevatorState, assignedRequests) && !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallDown] {
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		}
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+
+	case elevator_IO.MD_Stop:
+		fallthrough
+	default:
+	}
+
+	return requestsToClear
+}
+
+func RequestsClearOnNewData(
+	elevatorState messageSync.ElevatorData_t,
+	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
+	
+	var requestsToClear []elevator_IO.ButtonEvent_t
+	requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_Cab, requestsToClear)
+	
+	switch elevatorState.MotorDirection {
+
+	case elevator_IO.MD_Up:
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+
+	case elevator_IO.MD_Down:
+		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+
+	case elevator_IO.MD_Stop:
+		fallthrough
+
+	default:
+		if assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp]{
+
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+
+		} else {
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		}
+	}
+
+	return requestsToClear
+}
