@@ -39,11 +39,11 @@ func ElevatorServer(
 	fsm.OnInitBetweenFloors(guardianCommands, drv_floors)
 
 	// Timers
-	doorTimerStart := make(chan struct{})
-	doorTimerStop := make(chan struct{})
+	doorTimerStart := make(chan struct{}, 1)
+	doorTimerStop := make(chan struct{}, 1)
 	doorTimerTimeout := make(chan struct{})
-	isFunctionalStart := make(chan struct{})
-	isFunctionalStop := make(chan struct{})
+	isFunctionalStart := make(chan struct{}, 1)
+	isFunctionalStop := make(chan struct{}, 1)
 	isFunctionalTimeout := make(chan struct{})
 
 	//work in progress
@@ -58,6 +58,10 @@ func ElevatorServer(
 			if newSystemData.ElevatorData[localID].Floor == -1 {
 				break
 			}
+			guardianCommands <- elevatorStateGuardian.SetSystemData_t{SystemData: newSystemData}
+
+			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
+			fsm.LightHallLights(newSystemData.HallRequestData)
 			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
 			if requestsMap == nil {
 				break
@@ -69,11 +73,8 @@ func ElevatorServer(
 			}
 
 			//Store requests, send this and the confirmed system data
-			guardianCommands <- elevatorStateGuardian.SetSystemData_t{SystemData: newSystemData}
 			guardianCommands <- elevatorStateGuardian.SetAssignedRequest_t{AssignedRequests: assignedRequests}
 
-			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
-			fsm.LightHallLights(newSystemData.HallRequestData)
 
 			fsm.OnReceivedDataFromMsgSync(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, isObstructed)
 
