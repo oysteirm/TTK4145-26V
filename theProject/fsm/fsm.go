@@ -116,7 +116,14 @@ func OnFloorArrival(
 	elevator_IO.SetFloorIndicator(newFloor)
 
 	if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
+		//Not being able to go through the floor or the roof
+		if (elevatorState.Floor == 0 && elevatorState.MotorDirection==elevator_IO.MD_Down) ||
+	 		(elevatorState.Floor == (elevator_IO.N_FLOORS-1) && elevatorState.MotorDirection==elevator_IO.MD_Up){
+			elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
+			}
 		if requests.RequestsShouldStop(elevatorState, assignedRequests) {
+
+			
 
 			elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
 			elevator_IO.SetDoorOpenLamp(true)

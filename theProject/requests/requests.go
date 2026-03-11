@@ -61,10 +61,12 @@ func RequestsShouldStop(
 	elevatorState messageSync.ElevatorData_t, 
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
-	// Requests [][]bool:
+
 	if elevatorState.Floor < 0 || elevatorState.Floor >= len(assignedRequests) {
 		return false
 	}
+	
+	
 
 	switch elevatorState.MotorDirection {
 	case elevator_IO.MD_Down:
