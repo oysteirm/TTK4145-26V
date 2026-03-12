@@ -8,6 +8,17 @@ import (
 	"theProject/messageSync"
 )
 
+/*
+-----------------------------------
+Functionality: 
+	- Owns the local systemState used to control the local elevator FSM
+	- Communicates new elevator data and done requests to messageSync
+	- guardianCommands is used bu elevatorSever to get and set systemDataValues
+-----------------------------------
+*/
+
+
+// Channel type for communicating with the elevatorStateGuardian
 type GuardianCommands_t interface{}
 
 // Get types
@@ -51,25 +62,25 @@ type SetAssignedRequest_t struct {
 	AssignedRequests elevator_IO.AssignedRequests_t
 }
 
-// routine that owns the local elevator data
-// responible for message passing with messageSync, FSM and RA
+// Go routine that owns the local systemData
 func ElevatorStateGuardian(
-	guardianCommands chan GuardianCommands_t, //channel for using the locally stored system state
-	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, //channel for sending data to messageSyncServer
-	requestsToMsgSync chan<- []elevator_IO.ButtonEvent_t, //channel for sending done request CC to msg sync
-	localID int) { //ID of the local elevator
-
-	requests_temp := make([][]bool, elevator_IO.N_FLOORS)
-	for i := range requests_temp {
-		requests_temp[i] = make([]bool, elevator_IO.N_BUTTONS)
-	}
+	guardianCommands chan GuardianCommands_t, 					//channel for get / set systemData
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, 	//channel for sending data to messageSyncServer
+	requestsToMsgSync chan<- []elevator_IO.ButtonEvent_t, 		//channel for sending done request CC to messageSyncServer
+	localID int) { 												//ID of the local elevator
 
 	//Initialize the system data
 	var systemData messageSync.SystemData_t
-	var assignedRequests elevator_IO.AssignedRequests_t = requests_temp
 	systemData, _ = messageSync.InitSystemData(localID)
 	var elevatorDataChanged bool = false
 
+	requests_temp := make([][]bool, config.N_FLOORS)
+	for i := range requests_temp {
+		requests_temp[i] = make([]bool, config.N_BUTTONS)
+	}
+	var assignedRequests elevator_IO.AssignedRequests_t = requests_temp
+
+	
 	for cmd := range guardianCommands {
 		switch c := cmd.(type) {
 
