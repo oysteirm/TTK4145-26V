@@ -104,8 +104,8 @@ func main() {
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
-		case a := <-sysRX:
-			testHelpers.MoreReadablePrint_JSON("Received SystemData",a)
+		// case a := <-sysRX:
+		// 	//testHelpers.MoreReadablePrint_JSON("Received SystemData",a)
 		}
 	}
 }

@@ -26,6 +26,8 @@ func LightHallLights(Hall_Requests [config.N_FLOORS][config.N_UP_DOWN]messageSyn
 
 // elevator moves down on init between floors
 func OnInitBetweenFloors(guardianCommands chan elevatorStateGuardian.GuardianCommands_t, drv_floors chan int) {
+	
+	elevator_IO.SetDoorOpenLamp(false)
 	elevator_IO.SetMotorDirection(elevator_IO.MD_Down)
 
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
@@ -77,16 +79,18 @@ func OnReceivedDataFromMsgSync(
 		doorTimerStart <- struct{}{}
 
 		//change RequestsClearAtCurrentFloor return cleared request (in floor)
-		requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+		requestsToClear := requests.RequestsClearOnNewData(elevatorState, assignedRequests)
 		guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 	case elevator_IO.EB_Moving:
 		isFunctionalStart <- struct{}{}
 		elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
+		elevator_IO.SetDoorOpenLamp(false)
 
 	case elevator_IO.EB_Idle:
 		isFunctionalStop <- struct{}{}
 		elevator_IO.SetMotorDirection((elevatorState.MotorDirection))
+		elevator_IO.SetDoorOpenLamp(false)
 
 	}
 
@@ -116,7 +120,14 @@ func OnFloorArrival(
 	elevator_IO.SetFloorIndicator(newFloor)
 
 	if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
+		//Not being able to go through the floor or the roof
+		if (elevatorState.Floor == 0 && elevatorState.MotorDirection==elevator_IO.MD_Down) ||
+	 		(elevatorState.Floor == (elevator_IO.N_FLOORS-1) && elevatorState.MotorDirection==elevator_IO.MD_Up){
+			elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
+			}
 		if requests.RequestsShouldStop(elevatorState, assignedRequests) {
+
+			
 
 			elevator_IO.SetMotorDirection(elevator_IO.MD_Stop)
 			elevator_IO.SetDoorOpenLamp(true)
@@ -126,7 +137,7 @@ func OnFloorArrival(
 			//removing this for keeping the previous direction, to avoid clearing both up and down in single floor when not supposed to
 			//elevatorState.MotorDirection = elevator_IO.MD_Stop
 
-			requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+			requestsToClear := requests.RequestsClearOnFloorArrival(elevatorState, assignedRequests)
 			guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 			//RESET doorTimer
@@ -181,7 +192,7 @@ func OnDoorTimeout(
 			doorTimerStop <- struct{}{}
 			doorTimerStart <- struct{}{}
 
-			requestsToClear := requests.RequestsClearAtCurrentFloor(elevatorState, assignedRequests)
+			requestsToClear := requests.RequestsClearOnDoorTimeout(elevatorState, assignedRequests)
 			guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
 
 		case elevator_IO.EB_Moving:
