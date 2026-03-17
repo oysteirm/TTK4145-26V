@@ -60,7 +60,7 @@ Available flags:
 
 ## Startup Sequence
 1. Start the elevator simulator or elevator server for each elevator
-2. Run one Go process per elevator with a unique ```-id````
+2. Run one Go process per elevator with a unique ```-id```
 3. Verify that peers are discovered
 
 ## Configuration

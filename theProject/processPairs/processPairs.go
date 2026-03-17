@@ -5,11 +5,11 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"runtime"
-	"strings"
 	"time"
 	"theProject/config"
 )
+
+const backupArg = "--backup"
 
 /*
 -----------------------------------
@@ -33,7 +33,7 @@ func RunProcessPair() {
 // Checks if this process was spawned as a backup.
 func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
-		if arg == "--backup" {
+		if arg == backupArg {
 			return true
 		}
 	}
@@ -104,9 +104,9 @@ func runBackup() {
 	}
 }
 
-// Launches a new instance of this binary with the --backup flag.
+// Spawn backup process.
 func spawnBackup() {
-	// Prefer the executable path returned by os.Executable
+	// prefer the executable path returned by os.Executable, fallback to argv[0]
 	self, err := os.Executable()
 	if err != nil {
 		self = os.Args[0]
@@ -150,7 +150,11 @@ func trySpawnBackupInLinuxTerminal(self string, args []string) bool {
 	}
 
 	specs := []terminalSpec{
+		{bin: "x-terminal-emulator", params: []string{"-e", runCmd}},
 		{bin: "gnome-terminal", params: []string{"--", "bash", "-lc", runCmd}},
+		{bin: "konsole", params: []string{"-e", "bash", "-lc", runCmd}},
+		{bin: "xfce4-terminal", params: []string{"-e", runCmd}},
+		{bin: "xterm", params: []string{"-e", runCmd}},
 	}
 
 	for _, spec := range specs {
@@ -172,10 +176,8 @@ func shellQuote(s string) string {
 // Re-launches the primary role in this same process,
 // without restarting the binary, just switches role internally.
 func promoteToPrimary() {
-	// remove --backup flag from args so future children are
-	// always started in backup mode only
 	for i, a := range os.Args {
-		if a == "--backup" {
+		if a == backupArg {
 			os.Args = append(os.Args[:i], os.Args[i+1:]...)
 			break
 		}
