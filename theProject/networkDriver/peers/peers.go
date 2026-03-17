@@ -1,6 +1,6 @@
 package peers
 
-// The functionalities in this file are fetched from https://github.com/TTK4145/Network-go/blob/master/network/peers/peers.go
+// This code is fetched from https://github.com/TTK4145/Network-go/blob/master/network/peers/peers.go
 
 import (
 	"theProject/networkDriver/conn"

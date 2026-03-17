@@ -2,7 +2,7 @@
 
 package conn
 
-// The functionalities in this file are fetched from https://github.com/TTK4145/Network-go/blob/master/network/conn/bcast_conn_windows.go
+// This code is from https://github.com/TTK4145/Network-go/blob/master/network/conn/bcast_conn_windows.go
 
 // Windows socket error codes can be found here
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms740668(v=vs.85).aspx
