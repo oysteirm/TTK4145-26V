@@ -16,6 +16,8 @@ import (
 -----------------------------------
 Functionality: 
 	- Event based finite state machine (FSM) for local elevator
+	- Changing states on events and setting it in elevatorStateGuardian
+	- Using elevator_IO functions for controlling hardware (motor and lights)
 -----------------------------------
 */
 
@@ -111,10 +113,11 @@ func OnFloorArrival(
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
 	assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
 
+	// Dont need this, but is scared to delete
+	// if !isObstructed {
+	// 	elevatorState.IsFunctional = true
+	// }
 	
-	if !isObstructed {
-		elevatorState.IsFunctional = true
-	}
 	elevatorState.Floor = newFloor
 	elevator_IO.SetFloorIndicator(newFloor)
 
