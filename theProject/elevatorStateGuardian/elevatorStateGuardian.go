@@ -11,7 +11,7 @@ import (
 Functionality: 
 	- Owns the local systemState used to control the local elevator FSM
 	- Communicates new elevator data and done requests to messageSync
-	- guardianCommands is used by elevatorSever for message passing to get and set systemData Values.
+	- guardianCommands is used by elevatorSever for message passing to get and set system data values.
 	  It is used by sending the correct struct type to the channel. 
 -----------------------------------
 */
@@ -54,10 +54,10 @@ type SetAssignedRequest_t struct {
 
 
 func ElevatorStateGuardian(
-	guardianCommands chan GuardianCommands_t, 					// Channel for get / set systemData
-	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, 	// Channel for sending data to messageSyncServer
-	requestsToMsgSync chan<- []elevator_IO.ButtonEvent_t, 		// Channel for sending done request CC to messageSyncServer
-	localID int) { 												// ID of the local elevator
+	guardianCommands chan GuardianCommands_t, 					
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, 	
+	requestsToMsgSync chan<- []elevator_IO.ButtonEvent_t, 		
+	localID int) { 												
 
 	// Initialize the system data
 	var systemData messageSync.SystemData_t
@@ -70,7 +70,7 @@ func ElevatorStateGuardian(
 	}
 	var assignedRequests elevator_IO.AssignedRequests_t = requests_temp
 
-	// Loop that continuesly decodes guardianCommands type and executes it. 
+	// Loop that continously decodes guardianCommands type and executes it
 	for cmd := range guardianCommands {
 		switch c := cmd.(type) {
 
@@ -81,7 +81,7 @@ func ElevatorStateGuardian(
 			c.Reply <- assignedRequests
 
 		// Used by msg sync to set the new confirmed system data
-		// But Not letting potentially old data overwrite the local state
+		// But not letting potentially old data overwrite the local state
 		case SetSystemData_t:
 			tmpFloor := systemData.ElevatorData[localID].Floor
 			tmpElevatorBehaviour := systemData.ElevatorData[localID].ElevatorBehaviour
@@ -138,19 +138,16 @@ func ElevatorStateGuardian(
 				requestsToMsgSync <- filteredRequests
 			}
 
-		// The assigned reqests from RA
 		case SetAssignedRequest_t:
 			assignedRequests = c.AssignedRequests
 		}
 
-		// If data in the elevator state was changed by FSM, then we send it to messageSync
 		if elevatorDataChanged {
 			elevatorDataToMsgSync <- systemData.ElevatorData[localID]
 			elevatorDataChanged = false
 		}
 	}
 }
-
 
 // Functions for using the get functionallity with guardianCommands
 func GetElevatorData(guardianCommands chan GuardianCommands_t) messageSync.ElevatorData_t {

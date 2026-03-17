@@ -12,8 +12,6 @@ import (
 Functionality:
 	- Converts confirmed system data into the format required by the request assigner
 	- Filters out invalid or unusable elevators before sending data to the assigner
-
-Design:
 	- Acts as a translation layer between internal data structures and RA input format
 	- Only valid elevators are included in assignment to avoid bad decisions
 	- Falls back to including all alive elevators if no fully valid ones are found
@@ -21,6 +19,7 @@ Design:
 */
 
 func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_SystemData_t {
+
 	RA_systemData := RA_SystemData_t{}
 
 	// Convert hall requests to boolean format expected by the request assigner
@@ -31,7 +30,6 @@ func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_S
 		}
 	}
 
-	// Initialize map of elevator states
 	RA_systemData.States = make(map[string]RA_LocalElevatorState_t)
 	
 	// Adding valid elevators (alive, functional, and with known floor)
@@ -63,12 +61,14 @@ func Generating_RA_SystemData(confirmedSystemData messageSync.SystemData_t) RA_S
 				continue
 			}
 
+			// Convert cab requests to boolean slice
 			cabBools := make([]bool, config.N_FLOORS)
 			for floor := 0; floor < config.N_FLOORS; floor++ {
 				cabBools[floor] = converters.CC_ToBool(elevator.CabRequests[floor].Value)
 			}
 
 			IdStr := strconv.Itoa(elevator.ID)
+			
 			RA_systemData.States[IdStr] = RA_LocalElevatorState_t{
 				Behavior:    converters.ElevatorBehaviourToString(elevator.ElevatorBehaviour),
 				Floor:       elevator.Floor,

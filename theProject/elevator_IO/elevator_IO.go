@@ -36,7 +36,7 @@ const (
 type ButtonType_t int
 
 const (
-	BT_HallUp   ButtonType_t = 0
+	BT_HallUp ButtonType_t = 0
 	BT_HallDown            = 1
 	BT_Cab                 = 2
 )
@@ -46,11 +46,8 @@ type ButtonEvent_t struct {
 	Button ButtonType_t
 }
 
-const N_FLOORS int = 4
-const N_BUTTONS ButtonType_t = 3
-const N_UP_DOWN int = 2
-
 type ElevatorBehaviour_t int
+
 type AssignedRequests_t [][]bool
 
 const (
@@ -60,6 +57,7 @@ const (
 )
 
 func Init(addr string, numFloors int) {
+	
 	if _initialized {
 		fmt.Println("Driver already initialized!")
 		return

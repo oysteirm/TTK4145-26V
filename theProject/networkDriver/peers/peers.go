@@ -13,11 +13,11 @@ Functionality:
 */
 
 import (
-	"theProject/networkDriver/conn"
 	"fmt"
 	"net"
 	"sort"
 	"time"
+	"theProject/networkDriver/conn"
 )
 
 type PeerUpdate struct {

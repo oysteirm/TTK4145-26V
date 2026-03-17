@@ -7,7 +7,17 @@ import (
 	"theProject/elevator_IO"
 	"theProject/networkDriver/peers"
 )
-
+/*
+-----------------------------------
+Functionality: 
+	Update functions: 
+		- Input / output functions that return an updated variable based on the data on input
+		- Uses ID, barriers and cyclic counter (CC) logic to decide what data to update
+	Helper functions:
+		- Converting functions for peers
+		- Union and ActivePeers check for barriers
+-----------------------------------
+*/
 
 func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
@@ -50,7 +60,7 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 	return systemData, systemData
 }
 
-// Processing the freshSystemData and updating systemData and confirmedSystemData accordingly
+// Processing the freshSystemData, updating systemData and confirmedSystemData accordingly
 func onReceivedFreshData(
 	systemData SystemData_t,
 	confirmedSystemData SystemData_t,
@@ -67,22 +77,10 @@ func onReceivedFreshData(
 			updatedSystemData.ElevatorData[elevatorID] = updateElevatorDataAboutSelf(	systemData.ElevatorData[elevatorID], 
 																						freshSystemData.ElevatorData[elevatorID], 
 																						systemData.ID)
-
 		} else {
 			updatedSystemData.ElevatorData[elevatorID] = updateElevatorDataAboutOther(	systemData.ElevatorData[elevatorID], 
 																						freshSystemData.ElevatorData[elevatorID], 
 																						systemData.ID)
-		}
-	}
-	
-	//TODO: evaluate if this belongs here
-	// Updating all the cab requests using the Cyclic Counter logic
-	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
-		for floor := 0; floor < config.N_FLOORS; floor++ {
-			updatedSystemData.ElevatorData[elevatorID].CabRequests[floor] = update_CC(
-				systemData.ElevatorData[elevatorID].CabRequests[floor],
-				freshSystemData.ElevatorData[elevatorID].CabRequests[floor],
-				systemData.ID)
 		}
 	}
 
@@ -140,6 +138,14 @@ func updateElevatorDataAboutSelf(
 		updatedData.ElevatorBarrier 	= freshData.ElevatorBarrier
 		updatedData.ElevatorBarrier[ID] = true
 	}
+	
+	// Updating cab requests
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+			updatedData.CabRequests[floor] = update_CC(
+				oldData.CabRequests[floor],
+				freshData.CabRequests[floor],
+				ID)
+	}
 
 	return updatedData
 }
@@ -160,6 +166,14 @@ func updateElevatorDataAboutOther(
 		oldData.MotorDirection == freshData.MotorDirection {
 
 		updatedData.ElevatorBarrier = boolArrayUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
+	}
+
+	// Updating cab requests
+	for floor := 0; floor < config.N_FLOORS; floor++ {
+			updatedData.CabRequests[floor] = update_CC(
+				oldData.CabRequests[floor],
+				freshData.CabRequests[floor],
+				ID)
 	}
 
 	return updatedData
@@ -192,7 +206,7 @@ func updateConfirmedSystemData(
 		}
 
 		// Dont need Barrier check since update_CC() have Barrier checks
-		for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
+		for floor := 0; floor < config.N_FLOORS; floor++ {
 
 			if  unconfirmedData.ElevatorData[elevatorID].CabRequests[floor].Value != 
 				confirmedData.ElevatorData[elevatorID].CabRequests[floor].Value {
@@ -204,7 +218,7 @@ func updateConfirmedSystemData(
 	}
 
 	// Dont need Barrier check since update_CC() have Barrier checks
-	for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
+	for floor := 0; floor < config.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
 
 			if  unconfirmedData.HallRequestData[floor][btn].Value != 
@@ -244,7 +258,7 @@ func update_CC(
 		updated_CC.Barrier[ID] 	= true
 	}
 
-	// Transition the CC if consesus is reached
+	// Transition the CC if consensus is reached
 	if updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier) {
 		updated_CC.Value 		= CC_Confirmed
 		updated_CC.Barrier 		= [config.N_ELEVATORS]bool{}
@@ -259,7 +273,7 @@ func update_CC(
 	return updated_CC
 }
 
-// Checks if request cyclic counters can transition to new state based on ActivePeers
+// Checks if request CCs can transition to new state based on ActivePeers
 func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
 
 	updatedSystemData := systemData
@@ -279,8 +293,6 @@ func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_
 	}
 	return updatedSystemData
 }
-
-//-----------------------------------------------------------
 
 // Helper functions
 // -----------------------------------------------------------
@@ -369,15 +381,15 @@ func systemPrintHorizontal(systemData SystemData_t) {
 	}
 	fmt.Println()
 
-	for f := elevator_IO.N_FLOORS - 1; f >= 0; f-- {
+	for f := config.N_FLOORS - 1; f >= 0; f-- {
 
 		for i := 0; i < config.N_ELEVATORS; i++ {
 
 			fmt.Printf("  | %d", f)
 
-			for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
+			for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.ButtonType_t(config.N_BUTTONS); btn++ {
 
-				if (f == elevator_IO.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
+				if (f == config.N_FLOORS-1 && btn == elevator_IO.BT_HallUp) ||
 					(f == 0 && btn == elevator_IO.BT_HallDown) {
 
 					fmt.Print("|     ")
@@ -413,8 +425,7 @@ func systemPrintHorizontal(systemData SystemData_t) {
 	fmt.Println()
 }
 
-// MARK: The functions below is also implemented other places, 
-// but is duplicated due to cycle import problems
+// NOTE: The functions below is also implemented other places, but is duplicated due to cycle import problems
 func CC_ToBool(cc CyclicCounter_t) bool {
 	switch cc {
 	case CC_Confirmed, CC_Done:

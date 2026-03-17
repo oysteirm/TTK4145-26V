@@ -8,14 +8,13 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
 	"theProject/config"
 )
 
 /*
 -----------------------------------
-Behaviour:
-	- Initial primary: spawns backup, starts heartbeat sender, returns
+Functionality:
+	- Initialize primary: spawns backup, starts heartbeat sender, returns
 	- Backup: blocks waiting for heartbeats
 	- On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
 	then returns as the new primary
@@ -23,7 +22,6 @@ Behaviour:
 -----------------------------------
 */
 
-// Runs instance as backup or primary based on arguments.
 func RunProcessPair() {
 	if isBackupProcess() {
 		runBackup()
@@ -42,7 +40,6 @@ func isBackupProcess() bool {
 	return false
 }
 
-// Spawns a backup, starts heartbeats in a goroutine, then returns.
 func runPrimary() {
 	fmt.Println("[ProcessPair] Running as PRIMARY")
 
@@ -109,7 +106,7 @@ func runBackup() {
 
 // Launches a new instance of this binary with the --backup flag.
 func spawnBackup() {
-	// prefer the executable path returned by os.Executable, fallback to argv[0]
+	// Prefer the executable path returned by os.Executable
 	self, err := os.Executable()
 	if err != nil {
 		self = os.Args[0]
@@ -153,11 +150,7 @@ func trySpawnBackupInLinuxTerminal(self string, args []string) bool {
 	}
 
 	specs := []terminalSpec{
-		{bin: "x-terminal-emulator", params: []string{"-e", runCmd}},
 		{bin: "gnome-terminal", params: []string{"--", "bash", "-lc", runCmd}},
-		{bin: "konsole", params: []string{"-e", "bash", "-lc", runCmd}},
-		{bin: "xfce4-terminal", params: []string{"-e", runCmd}},
-		{bin: "xterm", params: []string{"-e", runCmd}},
 	}
 
 	for _, spec := range specs {

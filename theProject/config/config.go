@@ -8,7 +8,7 @@ const (
 	N_BUTTONS int = 3
 	N_UP_DOWN int = 2
 	DOOR_OPEN_DURATION time.Duration = 3 * time.Second
-	IS_FUNCTIONAL_TIMER_DURATION time.Duration = 9 * time.Second
+	IS_FUNCTIONAL_TIMER_DURATION time.Duration = 5 * time.Second
 
 	BCAST_PORT int = 20014
 	PEER_UPDATE_PORT int = 20015

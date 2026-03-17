@@ -1,6 +1,6 @@
 package requestAssigner
 
-// This code is inspired by provided code, fetched from https://github.com/TTK4145/Project-resources/tree/master/cost_fns/hall_request_assigner
+// This code is inspired by provided code fetched from https://github.com/TTK4145/Project-resources/tree/master/cost_fns/hall_request_assigner
 
 import (
 	"theProject/config"
@@ -15,11 +15,9 @@ Functionallity:
 	- Converts internal system data to JSON format expected by the assigner
 	- Executes the provided request assigner 
 	- Parses and returns assigned requests back to the system
-Design: 
 	- The requestAssigner module does not implement assignment logic itself
 	- It acts as a bridge between our Go code and the provided assigner
 	- All communication with the assigner happens through JSON encoding/decoding
-
 -----------------------------------
 */
 
@@ -42,7 +40,6 @@ type RA_SystemData_t  struct {
 
 type RA_Output_t map[string][][]bool
 
-//Sends current system state to external request assigner and returns assigned requests
 func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
 	//Encoding system data to JSON string
@@ -59,7 +56,7 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 		"-i", string(input),
 	).CombinedOutput()
 
-	// Print to debug info if execution fails
+	
 	if err != nil {
 		fmt.Println("Exec error in AssignRequests:", err)
 		fmt.Println("AssignRequests output:", string(output))

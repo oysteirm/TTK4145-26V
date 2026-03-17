@@ -1,5 +1,5 @@
 package converters
-//import something to use System_Data_t??
+
 import (
 	"theProject/messageSync"
 	"theProject/elevator_IO"

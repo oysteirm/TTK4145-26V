@@ -1,36 +1,32 @@
 package requests
 
-// This code is inspired by provided code, fetched from https://github.com/TTK4145/Project-resources/blob/master/elev_algo/requests.c
+// This code is inspired by provided code fetched from https://github.com/TTK4145/Project-resources/blob/master/elev_algo/requests.c
 
 import (
-	"theProject/messageSync"
+	"theProject/config"
 	"theProject/elevator_IO"
+	"theProject/messageSync"
 )
 
 /*
 -----------------------------------
-Functionallity: 
+Functionallity:
 	- Contains logic for request decision for a local elevator
 	- Contains helper functions for checking valid floor and for requests below, above and at current floor
 	- Decides movement direction and behaviour based on assigned requests
 	- Decides when the elevator should stop
 	- Decides which requests that should be cleared
-	
-Design:
 	- The requests module does not own state itself
 	- It uses assigned requests and current elevator state
 	- The fsm calls these functions to decide what to do next
 -----------------------------------
 */
 
-// Pair used for deciding next motor direction and elevator behaviour
 type MotorDirectionBehaviourPair_t struct {
 	MotorDirection    elevator_IO.MotorDirection_t
 	ElevatorBehaviour elevator_IO.ElevatorBehaviour_t
 }
 
-
-// Chooses the next direction and behaviour for the elevator
 func RequestsChooseDirection(
 	elevatorState messageSync.ElevatorData_t, 
 	assignedRequests elevator_IO.AssignedRequests_t) MotorDirectionBehaviourPair_t {
@@ -124,16 +120,13 @@ Three functions for clearing requests at current floor due to different situatio
 	- RequestsClearOnDoorTimeout
 	- RequestsClearOnNewData
 
-
 They all return a slice of button events that should be cleared when the elevator is serving the current floor,
-but they use different clearing policies depending on when the decision is made.
+but they use different clearing policies
 
 General idea:
 	Note that requests only are appended if they actually exist.
 	- Cab request at current floor always appended 
 	- Hall requests may be appended depending on motor direction and event type
-	- Some policies are conservative, while others allow broader clearing
------------------------------------
 */
 
 // Conservative clearing policy for floor arrival, clearing hall request matching current travel direction and clearing cab requests 
@@ -147,11 +140,9 @@ func RequestsClearOnFloorArrival(
 	switch elevatorState.MotorDirection {
 
 	case elevator_IO.MD_Up:
-		
 		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
 
 	case elevator_IO.MD_Down:
-		
 		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
 
 	case elevator_IO.MD_Stop:
@@ -211,9 +202,8 @@ func RequestsClearOnNewData(
 		fallthrough
 
 	default:
-		// Choose hall up as priority, since more have to take the stairs in this case:)
+		// Choose hall up as priority, since more heavy to take the stairs in this case:)
 		if assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp]{
-
 			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
 
 		} else {
@@ -248,16 +238,15 @@ Internal helper functions for checking valid floor and for requests below, above
 */
 
 func validFloor(floor int)bool{
-	return floor>=0 && floor <elevator_IO.N_FLOORS
+	return floor>=0 && floor < config.N_FLOORS
 }
 
 func requestsAbove(
 	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
-	
-	for floor := elevatorState.Floor + 1; floor < elevator_IO.N_FLOORS; floor++ {
-		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
+	for floor := elevatorState.Floor + 1; floor < config.N_FLOORS; floor++ {
+		for btn := 0; btn < config.N_BUTTONS; btn++ {
 			if assignedRequests[floor][btn] {
 				return true
 			}
@@ -271,7 +260,7 @@ func requestsBelow(
 	assignedRequests elevator_IO.AssignedRequests_t) bool {
 
 	for floor := 0; floor < elevatorState.Floor; floor++ {
-		for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
+		for btn := 0; btn < config.N_BUTTONS; btn++ {
 			if assignedRequests[floor][btn] {
 				return true
 			}
@@ -288,7 +277,7 @@ func requestsHere(
 		return false
 	}
 
-	for btn := elevator_IO.ButtonType_t(0); btn < elevator_IO.N_BUTTONS; btn++ {
+	for btn := 0; btn < config.N_BUTTONS; btn++ {
 		if assignedRequests[elevatorState.Floor][btn] {
 			return true
 		}

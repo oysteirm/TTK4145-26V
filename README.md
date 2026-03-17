@@ -12,6 +12,7 @@ These values are defined in theProject/config/config.go
 
 ## Architecture
 **Modules**
+- elevator_IO: communication between elevator hardware and software
 - elevatorServer: local elevator logic and wires the subsystems together
 - fsm: elevator state machine and event handling
 - msgSynsServer: distributed state synchronization and button event propagation
