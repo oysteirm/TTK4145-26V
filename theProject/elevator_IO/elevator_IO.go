@@ -1,5 +1,7 @@
 package elevator_IO
 
+// This code is inspired by provided code fetched from https://github.com/TTK4145/driver-go/blob/master/elevio/elevator_io.go
+
 import (
 	"time"
 	"sync"
