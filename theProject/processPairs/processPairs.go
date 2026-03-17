@@ -14,7 +14,7 @@ const backupArg = "--backup"
 
 /*
 -----------------------------------
-Behaviour:
+Functionality:
 	- Initial primary: spawns backup, starts heartbeat sender, returns
 	- Backup: blocks waiting for heartbeats
 	- On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
@@ -23,7 +23,6 @@ Behaviour:
 -----------------------------------
 */
 
-// Runs instance as backup or primary based on arguments.
 func RunProcessPair() {
 	if isBackupProcess() {
 		runBackup()
@@ -32,7 +31,6 @@ func RunProcessPair() {
 	runPrimary()
 }
 
-// Checks if this process was spawned as a backup.
 func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
 		if arg == backupArg {
@@ -42,7 +40,6 @@ func isBackupProcess() bool {
 	return false
 }
 
-// Spawns a backup, starts heartbeats in a goroutine, then returns.
 func runPrimary() {
 	fmt.Println("[ProcessPair] Running as PRIMARY")
 
