@@ -1,5 +1,7 @@
 package bcast
 
+// The functionalities in this file are fetched from https://github.com/TTK4145/Network-go/blob/master/network/bcast/bcast.go
+
 import (
 	"theProject/networkDriver/conn"
 	"encoding/json"

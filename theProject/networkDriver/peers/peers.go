@@ -1,5 +1,7 @@
 package peers
 
+// The functionalities in this file are fetched from https://github.com/TTK4145/Network-go/blob/master/network/peers/peers.go
+
 import (
 	"theProject/networkDriver/conn"
 	"fmt"
@@ -27,7 +29,7 @@ func Transmitter(port int, id string, transmitEnable <-chan bool) {
 		select {
 		case enable = <-transmitEnable:
 		case <-time.After(interval):
-		}// Removing dead connection
+		} // Removing dead connection
 		if enable {
 			conn.WriteTo([]byte(id), addr)
 		}
