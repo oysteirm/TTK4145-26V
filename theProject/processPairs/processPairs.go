@@ -23,44 +23,31 @@ Behaviour:
 -----------------------------------
 */
 
-const (
-/*
-	Heartbeat interval taken from configuration; this is the delay between
-	the primary sending packets to the backup.
-*/
-	HEARTBEAT = config.PP_INTERVAL
-)	
-
-// Runs instance as backup or primary based on arguments
+// Runs instance as backup or primary based on arguments.
 func RunProcessPair() {
-	role := roleFromArgs() // "primary" or "backup"
-
-	switch role {
-	case "backup":
+	if isBackupProcess() {
 		runBackup()
-	default:
-		runPrimary()
+		return
 	}
+	runPrimary()
 }
 
 // Checks if this process was spawned as a backup.
-func roleFromArgs() string {
+func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
 		if arg == "--backup" {
-			return "backup"
+			return true
 		}
 	}
-	return "primary"
+	return false
 }
 
-// runPrimary is the ACTIVE role.
-// It spawns a backup, starts heartbeats in a goroutine, then returns.
+// Spawns a backup, starts heartbeats in a goroutine, then returns.
 func runPrimary() {
 	fmt.Println("[ProcessPair] Running as PRIMARY")
 
-	// Spawn the backup process headlessly, then start sending packets.
 	spawnBackup()
-	time.Sleep(200 * time.Millisecond) // Give the backup time to start listening
+	time.Sleep(200 * time.Millisecond)
 
 	go heartbeatLoop()
 }
@@ -83,11 +70,10 @@ func heartbeatLoop() {
 		if err != nil {
 			fmt.Println("[ProcessPair] Heartbeat send error:", err)
 		}
-		time.Sleep(HEARTBEAT)
+		time.Sleep(config.PP_INTERVAL)
 	}
 }
 
-// runBackup is the PASSIVE role.
 // It listens for heartbeats from the primary on PP_PORT.
 // If the primary times out, it promotes itself to primary.
 func runBackup() {
@@ -121,7 +107,7 @@ func runBackup() {
 	}
 }
 
-// spawnBackup launches a new instance of this binary with the --backup flag.
+// Launches a new instance of this binary with the --backup flag.
 func spawnBackup() {
 	// prefer the executable path returned by os.Executable, fallback to argv[0]
 	self, err := os.Executable()
@@ -151,7 +137,7 @@ func spawnBackup() {
 	}
 }
 
-// trySpawnBackupInLinuxTerminal attempts common terminal emulators.
+// Attempts common terminal emulators.
 // Returns true if launching succeeded.
 func trySpawnBackupInLinuxTerminal(self string, args []string) bool {
 	quotedSelf := shellQuote(self)
@@ -190,7 +176,7 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
 }
 
-// promoteToPrimary re-launches the primary role in this same process,
+// Re-launches the primary role in this same process,
 // without restarting the binary, just switches role internally.
 func promoteToPrimary() {
 	// remove --backup flag from args so future children are
