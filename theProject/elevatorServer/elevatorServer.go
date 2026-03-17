@@ -11,6 +11,17 @@ import (
 	"theProject/timer"
 )
 
+/*
+-----------------------------------
+Functionality: 
+	- Initiaize the elevator IO through ioAddr
+	- Reacts to the different events of elevator finite state machine (FSM)
+	  (Floor arrival, New data, Obstruction, Door closing)
+	- Recieves confirmed system data from message sync and uses this for requests assigning (RA)
+	- Communicates new states of the FSM to the elevatorStateGuardian
+-----------------------------------
+*/
+
 func ElevatorServer(
 	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, //channel for sending data to messageSyncServer
 	requestToMsgSync chan<- []elevator_IO.ButtonEvent_t, //channel for sending done request CC to msg sync

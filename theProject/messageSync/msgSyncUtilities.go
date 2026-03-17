@@ -8,6 +8,7 @@ import (
 	"theProject/networkDriver/peers"
 )
 
+
 // Initalizing systemData_t types
 func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
@@ -33,9 +34,9 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
 	var tmpElevatorData [config.N_ELEVATORS]ElevatorData_t
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		tmpElevatorData[i] = ElevatorData_t{
-			ID:                i,
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		tmpElevatorData[elevatorID] = ElevatorData_t{
+			ID:                elevatorID,
 			IsAlive:           true,
 			IsFunctional:      true,
 			Floor:             -1,
@@ -56,21 +57,27 @@ func OnReceivedFreshData(
 	confirmedSystemData SystemData_t,
 	freshSystemData SystemData_t) (SystemData_t, SystemData_t, bool) {
 
-	//Starting with no changes in the data
+	//Starting with no changes
 	var updatedSystemData SystemData_t = systemData
 	var updatedConfirmedSystemData SystemData_t = confirmedSystemData
 	var isConfirmedDataUpdated bool = false
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		//Difference between an elevator giving information about itself and about another elevator.
-		if systemData.ElevatorData[i].ID == freshSystemData.ID {
-			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		// Difference between an elevator giving information about itself and about another elevator.
+		if systemData.ElevatorData[elevatorID].ID == freshSystemData.ID {
+			updatedSystemData.ElevatorData[elevatorID] = UpdateElevatorDataAboutSelf(	systemData.ElevatorData[elevatorID], 
+																						freshSystemData.ElevatorData[elevatorID], 
+																						systemData.ID)
 
 		} else {
-			updatedSystemData.ElevatorData[i] = UpdateElevatorDataAboutOther(systemData.ElevatorData[i], freshSystemData.ElevatorData[i], systemData.ID)
+			updatedSystemData.ElevatorData[elevatorID] = UpdateElevatorDataAboutOther(	systemData.ElevatorData[elevatorID], 
+																						freshSystemData.ElevatorData[elevatorID], 
+																						systemData.ID)
 		}
 	}
-
+	
+	//TODO: evaluate if this belongs here
+	// Updating all the cab requests using the Cyclic Counter logic
 	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
 		for floor := 0; floor < config.N_FLOORS; floor++ {
 			updatedSystemData.ElevatorData[elevatorID].CabRequests[floor] = update_CC(
@@ -80,23 +87,27 @@ func OnReceivedFreshData(
 		}
 	}
 
-	//Update hall requests with the cyclic counter
-	updatedSystemData.HallRequestData = UpdateHallRequestData(systemData.HallRequestData, freshSystemData.HallRequestData, systemData.ID)
+	// Update hall requests with the cyclic counter
+	updatedSystemData.HallRequestData = UpdateHallRequestData(	systemData.HallRequestData, 
+																freshSystemData.HallRequestData, 
+																systemData.ID)
 
-	//Update the confirmed data that have recieved consensus
+	// Update the confirmed data with the data that have recieved consensus, and remebering we updated something
 	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(updatedSystemData, confirmedSystemData)
 
 	return updatedSystemData, updatedConfirmedSystemData, isConfirmedDataUpdated
 }
 
 
-// Functions for safely updating the system data
+// Functions for updating confirmedSystemData, elevatorData and requests
 // -----------------------------------------------------------
-//Udating hall requests
-func UpdateHallRequestData(oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
+// Udating hall requests
+func UpdateHallRequestData(
+	oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
 	freshData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
 	ID int) [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t {
 
+	//Starting with no changes
 	var updatedHallRequests [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t = oldData
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
@@ -115,44 +126,37 @@ func UpdateElevatorDataAboutSelf(
 	freshData ElevatorData_t,
 	ID int) ElevatorData_t {
 
+	//Starting with no changes
 	var updatedData ElevatorData_t = oldData
 
-	if oldData.IsAlive == freshData.IsAlive &&
-		oldData.IsFunctional == freshData.IsFunctional &&
-		oldData.Floor == freshData.Floor &&
-		oldData.ElevatorBehaviour == freshData.ElevatorBehaviour &&
-		oldData.MotorDirection == freshData.MotorDirection {
+	if  oldData.IsAlive 			== freshData.IsAlive &&
+		oldData.IsFunctional 		== freshData.IsFunctional &&
+		oldData.Floor 				== freshData.Floor &&
+		oldData.ElevatorBehaviour 	== freshData.ElevatorBehaviour &&
+		oldData.MotorDirection 		== freshData.MotorDirection {
 
 		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	} else {
-		updatedData.IsAlive = freshData.IsAlive
-		updatedData.IsFunctional = freshData.IsFunctional
-		updatedData.Floor = freshData.Floor
-		updatedData.ElevatorBehaviour = freshData.ElevatorBehaviour
-		updatedData.MotorDirection = freshData.MotorDirection
-		updatedData.ElevatorBarrier = freshData.ElevatorBarrier
+		updatedData.IsAlive 			= freshData.IsAlive
+		updatedData.IsFunctional 		= freshData.IsFunctional
+		updatedData.Floor 				= freshData.Floor
+		updatedData.ElevatorBehaviour 	= freshData.ElevatorBehaviour
+		updatedData.MotorDirection 		= freshData.MotorDirection
+		updatedData.ElevatorBarrier 	= freshData.ElevatorBarrier
 		updatedData.ElevatorBarrier[ID] = true
 	}
-
-	// for floor := 0; floor < config.N_FLOORS; floor++ {
-
-	// 	if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
-	// 		updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
-
-	// 	} else if freshData.CabRequests[floor].Value != CC_Uninit {
-	// 		updatedData.CabRequests[floor] = freshData.CabRequests[floor]
-	// 		updatedData.CabRequests[floor].Barrier[ID] = true
-	// 	}
-	// }
 
 	return updatedData
 }
 
-// Only update cab requests CC and update barrier for elevator states
-func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
+// We don't trust info an elevator tells about others
+// Update barrier if data is the same
+func UpdateElevatorDataAboutOther(
+	oldData ElevatorData_t,
 	freshData ElevatorData_t,
-	localID int) ElevatorData_t {
+	ID int) ElevatorData_t {
 
+	//Starting with no changes
 	var updatedData ElevatorData_t = oldData
 
 	if oldData.IsAlive == freshData.IsAlive &&
@@ -164,59 +168,56 @@ func UpdateElevatorDataAboutOther(oldData ElevatorData_t,
 		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	}
 
-	// //Updating cab requests
-	// for floor := 0; floor < config.N_FLOORS; floor++ {
-
-	// 	if oldData.CabRequests[floor].Value == CC_Uninit {
-	// 		updatedData.CabRequests[floor] = update_CC(oldData.CabRequests[floor], freshData.CabRequests[floor], localID)
-
-	// 	} else if oldData.CabRequests[floor].Value == freshData.CabRequests[floor].Value {
-	// 		updatedData.CabRequests[floor].Barrier = boolUnion(oldData.CabRequests[floor].Barrier, freshData.CabRequests[floor].Barrier)
-	// 	}
-	// }
-
 	return updatedData
 }
 
-//Updating confirmed data and detecting if updated
-func updateConfirmedSystemData(unconfirmedData SystemData_t,
+// Updating confirmed data and detecting if updated
+func updateConfirmedSystemData(
+	unconfirmedData SystemData_t,
 	confirmedData SystemData_t) (SystemData_t, bool) {
 
+	//Starting with no changes
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		//Check for consensus
-		if checkBarrier(unconfirmedData.ElevatorData[i].ElevatorBarrier) {
-			//If there is new data, we update
-			if unconfirmedData.ElevatorData[i].IsAlive 				!= confirmedData.ElevatorData[i].IsAlive ||
-				unconfirmedData.ElevatorData[i].IsFunctional 		!= confirmedData.ElevatorData[i].IsFunctional ||
-				unconfirmedData.ElevatorData[i].Floor 				!= confirmedData.ElevatorData[i].Floor ||
-				unconfirmedData.ElevatorData[i].ElevatorBehaviour 	!= confirmedData.ElevatorData[i].ElevatorBehaviour ||
-				unconfirmedData.ElevatorData[i].MotorDirection 		!= confirmedData.ElevatorData[i].MotorDirection {
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		// Check for consensus
+		if checkBarrier(unconfirmedData.ElevatorData[elevatorID].ElevatorBarrier) {
+			// If there is new data, we update
+			if  unconfirmedData.ElevatorData[elevatorID].IsAlive 			!= confirmedData.ElevatorData[elevatorID].IsAlive ||
+				unconfirmedData.ElevatorData[elevatorID].IsFunctional 		!= confirmedData.ElevatorData[elevatorID].IsFunctional ||
+				unconfirmedData.ElevatorData[elevatorID].Floor 				!= confirmedData.ElevatorData[elevatorID].Floor ||
+				unconfirmedData.ElevatorData[elevatorID].ElevatorBehaviour 	!= confirmedData.ElevatorData[elevatorID].ElevatorBehaviour ||
+				unconfirmedData.ElevatorData[elevatorID].MotorDirection 	!= confirmedData.ElevatorData[elevatorID].MotorDirection {
 
-				updatedConfirmedData.ElevatorData[i].IsAlive 			= unconfirmedData.ElevatorData[i].IsAlive
-				updatedConfirmedData.ElevatorData[i].IsFunctional 		= unconfirmedData.ElevatorData[i].IsFunctional
-				updatedConfirmedData.ElevatorData[i].Floor 				= unconfirmedData.ElevatorData[i].Floor
-				updatedConfirmedData.ElevatorData[i].ElevatorBehaviour 	= unconfirmedData.ElevatorData[i].ElevatorBehaviour
-				updatedConfirmedData.ElevatorData[i].MotorDirection 	= unconfirmedData.ElevatorData[i].MotorDirection
+				updatedConfirmedData.ElevatorData[elevatorID].IsAlive 			= unconfirmedData.ElevatorData[elevatorID].IsAlive
+				updatedConfirmedData.ElevatorData[elevatorID].IsFunctional 		= unconfirmedData.ElevatorData[elevatorID].IsFunctional
+				updatedConfirmedData.ElevatorData[elevatorID].Floor 			= unconfirmedData.ElevatorData[elevatorID].Floor
+				updatedConfirmedData.ElevatorData[elevatorID].ElevatorBehaviour = unconfirmedData.ElevatorData[elevatorID].ElevatorBehaviour
+				updatedConfirmedData.ElevatorData[elevatorID].MotorDirection 	= unconfirmedData.ElevatorData[elevatorID].MotorDirection
 				isUpdated = true
 			}
 		}
 
-		//Dont need Barrier check since update_CC() have Barrier checks
+		// Dont need Barrier check since update_CC() have Barrier checks
 		for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
-			if unconfirmedData.ElevatorData[i].CabRequests[floor].Value != confirmedData.ElevatorData[i].CabRequests[floor].Value {
-				updatedConfirmedData.ElevatorData[i].CabRequests[floor] = unconfirmedData.ElevatorData[i].CabRequests[floor]
+
+			if  unconfirmedData.ElevatorData[elevatorID].CabRequests[floor].Value != 
+				confirmedData.ElevatorData[elevatorID].CabRequests[floor].Value {
+
+				updatedConfirmedData.ElevatorData[elevatorID].CabRequests[floor] = unconfirmedData.ElevatorData[elevatorID].CabRequests[floor]
 				isUpdated = true
 			}
 		}
 	}
 
-	//Dont need Barrier check since update_CC() have Barrier checks
+	// Dont need Barrier check since update_CC() have Barrier checks
 	for floor := 0; floor < elevator_IO.N_FLOORS; floor++ {
 		for btn := 0; btn < 2; btn++ {
-			if unconfirmedData.HallRequestData[floor][btn].Value != confirmedData.HallRequestData[floor][btn].Value {
+
+			if  unconfirmedData.HallRequestData[floor][btn].Value != 
+				confirmedData.HallRequestData[floor][btn].Value {
+
 				updatedConfirmedData.HallRequestData[floor][btn] = unconfirmedData.HallRequestData[floor][btn]
 				isUpdated = true
 			}
@@ -226,36 +227,38 @@ func updateConfirmedSystemData(unconfirmedData SystemData_t,
 	return updatedConfirmedData, isUpdated
 }
 
-//Updates cyclic counter
-func update_CC(old_CC RequestCyclicCounter_t,
+// Updates cyclic counter
+func update_CC(
+	old_CC RequestCyclicCounter_t,
 	new_CC RequestCyclicCounter_t,
 	ID int) RequestCyclicCounter_t {
 
+		// Starting with no changes
 	var updated_CC RequestCyclicCounter_t = old_CC
 
-	//Cycle to CC_No
+	// Cycle back to CC_No
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No {
 		updated_CC.Value 		= new_CC.Value
 		updated_CC.Barrier 		= new_CC.Barrier
 		updated_CC.Barrier[ID] 	= true
 
-	//Can't go from 0 -> max
+	// Can't go from 0 -> max value
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done {
 		updated_CC.Value 	= old_CC.Value
 		updated_CC.Barrier 	= old_CC.Barrier
 
-	//They are the same, only update Barrier
+	// They are the same, only update Barrier
 	} else if old_CC.Value == new_CC.Value {
 		updated_CC.Barrier = boolUnion(old_CC.Barrier, new_CC.Barrier)
 
-	//Accept bigger value
+	// Accept bigger value
 	} else if old_CC.Value < new_CC.Value {
 		updated_CC.Value 		= new_CC.Value
 		updated_CC.Barrier 		= new_CC.Barrier
 		updated_CC.Barrier[ID] 	= true
 	}
 
-	//Transition the CC if consesus is reached
+	// Transition the CC if consesus is reached
 	if updated_CC.Value == CC_Unconfirmed && checkBarrier(updated_CC.Barrier) {
 		updated_CC.Value 		= CC_Confirmed
 		updated_CC.Barrier 		= [config.N_ELEVATORS]bool{}
@@ -270,9 +273,10 @@ func update_CC(old_CC RequestCyclicCounter_t,
 	return updated_CC
 }
 
-//Checks if request cyclic counters can transition to new state based on ActivePeers
+// Checks if request cyclic counters can transition to new state based on ActivePeers
 func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
 
+	//Starting with no changes
 	updatedSystemData := systemData
 
 	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
@@ -295,36 +299,36 @@ func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_
 
 // Helper functions
 // -----------------------------------------------------------
-//Compares barrier with AtctivePeers
+// Compares barrier with ActivePeers
 func checkBarrier(barrier [config.N_ELEVATORS]bool) bool {
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
-		if ActivePeers[i] && !barrier[i] {
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+		if ActivePeers[elevatorID] && !barrier[elevatorID] {
 			return false
 		}
 	}
 	return true
 }
 
-//Returns union of two bool lists
+// Returns union of two bool lists
 func boolUnion(a [config.N_ELEVATORS]bool, b [config.N_ELEVATORS]bool) [config.N_ELEVATORS]bool {
 
 	var result [config.N_ELEVATORS]bool
 
-	for i := 0; i < config.N_ELEVATORS; i++ {
+	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
 		var valA, valB bool
-		if i < len(a) {
-			valA = a[i]
+		if elevatorID < len(a) {
+			valA = a[elevatorID]
 		}
-		if i < len(b) {
-			valB = b[i]
+		if elevatorID < len(b) {
+			valB = b[elevatorID]
 		}
-		result[i] = valA || valB
+		result[elevatorID] = valA || valB
 	}
 	return result
 }
 
-//Type coverting 
+// Type coverting 
 func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVATORS]bool {
 
 	var ActivePeers [config.N_ELEVATORS]bool
