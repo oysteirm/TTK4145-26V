@@ -9,7 +9,6 @@ import (
 )
 
 
-// Initalizing systemData_t types
 func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 
 	var tmpCabRequests [config.N_FLOORS]RequestCyclicCounter_t
@@ -52,25 +51,25 @@ func InitSystemData(localID int) (SystemData_t, SystemData_t) {
 }
 
 // Processing the freshSystemData and updating systemData and confirmedSystemData accordingly
-func OnReceivedFreshData(
+func onReceivedFreshData(
 	systemData SystemData_t,
 	confirmedSystemData SystemData_t,
 	freshSystemData SystemData_t) (SystemData_t, SystemData_t, bool) {
 
-	//Starting with no changes
 	var updatedSystemData SystemData_t = systemData
 	var updatedConfirmedSystemData SystemData_t = confirmedSystemData
 	var isConfirmedDataUpdated bool = false
 
 	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
+
 		// Difference between an elevator giving information about itself and about another elevator.
 		if systemData.ElevatorData[elevatorID].ID == freshSystemData.ID {
-			updatedSystemData.ElevatorData[elevatorID] = UpdateElevatorDataAboutSelf(	systemData.ElevatorData[elevatorID], 
+			updatedSystemData.ElevatorData[elevatorID] = updateElevatorDataAboutSelf(	systemData.ElevatorData[elevatorID], 
 																						freshSystemData.ElevatorData[elevatorID], 
 																						systemData.ID)
 
 		} else {
-			updatedSystemData.ElevatorData[elevatorID] = UpdateElevatorDataAboutOther(	systemData.ElevatorData[elevatorID], 
+			updatedSystemData.ElevatorData[elevatorID] = updateElevatorDataAboutOther(	systemData.ElevatorData[elevatorID], 
 																						freshSystemData.ElevatorData[elevatorID], 
 																						systemData.ID)
 		}
@@ -87,12 +86,10 @@ func OnReceivedFreshData(
 		}
 	}
 
-	// Update hall requests with the cyclic counter
-	updatedSystemData.HallRequestData = UpdateHallRequestData(	systemData.HallRequestData, 
+	updatedSystemData.HallRequestData = updateHallRequestData(	systemData.HallRequestData, 
 																freshSystemData.HallRequestData, 
 																systemData.ID)
 
-	// Update the confirmed data with the data that have recieved consensus, and remebering we updated something
 	updatedConfirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(updatedSystemData, confirmedSystemData)
 
 	return updatedSystemData, updatedConfirmedSystemData, isConfirmedDataUpdated
@@ -101,13 +98,12 @@ func OnReceivedFreshData(
 
 // Functions for updating confirmedSystemData, elevatorData and requests
 // -----------------------------------------------------------
-// Udating hall requests
-func UpdateHallRequestData(
+
+func updateHallRequestData(
 	oldData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
 	freshData [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t,
 	ID int) [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t {
 
-	//Starting with no changes
 	var updatedHallRequests [config.N_FLOORS][config.N_UP_DOWN]RequestCyclicCounter_t = oldData
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
@@ -121,12 +117,11 @@ func UpdateHallRequestData(
 // We trust info an elevator tells about itself.
 // If the data is the same: update barrier
 // If the data is not the same: accept new data and sign the barrier
-func UpdateElevatorDataAboutSelf(
+func updateElevatorDataAboutSelf(
 	oldData ElevatorData_t,
 	freshData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	//Starting with no changes
 	var updatedData ElevatorData_t = oldData
 
 	if  oldData.IsAlive 			== freshData.IsAlive &&
@@ -135,7 +130,7 @@ func UpdateElevatorDataAboutSelf(
 		oldData.ElevatorBehaviour 	== freshData.ElevatorBehaviour &&
 		oldData.MotorDirection 		== freshData.MotorDirection {
 
-		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolArrayUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	} else {
 		updatedData.IsAlive 			= freshData.IsAlive
 		updatedData.IsFunctional 		= freshData.IsFunctional
@@ -151,12 +146,11 @@ func UpdateElevatorDataAboutSelf(
 
 // We don't trust info an elevator tells about others
 // Update barrier if data is the same
-func UpdateElevatorDataAboutOther(
+func updateElevatorDataAboutOther(
 	oldData ElevatorData_t,
 	freshData ElevatorData_t,
 	ID int) ElevatorData_t {
 
-	//Starting with no changes
 	var updatedData ElevatorData_t = oldData
 
 	if oldData.IsAlive == freshData.IsAlive &&
@@ -165,18 +159,16 @@ func UpdateElevatorDataAboutOther(
 		oldData.ElevatorBehaviour == freshData.ElevatorBehaviour &&
 		oldData.MotorDirection == freshData.MotorDirection {
 
-		updatedData.ElevatorBarrier = boolUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
+		updatedData.ElevatorBarrier = boolArrayUnion(oldData.ElevatorBarrier, freshData.ElevatorBarrier)
 	}
 
 	return updatedData
 }
 
-// Updating confirmed data and detecting if updated
 func updateConfirmedSystemData(
 	unconfirmedData SystemData_t,
 	confirmedData SystemData_t) (SystemData_t, bool) {
 
-	//Starting with no changes
 	var updatedConfirmedData SystemData_t = confirmedData
 	var isUpdated bool = false
 
@@ -227,31 +219,25 @@ func updateConfirmedSystemData(
 	return updatedConfirmedData, isUpdated
 }
 
-// Updates cyclic counter
 func update_CC(
 	old_CC RequestCyclicCounter_t,
 	new_CC RequestCyclicCounter_t,
 	ID int) RequestCyclicCounter_t {
 
-		// Starting with no changes
 	var updated_CC RequestCyclicCounter_t = old_CC
 
-	// Cycle back to CC_No
 	if old_CC.Value == CC_Done && new_CC.Value == CC_No {
 		updated_CC.Value 		= new_CC.Value
 		updated_CC.Barrier 		= new_CC.Barrier
 		updated_CC.Barrier[ID] 	= true
 
-	// Can't go from 0 -> max value
 	} else if old_CC.Value == CC_No && new_CC.Value == CC_Done {
 		updated_CC.Value 	= old_CC.Value
 		updated_CC.Barrier 	= old_CC.Barrier
 
-	// They are the same, only update Barrier
 	} else if old_CC.Value == new_CC.Value {
-		updated_CC.Barrier = boolUnion(old_CC.Barrier, new_CC.Barrier)
+		updated_CC.Barrier = boolArrayUnion(old_CC.Barrier, new_CC.Barrier)
 
-	// Accept bigger value
 	} else if old_CC.Value < new_CC.Value {
 		updated_CC.Value 		= new_CC.Value
 		updated_CC.Barrier 		= new_CC.Barrier
@@ -276,7 +262,6 @@ func update_CC(
 // Checks if request cyclic counters can transition to new state based on ActivePeers
 func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_t {
 
-	//Starting with no changes
 	updatedSystemData := systemData
 
 	for elevatorID := 0; elevatorID < config.N_ELEVATORS; elevatorID++ {
@@ -310,8 +295,7 @@ func checkBarrier(barrier [config.N_ELEVATORS]bool) bool {
 	return true
 }
 
-// Returns union of two bool lists
-func boolUnion(a [config.N_ELEVATORS]bool, b [config.N_ELEVATORS]bool) [config.N_ELEVATORS]bool {
+func boolArrayUnion(a [config.N_ELEVATORS]bool, b [config.N_ELEVATORS]bool) [config.N_ELEVATORS]bool {
 
 	var result [config.N_ELEVATORS]bool
 
@@ -328,7 +312,6 @@ func boolUnion(a [config.N_ELEVATORS]bool, b [config.N_ELEVATORS]bool) [config.N
 	return result
 }
 
-// Type coverting 
 func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVATORS]bool {
 
 	var ActivePeers [config.N_ELEVATORS]bool
@@ -342,8 +325,7 @@ func fromPeersUpdateToActivePeers(peersUpdate peers.PeerUpdate) [config.N_ELEVAT
 
 // -----------------------------------------------------------
 
-// Prints the whole system
-func SystemPrintHorizontal(systemData SystemData_t) {
+func systemPrintHorizontal(systemData SystemData_t) {
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 		fmt.Print("  +--------------------+")
@@ -372,13 +354,13 @@ func SystemPrintHorizontal(systemData SystemData_t) {
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 		fmt.Printf("  | dirn  = %-10s |",
-			ElevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
+			elevatorDirnToString(systemData.ElevatorData[i].MotorDirection))
 	}
 	fmt.Println()
 
 	for i := 0; i < config.N_ELEVATORS; i++ {
 		fmt.Printf("  | behav = %-10s |",
-			ElevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
+			elevatorBehaviourToString(systemData.ElevatorData[i].ElevatorBehaviour))
 	}
 	fmt.Println()
 
@@ -431,7 +413,8 @@ func SystemPrintHorizontal(systemData SystemData_t) {
 	fmt.Println()
 }
 
-//The functions below is also implemented other places, but is duplicated due to cycle import problems
+// MARK: The functions below is also implemented other places, 
+// but is duplicated due to cycle import problems
 func CC_ToBool(cc CyclicCounter_t) bool {
 	switch cc {
 	case CC_Confirmed, CC_Done:
@@ -441,7 +424,7 @@ func CC_ToBool(cc CyclicCounter_t) bool {
 	}
 }
 
-func ElevatorBehaviourToString(eb elevator_IO.ElevatorBehaviour_t) string {
+func elevatorBehaviourToString(eb elevator_IO.ElevatorBehaviour_t) string {
 	switch eb {
 	case elevator_IO.EB_Idle:
 		return "idle"
@@ -454,7 +437,7 @@ func ElevatorBehaviourToString(eb elevator_IO.ElevatorBehaviour_t) string {
 	}
 }
 
-func ElevatorDirnToString(d elevator_IO.MotorDirection_t) string {
+func elevatorDirnToString(d elevator_IO.MotorDirection_t) string {
 	switch d {
 	case elevator_IO.MD_Up:
 		return "up"
