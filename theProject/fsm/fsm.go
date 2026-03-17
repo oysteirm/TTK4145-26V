@@ -107,11 +107,17 @@ func OnFloorArrival(
 	doorTimerStop chan struct{},
 	isFunctionalStart chan struct{},
 	isFunctionalStop chan struct{},
-	newFloor int) {
+	newFloor int, 
+	isObstructed bool) {
 
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
 	assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
 	
+	//update floor and IsFunctional
+	if !isObstructed {
+		elevatorState.IsFunctional = true
+	}
+
 	elevatorState.Floor = newFloor
 	elevator_IO.SetFloorIndicator(newFloor)
 
@@ -166,6 +172,7 @@ func OnDoorTimeout(
 
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
 	assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
+
 
 	switch elevatorState.ElevatorBehaviour {
 	case elevator_IO.EB_DoorOpen:

@@ -96,7 +96,8 @@ func ElevatorServer(
 								doorTimerStop, 
 								isFunctionalStart, 
 								isFunctionalStop, 
-								floor)
+								floor,
+								isObstructed)
 
 		case <-doorTimerTimeout:
 			fsm.OnDoorTimeout(	guardianCommands, 
