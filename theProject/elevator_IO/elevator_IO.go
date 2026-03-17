@@ -1,5 +1,7 @@
 package elevator_IO
 
+// This code is inspired by provided code fetched from https://github.com/TTK4145/driver-go/blob/master/elevio/elevator_io.go
+
 import (
 	"time"
 	"sync"
@@ -11,7 +13,7 @@ import (
 -----------------------------------
 Functionality:
 	- Owns low-level TCP communication with the elevator server hardware simulator
-	- Exposes get/set functions for motor, lamps, buttons, floor sensor and safety signals
+	- Get and set functions for motor, lamps, buttons, floor sensor and safety signals
 	- Provides polling goroutines that detect input changes and publish events on channels
 -----------------------------------
 */
