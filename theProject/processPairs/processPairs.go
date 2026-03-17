@@ -5,12 +5,12 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"runtime"
-	"strings"
 	"time"
 
 	"theProject/config"
 )
+
+const backupArg = "--backup"
 
 /*
 -----------------------------------
@@ -35,7 +35,7 @@ func RunProcessPair() {
 // Checks if this process was spawned as a backup.
 func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
-		if arg == "--backup" {
+		if arg == backupArg {
 			return true
 		}
 	}
@@ -107,82 +107,21 @@ func runBackup() {
 	}
 }
 
-// Launches a new instance of this binary with the --backup flag.
+// Spawn backup process.
 func spawnBackup() {
-	// prefer the executable path returned by os.Executable, fallback to argv[0]
 	self, err := os.Executable()
 	if err != nil {
 		self = os.Args[0]
 	}
-	args := append(os.Args[1:], "--backup")
-
-	// On Linux, try to launch the backup in a visible terminal window first.
-	if runtime.GOOS == "linux" {
-		if trySpawnBackupInLinuxTerminal(self, args) {
-			fmt.Println("[ProcessPair] Backup spawned in new terminal")
-			return
-		}
-	}
-
-	cmd := exec.Command(self, args...)
-
-	// redirect I/O so messages from the child appear in the parent's console
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Start(); err != nil {
-		fmt.Println("[ProcessPair] Failed to spawn backup:", err)
-	} else {
-		fmt.Println("[ProcessPair] Backup spawned")
-	}
+	args := append(os.Args[1:], backupArg)
+	terminalArgs := append([]string{"--", self}, args...)
+	exec.Command("gnome-terminal", terminalArgs...).Start()
 }
 
-// Attempts common terminal emulators.
-// Returns true if launching succeeded.
-func trySpawnBackupInLinuxTerminal(self string, args []string) bool {
-	quotedSelf := shellQuote(self)
-	quotedArgs := make([]string, 0, len(args))
-	for _, a := range args {
-		quotedArgs = append(quotedArgs, shellQuote(a))
-	}
-	runCmd := strings.TrimSpace(quotedSelf + " " + strings.Join(quotedArgs, " "))
-
-	type terminalSpec struct {
-		bin    string
-		params []string
-	}
-
-	specs := []terminalSpec{
-		{bin: "x-terminal-emulator", params: []string{"-e", runCmd}},
-		{bin: "gnome-terminal", params: []string{"--", "bash", "-lc", runCmd}},
-		{bin: "konsole", params: []string{"-e", "bash", "-lc", runCmd}},
-		{bin: "xfce4-terminal", params: []string{"-e", runCmd}},
-		{bin: "xterm", params: []string{"-e", runCmd}},
-	}
-
-	for _, spec := range specs {
-		if _, err := exec.LookPath(spec.bin); err != nil {
-			continue
-		}
-		if err := exec.Command(spec.bin, spec.params...).Start(); err == nil {
-			return true
-		}
-	}
-
-	return false
-}
-
-func shellQuote(s string) string {
-	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
-}
-
-// Re-launches the primary role in this same process,
-// without restarting the binary, just switches role internally.
+// Remove --backup and continue as primary in this process.
 func promoteToPrimary() {
-	// remove --backup flag from args so future children are
-	// always started in backup mode only
 	for i, a := range os.Args {
-		if a == "--backup" {
+		if a == backupArg {
 			os.Args = append(os.Args[:i], os.Args[i+1:]...)
 			break
 		}
