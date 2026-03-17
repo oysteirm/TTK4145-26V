@@ -27,6 +27,9 @@ func main() {
 
 	fmt.Println("Starting elevator with localID = ", *localID)
 	fmt.Println("Using IO address = ", *ioAddr)
+	
+	//Connecting to elevator hardware
+	elevator_IO.Init(*ioAddr, config.N_FLOORS)
 
 	// Channels and routines for updating peers
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -42,7 +45,7 @@ func main() {
 
 	// Launch the go routines
 	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, *localID)
-	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *ioAddr, *localID)
+	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *localID)
 
 	for {
 	}

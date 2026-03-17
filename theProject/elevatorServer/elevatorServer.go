@@ -2,7 +2,6 @@ package elevatorServer
 
 import (
 	"strconv"
-	"theProject/config"
 	"theProject/elevatorStateGuardian"
 	"theProject/elevator_IO"
 	"theProject/fsm"
@@ -23,61 +22,60 @@ Functionality:
 */
 
 func ElevatorServer(
-	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, //channel for sending data to messageSyncServer
-	requestToMsgSync chan<- []elevator_IO.ButtonEvent_t, //channel for sending done request CC to msg sync
-	systemDataFromMsgSync <-chan messageSync.SystemData_t, //channel for receiving confirmed system data
-	ioAddr string,
-	localID int, //local ID
-) {
-
-	elevator_IO.Init(ioAddr, config.N_FLOORS)
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,	//channel for sending data to messageSyncServer
+	requestToMsgSync chan<- []elevator_IO.ButtonEvent_t, 		//channel for sending done request CC to msg sync
+	systemDataFromMsgSync <-chan messageSync.SystemData_t, 		//channel for receiving confirmed system data
+	localID int, ) {												//local ID
+	
+	// channel used to get and set data to the elevatirStateGuardian
+	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t,32)
 	isObstructed := false
 
-	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t,32)
-
-	// Start elevator state server
+	// Start elevator state guardian server that owns the local system data
 	go elevatorStateGuardian.ElevatorStateGuardian(guardianCommands, elevatorDataToMsgSync, requestToMsgSync, localID)
 
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	drv_stop := make(chan bool)
-
+	// Launch routines that polls elevator_IO inputs
+	drv_floors 	:= make(chan int)
+	drv_obstr 	:= make(chan bool)
+	drv_stop 	:= make(chan bool)
 	go elevator_IO.PollFloorSensor(drv_floors)
 	go elevator_IO.PollObstructionSwitch(drv_obstr)
 	go elevator_IO.PollStopButton(drv_stop)
 
-	// Init FSM (handle between floors)
+	// Init FSM (handle startingbetween floors)
 	fsm.OnInitBetweenFloors(guardianCommands, drv_floors)
 
-	// Timers
-	doorTimerStart := make(chan struct{}, 1)
-	doorTimerStop := make(chan struct{}, 1)
-	doorTimerTimeout := make(chan struct{})
-	isFunctionalStart := make(chan struct{}, 1)
-	isFunctionalStop := make(chan struct{}, 1)
+	// Timers for door and functional
+	doorTimerStart 		:= make(chan struct{}, 1)
+	doorTimerStop 		:= make(chan struct{}, 1)
+	doorTimerTimeout 	:= make(chan struct{})
+	isFunctionalStart 	:= make(chan struct{}, 1)
+	isFunctionalStop 	:= make(chan struct{}, 1)
 	isFunctionalTimeout := make(chan struct{})
-
-	//work in progress
 	go timer.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, isFunctionalStart, isFunctionalStop, isFunctionalTimeout)
 
+	// Loop that reacts to FSM events
 	for {
 		select {
 
 		// Recieved data from msg sync
 		case newSystemData := <-systemDataFromMsgSync:
 
+			// Not using unitialized floor value
 			if newSystemData.ElevatorData[localID].Floor == -1 {
 				break
 			}
+			// Setting new data from message sync and lighting the lights
 			guardianCommands <- elevatorStateGuardian.SetSystemData_t{SystemData: newSystemData}
-
 			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
 			fsm.LightHallLights(newSystemData.HallRequestData)
+
+			// Calculating the assigned requests, breaking if we dont get anything
 			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
+
 			if requestsMap == nil {
 				break
 			}
-
 			assignedRequests, exists := requestsMap[strconv.Itoa(localID)]
 			if !exists {
 				break
