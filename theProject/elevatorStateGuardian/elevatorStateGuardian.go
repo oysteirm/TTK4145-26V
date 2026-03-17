@@ -18,7 +18,6 @@ Functionality:
 -----------------------------------
 */
 
-
 // Channel type for communicating with the elevatorStateGuardian
 type GuardianCommands_t interface{}
 

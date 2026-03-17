@@ -12,19 +12,26 @@ import (
 	"theProject/config"
 )
 
-const (
-	// heartbeat interval taken from configuration; this is the delay between
-	// the primary sending packets to the backup.
-	HEARTBEAT = config.PP_INTERVAL
-)
+/*
+-----------------------------------
+Behaviour:
+	- Initial primary: spawns backup, starts heartbeat sender, returns
+	- Backup: blocks waiting for heartbeats
+	- On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
+	then returns as the new primary
+	- RunProcessPair ensures only the current PRIMARY continues with main startup
+-----------------------------------
+*/
 
-// RunProcessPair ensures only the current PRIMARY continues with main startup.
-//
-// Behaviour:
-//   - Initial primary: spawns backup, starts heartbeat sender, returns.
-//   - Backup: blocks waiting for heartbeats.
-//   - On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
-//     then returns as the new primary.
+const (
+/*
+	Heartbeat interval taken from configuration; this is the delay between
+	the primary sending packets to the backup.
+*/
+	HEARTBEAT = config.PP_INTERVAL
+)	
+
+// Runs instance as backup or primary based on arguments
 func RunProcessPair() {
 	role := roleFromArgs() // "primary" or "backup"
 
@@ -36,7 +43,7 @@ func RunProcessPair() {
 	}
 }
 
-// roleFromArgs checks if this process was spawned as a backup.
+// Checks if this process was spawned as a backup.
 func roleFromArgs() string {
 	for _, arg := range os.Args[1:] {
 		if arg == "--backup" {
@@ -53,7 +60,7 @@ func runPrimary() {
 
 	// Spawn the backup process headlessly, then start sending packets.
 	spawnBackup()
-	time.Sleep(200 * time.Millisecond) // give the backup time to start listening
+	time.Sleep(200 * time.Millisecond) // Give the backup time to start listening
 
 	go heartbeatLoop()
 }
@@ -110,13 +117,11 @@ func runBackup() {
 			}
 			fmt.Println("[ProcessPair] Read error:", err)
 		}
-		// Heartbeat received — primary is alive, stay passive
+		// Heartbeat received, primary is alive, stay passive
 	}
 }
 
 // spawnBackup launches a new instance of this binary with the --backup flag.
-// It does not rely on a graphical terminal so that the library works on
-// macOS, Linux and Windows in headless test environments.
 func spawnBackup() {
 	// prefer the executable path returned by os.Executable, fallback to argv[0]
 	self, err := os.Executable()
@@ -186,7 +191,7 @@ func shellQuote(s string) string {
 }
 
 // promoteToPrimary re-launches the primary role in this same process,
-// without restarting the binary — just switches role internally.
+// without restarting the binary, just switches role internally.
 func promoteToPrimary() {
 	// remove --backup flag from args so future children are
 	// always started in backup mode only
