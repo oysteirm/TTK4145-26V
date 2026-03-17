@@ -2,6 +2,17 @@ package bcast
 
 // This code is fetched from https://github.com/TTK4145/Network-go/blob/master/network/bcast/bcast.go
 
+/*
+-----------------------------------
+Functionality:
+	- Provides generic UDP broadcast transmit/receive using channels.
+	- Transmitter tags each outgoing message with its Go type and encodes it as JSON.
+	- Receiver decodes incoming type-tagged JSON and forwards payloads to the
+	  matching channel by element type.
+	- Validates channel arguments early to catch unsupported types.
+-----------------------------------
+*/
+
 import (
 	"theProject/networkDriver/conn"
 	"encoding/json"

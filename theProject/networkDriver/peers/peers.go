@@ -2,6 +2,16 @@ package peers
 
 // This code is fetched from https://github.com/TTK4145/Network-go/blob/master/network/peers/peers.go
 
+/*
+-----------------------------------
+Functionality:
+	- Maintains distributed peer discovery over UDP broadcast heartbeats.
+	- Receiver tracks last-seen timestamps per peer, detects new peers, and
+	  removes peers that have timed out.
+	- Emits sorted PeerUpdate, containing current peers plus New/Lost.
+-----------------------------------
+*/
+
 import (
 	"theProject/networkDriver/conn"
 	"fmt"
