@@ -2,7 +2,7 @@
 
 package conn
 
-// The functionalities in this file are fetched from https://github.com/TTK4145/Network-go/blob/master/network/conn/bcast_conn_darwin.go
+// This code is fetched from https://github.com/TTK4145/Network-go/blob/master/network/conn/bcast_conn_darwin.go
 
 import (
 	"fmt"
