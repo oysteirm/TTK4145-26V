@@ -1,9 +1,22 @@
 package elevator_IO
 
-import "time"
-import "sync"
-import "net"
-import "fmt"
+// This code is inspired by provided code fetched from https://github.com/TTK4145/driver-go/blob/master/elevio/elevator_io.go
+
+import (
+	"time"
+	"sync"
+	"net"
+	"fmt"
+)
+
+/*
+-----------------------------------
+Functionality:
+	- Owns low-level TCP communication with the elevator server hardware simulator
+	- Get and set functions for motor, lamps, buttons, floor sensor and safety signals
+	- Provides polling goroutines that detect input changes and publish events on channels
+-----------------------------------
+*/
 
 const _pollRate = 20 * time.Millisecond
 
@@ -46,16 +59,6 @@ const (
     EB_Moving   ElevatorBehaviour_t = 2
 )
 
-type ElevatorState_t struct {
-    Floor              int
-    MotorDirection     MotorDirection_t
-    Requests           AssignedRequests_t
-    ElevatorBehaviour  ElevatorBehaviour_t
-    DoorOpenDuration   time.Duration //TODO: this is no longer used, make a const?
-    IsFunctional       bool
-}
-
-
 func Init(addr string, numFloors int) {
 	if _initialized {
 		fmt.Println("Driver already initialized!")
@@ -70,8 +73,6 @@ func Init(addr string, numFloors int) {
 	}
 	_initialized = true
 }
-
-
 
 func SetMotorDirection(dir MotorDirection_t) {
 	write([4]byte{1, byte(dir), 0, 0})
@@ -92,8 +93,6 @@ func SetDoorOpenLamp(value bool) {
 func SetStopLamp(value bool) {
 	write([4]byte{5, ToByte(value), 0, 0})
 }
-
-
 
 func PollButtons(receiver chan<- ButtonEvent_t) {
 	prev := make([][3]bool, _numFloors)

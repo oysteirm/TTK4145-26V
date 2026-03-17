@@ -12,48 +12,42 @@ import (
 	"theProject/config"
 )
 
-const (
-	// heartbeat interval taken from configuration; this is the delay between
-	// the primary sending packets to the backup.
-	HEARTBEAT = config.PP_INTERVAL
-)
+/*
+-----------------------------------
+Behaviour:
+	- Initial primary: spawns backup, starts heartbeat sender, returns
+	- Backup: blocks waiting for heartbeats
+	- On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
+	then returns as the new primary
+	- RunProcessPair ensures only the current PRIMARY continues with main startup
+-----------------------------------
+*/
 
-// RunProcessPair ensures only the current PRIMARY continues with main startup.
-//
-// Behaviour:
-//   - Initial primary: spawns backup, starts heartbeat sender, returns.
-//   - Backup: blocks waiting for heartbeats.
-//   - On timeout: backup promotes itself, spawns a new backup, starts heartbeats,
-//     then returns as the new primary.
+// Runs instance as backup or primary based on arguments.
 func RunProcessPair() {
-	role := roleFromArgs() // "primary" or "backup"
-
-	switch role {
-	case "backup":
+	if isBackupProcess() {
 		runBackup()
-	default:
-		runPrimary()
+		return
 	}
+	runPrimary()
 }
 
-// roleFromArgs checks if this process was spawned as a backup.
-func roleFromArgs() string {
+// Checks if this process was spawned as a backup.
+func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
 		if arg == "--backup" {
-			return "backup"
+			return true
 		}
 	}
-	return "primary"
+	return false
 }
 
-// runPrimary is the ACTIVE role.
-// It spawns a backup, starts heartbeats in a goroutine, then returns.
+// Spawns a backup, starts heartbeats in a goroutine, then returns.
 func runPrimary() {
 	fmt.Println("[ProcessPair] Running as PRIMARY")
 
-	// Spawn the backup process headlessly, then start sending packets.
 	spawnBackup()
-	time.Sleep(200 * time.Millisecond) // give the backup time to start listening
+	time.Sleep(200 * time.Millisecond)
 
 	go heartbeatLoop()
 }
@@ -76,11 +70,10 @@ func heartbeatLoop() {
 		if err != nil {
 			fmt.Println("[ProcessPair] Heartbeat send error:", err)
 		}
-		time.Sleep(HEARTBEAT)
+		time.Sleep(config.PP_INTERVAL)
 	}
 }
 
-// runBackup is the PASSIVE role.
 // It listens for heartbeats from the primary on PP_PORT.
 // If the primary times out, it promotes itself to primary.
 func runBackup() {
@@ -110,13 +103,11 @@ func runBackup() {
 			}
 			fmt.Println("[ProcessPair] Read error:", err)
 		}
-		// Heartbeat received — primary is alive, stay passive
+		// Heartbeat received, primary is alive, stay passive
 	}
 }
 
-// spawnBackup launches a new instance of this binary with the --backup flag.
-// It does not rely on a graphical terminal so that the library works on
-// macOS, Linux and Windows in headless test environments.
+// Launches a new instance of this binary with the --backup flag.
 func spawnBackup() {
 	// prefer the executable path returned by os.Executable, fallback to argv[0]
 	self, err := os.Executable()
@@ -146,7 +137,7 @@ func spawnBackup() {
 	}
 }
 
-// trySpawnBackupInLinuxTerminal attempts common terminal emulators.
+// Attempts common terminal emulators.
 // Returns true if launching succeeded.
 func trySpawnBackupInLinuxTerminal(self string, args []string) bool {
 	quotedSelf := shellQuote(self)
@@ -185,8 +176,8 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
 }
 
-// promoteToPrimary re-launches the primary role in this same process,
-// without restarting the binary — just switches role internally.
+// Re-launches the primary role in this same process,
+// without restarting the binary, just switches role internally.
 func promoteToPrimary() {
 	// remove --backup flag from args so future children are
 	// always started in backup mode only

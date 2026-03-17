@@ -57,7 +57,7 @@ var ActivePeers [config.N_ELEVATORS]bool
 
 
 /* 
-Datatype for cyclic counter state
+Datatype for cyclic counter states
 -1: uninitialized,
 0: no request
 1: unconfirmed request
@@ -145,14 +145,14 @@ func MessageSyncServer(
 			if freshSystemData.ID != localID {
 
 				// Update based on the newly received data
-				systemData, confirmedSystemData, isConfirmedDataUpdated = OnReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
+				systemData, confirmedSystemData, isConfirmedDataUpdated = onReceivedFreshData(systemData, confirmedSystemData, freshSystemData)
 
 				// If we have new confirmed data, we sent it to the elevator FSM
 				if isConfirmedDataUpdated {
 					// Filtering out unitialized floor value
 					if confirmedSystemData.ElevatorData[localID].Floor != -1 {
 						fmt.Println("Sending new confirmed data to FSM")
-						SystemPrintHorizontal(confirmedSystemData)
+						systemPrintHorizontal(confirmedSystemData)
 						dataToFSM <- confirmedSystemData
 						isConfirmedDataUpdated = false
 					}
@@ -182,7 +182,7 @@ func MessageSyncServer(
 			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
 			if isConfirmedDataUpdated {
 				fmt.Println("Sending new confirmed data to FSM")
-				SystemPrintHorizontal(confirmedSystemData)
+				systemPrintHorizontal(confirmedSystemData)
 				dataToFSM <- confirmedSystemData
 				isConfirmedDataUpdated = false
 			}
@@ -190,12 +190,12 @@ func MessageSyncServer(
 		// We recieve data from the elevator FSM
 		case freshData := <-elevatorDataFromFSM:
 			
-			systemData.ElevatorData[localID] = UpdateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
+			systemData.ElevatorData[localID] = updateElevatorDataAboutSelf(systemData.ElevatorData[localID], freshData, localID)
 			// Update confirmed data and send to elevator FSM if we did
 			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
 			if isConfirmedDataUpdated {
 				fmt.Println("Sending new confirmed data to FSM")
-				SystemPrintHorizontal(confirmedSystemData)
+				systemPrintHorizontal(confirmedSystemData)
 				dataToFSM <- confirmedSystemData
 				isConfirmedDataUpdated = false
 			}
@@ -213,7 +213,7 @@ func MessageSyncServer(
 			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
 			if isConfirmedDataUpdated {
 				fmt.Println("Sending new confirmed data to FSM")
-				SystemPrintHorizontal(confirmedSystemData)
+				systemPrintHorizontal(confirmedSystemData)
 				dataToFSM <- confirmedSystemData
 				isConfirmedDataUpdated = false
 			}
@@ -243,7 +243,7 @@ func MessageSyncServer(
 			confirmedSystemData, isConfirmedDataUpdated = updateConfirmedSystemData(systemData, confirmedSystemData)
 			if isConfirmedDataUpdated {
 				fmt.Println("Sending new confirmed data to FSM")
-				SystemPrintHorizontal(confirmedSystemData)
+				systemPrintHorizontal(confirmedSystemData)
 				dataToFSM <- confirmedSystemData
 				isConfirmedDataUpdated = false
 			}
