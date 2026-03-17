@@ -120,14 +120,14 @@ func MessageSyncServer(
 	// Network channels and variable
 	networkReceiver := make(chan SystemData_t)
 	networkTransmitter := make(chan SystemData_t)
-	bcastPort := config.B_CAST_PORT
+	bcastPort := config.BCAST_PORT
 
 	// Go routines for communicating with other elevators
 	go bcast.Receiver(bcastPort, networkReceiver)
 	go bcast.Transmitter(bcastPort, networkTransmitter)
 
 	// Ticker for periodic broadcasting
-	ticker := time.NewTicker(config.B_CAST_PERIOD)
+	ticker := time.NewTicker(config.BCAST_PERIOD)
 	defer ticker.Stop()
 
 	// Go routine for request buttons polling
