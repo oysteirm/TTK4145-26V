@@ -92,8 +92,7 @@ func ElevatorServer(
 											doorTimerStart, 
 											doorTimerStop, 
 											isFunctionalStart, 
-											isFunctionalStop, 
-											isObstructed)
+											isFunctionalStop)
 
 		// Floor arrival
 		case floor := <-drv_floors:
