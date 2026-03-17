@@ -21,9 +21,11 @@ func main() {
 	ioAddr := flag.String("addr", "", "Elevator IO TCP address (e.g. localhost:15657)")
 	flag.Parse()
 
+	// Connecting to the elevator hardware
 	if *ioAddr == "" {
 		*ioAddr = fmt.Sprintf("localhost:%d", 15657+*localID)
 	}
+	elevator_IO.Init(*ioAddr, config.N_FLOORS)
 
 	fmt.Println("Starting elevator with localID = ", *localID)
 	fmt.Println("Using IO address = ", *ioAddr)
@@ -42,7 +44,7 @@ func main() {
 
 	// Launch the go routines
 	go messageSync.MessageSyncServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, peerUpdateCh, *localID)
-	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *ioAddr, *localID)
+	go elevatorServer.ElevatorServer(elevatorDataToMsgSyncFrom_FSM, requestToMsgSyncFrom_FSM, systemDataTo_FSM_FromMsgSync, *localID)
 
 	for {
 	}
