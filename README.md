@@ -21,7 +21,7 @@ These values are defined in theProject/config/config.go
 - msgSynsServer: distributed state synchronization and button event propagation
 - elevatorStateGuardian: central owner of elevator state and assigned requests
 - requests: logic for request decisions for a local elevator
-- requestAssigner: hall request assigner, algorithm fetched from [TTK4145](https://github.com/TTK4145/Project-recources/tree/master/elev_algo)
+- requestAssigner: hall request assigner, algorithm fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/elev_algo)
 - networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/driver-go)
 - processPairs:  automatic restart for terminal window
 
