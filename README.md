@@ -45,18 +45,15 @@ Example with two elevators:
 
 ```
 cd theProject
-go run main.go -id=0 -addr=localhost:15657
+go run main.go -id=0
 ```
 ```
 cd theProject
-go run main.go -id=1 -addr=localhost:15658
+go run main.go -id=1
 ```
-if ```-addr``` is excluded, the program defaults to:
-- elevator n: ```localhost:15658 + n```
 
 Available flags:
 - ```-id```: local elevator id
-- ```-addr```: TCP address for the elevator I/O server
 
 ## Startup Sequence
 1. Start the elevator simulator or elevator server for each elevator

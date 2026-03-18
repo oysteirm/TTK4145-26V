@@ -75,5 +75,3 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
 	return result
 }
-
-

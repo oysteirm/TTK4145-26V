@@ -284,7 +284,3 @@ func requestsHere(
 	}
 	return false
 }
-
-
-
-
