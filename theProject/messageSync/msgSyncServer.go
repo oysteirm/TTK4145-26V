@@ -13,10 +13,10 @@ import (
 -----------------------------------
 Functionality: 
 	- MessageSyncServer receives elevator data and done requests from the elevator FSM,
-	  and receives system data from other elevators from UDP bcasts.
-	- It also UDP bcasts it's own systemdata to its peers. It does not receive it's own bcasts.
-	- Every state and requests of the whole system is stored in the SystemData_t struct.
-	- Every elevator state and request have a list (barrier) with the elevators who have seen this information,
+	  and receives system data from other elevators via UDP bcasts.
+	- It also UDP bcasts its own system data to its peers. It does not receive its own bcasts.
+	- Every state and request of the whole system is stored in the SystemData_t struct.
+	- Every elevator state and request has a list (barrier) of the elevators who have seen this information,
 	  if this list == AcitvePeers list, then this data has reached consensus on the network.
 	- For requests, this list is used to transition from unconfirmed -> confirmed and done -> no. 
 	- For elevator states, it is used to update confirmed data with new elevator states that have reached consensus.

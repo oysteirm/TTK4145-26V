@@ -113,7 +113,7 @@ func OnFloorArrival(
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
 	assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
 	
-	//update floor and IsFunctional
+	// Update floor and IsFunctional
 	if !isObstructed {
 		elevatorState.IsFunctional = true
 	}

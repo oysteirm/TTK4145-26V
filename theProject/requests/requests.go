@@ -10,7 +10,7 @@ import (
 
 /*
 -----------------------------------
-Functionallity:
+Functionality:
 	- Contains logic for request decision for a local elevator
 	- Contains helper functions for checking valid floor and for requests below, above and at current floor
 	- Decides movement direction and behaviour based on assigned requests

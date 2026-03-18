@@ -93,7 +93,7 @@ func onReceivedFreshData(
 	return updatedSystemData, updatedConfirmedSystemData, isConfirmedDataUpdated
 }
 
-
+// -----------------------------------------------------------
 // Functions for updating confirmedSystemData, elevatorData and requests
 // -----------------------------------------------------------
 
@@ -294,6 +294,7 @@ func update_CC_ForCurrentPeers(systemData SystemData_t, localID int) SystemData_
 	return updatedSystemData
 }
 
+// -----------------------------------------------------------
 // Helper functions
 // -----------------------------------------------------------
 // Compares barrier with ActivePeers

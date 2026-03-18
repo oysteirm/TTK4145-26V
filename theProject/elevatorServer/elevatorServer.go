@@ -13,7 +13,7 @@ import (
 /*
 -----------------------------------
 Functionality: 
-	- Reacts to the different events of elevator finite state machine (FSM)
+	- Responds to the different events of elevator finite state machine (FSM)
 	  (Floor arrival, New data, Obstruction, Door closing)
 	- Receives confirmed system data from message sync and uses this for requests assigning (RA)
 	- Communicates new states of the FSM to the elevatorStateGuardian
@@ -43,7 +43,7 @@ func ElevatorServer(
 
 	fsm.OnInitBetweenFloors(guardianCommands, drv_floors)
 
-	// Timers for door and detecting physical functionallity failure
+	// Timers for door and detecting physical functionality failure
 	doorTimerStart := make(chan struct{}, 1)
 	doorTimerStop := make(chan struct{}, 1)
 	doorTimerTimeout := make(chan struct{})

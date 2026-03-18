@@ -11,7 +11,7 @@ import (
 
 /*
 -----------------------------------
-Functionallity: 
+Functionality: 
 	- Converts internal system data to JSON format expected by the assigner
 	- Executes the provided request assigner 
 	- Parses and returns assigned requests back to the system

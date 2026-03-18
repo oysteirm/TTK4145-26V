@@ -70,7 +70,7 @@ func ElevatorStateGuardian(
 	}
 	var assignedRequests elevator_IO.AssignedRequests_t = requests_temp
 
-	// Loop that continously decodes guardianCommands type and executes it
+	// Loop that continuously decodes guardianCommands type and executes it
 	for cmd := range guardianCommands {
 		switch c := cmd.(type) {
 
@@ -81,7 +81,7 @@ func ElevatorStateGuardian(
 			c.Reply <- assignedRequests
 
 		// Used by msg sync to set the new confirmed system data
-		// But not letting potentially old data overwrite the local state
+		// But not letting potential old data overwrite the local state
 		case SetSystemData_t:
 			tmpFloor := systemData.ElevatorData[localID].Floor
 			tmpElevatorBehaviour := systemData.ElevatorData[localID].ElevatorBehaviour
@@ -123,7 +123,7 @@ func ElevatorStateGuardian(
 			elevatorDataChanged = true
 
 
-		// Sending requests that the local FSM have executed to messageSync
+		// Sending requests that the local FSM has executed to messageSync
 		// We filter out requests that is not on the same floor
 		case SetRequestsDone_t:
 			currentFloor := systemData.ElevatorData[localID].Floor
@@ -149,7 +149,7 @@ func ElevatorStateGuardian(
 	}
 }
 
-// Functions for using the get functionallity with guardianCommands
+// Functions for using the get functionality with guardianCommands
 func GetElevatorData(guardianCommands chan GuardianCommands_t) messageSync.ElevatorData_t {
 	reply := make(chan messageSync.ElevatorData_t)
 	guardianCommands <- GetElevatorData_t{Reply: reply}
