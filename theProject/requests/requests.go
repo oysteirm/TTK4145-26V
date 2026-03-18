@@ -181,7 +181,6 @@ func RequestsClearOnDoorTimeout(
 	return requestsToClear
 }
 
-
 // Clearing policy for new assigned data received while the elevator is already at the floor
 func RequestsClearOnNewData(
 	elevatorState messageSync.ElevatorData_t,
@@ -212,7 +211,6 @@ func RequestsClearOnNewData(
 	}
 	return requestsToClear
 }
-
 
 // Used inside alle RequestsClear... fuctions to check that request exists and to avoid repeated code when building the slice 
 func appendRequestsToClearIfExisting(

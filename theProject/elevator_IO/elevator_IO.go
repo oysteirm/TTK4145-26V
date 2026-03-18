@@ -190,7 +190,6 @@ func write(in [4]byte) {
 	if err != nil { panic("Lost connection to Elevator Server") }
 }
 
-
 func ToByte(a bool) byte {
 	var b byte = 0
 	if a {

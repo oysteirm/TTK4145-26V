@@ -52,7 +52,6 @@ type SetAssignedRequest_t struct {
 	AssignedRequests elevator_IO.AssignedRequests_t
 }
 
-
 func ElevatorStateGuardian(
 	guardianCommands chan GuardianCommands_t, 					
 	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, 	

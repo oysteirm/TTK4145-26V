@@ -21,7 +21,6 @@ Functionality:
 -----------------------------------
 */
 
-
 func LightCabLights(CabRequests [config.N_FLOORS]messageSync.RequestCyclicCounter_t) {
 
 	for floor := 0; floor < config.N_FLOORS; floor++ {
@@ -161,7 +160,6 @@ func OnFloorArrival(
 	ElevatorPrint(elevatorState, assignedRequests)
 }
 
-
 func OnDoorTimeout(
 	guardianCommands chan elevatorStateGuardian.GuardianCommands_t,
 	doorTimerStart chan struct{},
@@ -214,7 +212,6 @@ func OnDoorTimeout(
 	fmt.Printf("\nNew state from DoorTimeout:\n")
 	ElevatorPrint(elevatorState, assignedRequests)
 }
-
 
 func ElevatorPrint(
 	elevator messageSync.ElevatorData_t, 

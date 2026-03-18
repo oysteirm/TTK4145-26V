@@ -21,7 +21,6 @@ Functionality:
 -----------------------------------
 */
 
-
 // Local elevator state formatted for the request assigner
 // Note that field names and values must match expected JSON format 
 type RA_LocalElevatorState_t struct {
@@ -36,7 +35,6 @@ type RA_SystemData_t  struct {
     HallRequests    [][config.N_UP_DOWN]bool               `json:"hallRequests"`
     States          map[string]RA_LocalElevatorState_t     `json:"states"`
 }
-
 
 type RA_Output_t map[string][][]bool
 
