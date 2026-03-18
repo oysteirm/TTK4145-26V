@@ -9,27 +9,29 @@ import (
 	"theProject/config"
 )
 
+const backupArg = "--backup"
+
 func main() {
-	testRoleFromArgs()
+	testIsBackupProcess()
 	testBackupPromotesWhenPrimaryDies()
 	testHeartbeatKeepsBackupAlive()
 }
 
-// testRoleFromArgs verifies role detection from command-line arguments
+// testIsBackupProcess verifies role detection from command-line arguments
 // by manipulating os.Args directly — no real processes started.
-func testRoleFromArgs() {
-	fmt.Println("--- testRoleFromArgs ---")
+func testIsBackupProcess() {
+	fmt.Println("--- testIsBackupProcess ---")
 
 	original := os.Args
 
 	os.Args = []string{"elevator"}
-	assertEq("primary", roleFromArgs(), "no --backup flag")
+	assertEqBool(false, isBackupProcess(), "no --backup flag")
 
 	os.Args = []string{"elevator", "--backup"}
-	assertEq("backup", roleFromArgs(), "--backup present")
+	assertEqBool(true, isBackupProcess(), "--backup present")
 
 	os.Args = []string{"elevator", "--id=0", "--backup"}
-	assertEq("backup", roleFromArgs(), "--backup in the middle")
+	assertEqBool(true, isBackupProcess(), "--backup in the middle")
 
 	os.Args = original
 	fmt.Println("PASS")
@@ -147,19 +149,19 @@ func testHeartbeatKeepsBackupAlive() {
 	}
 }
 
-// roleFromArgs mirrors the unexported function in processPairs to allow
+// isBackupProcess mirrors the unexported function in processPairs to allow
 // testing its logic without needing to export it.
-func roleFromArgs() string {
+func isBackupProcess() bool {
 	for _, arg := range os.Args[1:] {
-		if arg == "--backup" {
-			return "backup"
+		if arg == backupArg {
+			return true
 		}
 	}
-	return "primary"
+	return false
 }
 
-func assertEq(expected, actual, label string) {
+func assertEqBool(expected, actual bool, label string) {
 	if expected != actual {
-		fmt.Printf("  FAIL [%s]: expected %q, got %q\n", label, expected, actual)
+		fmt.Printf("  FAIL [%s]: expected %t, got %t\n", label, expected, actual)
 	}
 }
