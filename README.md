@@ -24,16 +24,6 @@ These values are defined in theProject/config/config.go
 - requestAssigner: hall request assigner, algorithm fetched from [TTK4145](https://github.com/TTK4145/Project-recources/tree/master/elev_algo)
 - networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/driver-go)
 
-## Prerequisites
-- Go 1.25
-- An elevator simulator
-- or an elevator server that uses TCP endpoints such as localhost:15657
-
-## Repositary Layout
-- theProject/: Go module and source code
-- packetLoss/: packet loss script, fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/packet_loss)
-- SimElevatorServer: prebuilt simulator, fetched from [TTK4145](https://github.com/TTK4145/Simulator-V2)
-
 ## Run
 Start one process per elevator
 
@@ -56,5 +46,12 @@ Available flags:
 2. Run one Go process per elevator with a unique ```-id```
 3. Verify that peers are discovered
 
-## Configuration
-Key constants are defined in theProject/config/config.go:
+## Prerequisites
+- Go 1.25
+- An elevator simulator
+- or an elevator server that uses TCP endpoints such as localhost:15657
+
+## Repositary Layout
+- theProject/: Go module and source code
+- packetLoss/: packet loss script, fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/packet_loss)
+- SimElevatorServer: prebuilt simulator, fetched from [TTK4145](https://github.com/TTK4145/Simulator-V2)
