@@ -1,6 +1,9 @@
 # TTK4145 - Elevator Project:
 
-Distributed elevator control project for Real-time Programming TTK4145 at NTNU
+Distributed elevator control project for Real-time Programming TTK4145 at NTNU.
+
+Made by
+[Havan Palo](https://github.com/havanpalo), [Øystein Martinsen](https://github.com/oysteirm) and [Henning Sund](https://github.com/henninsu).
 
 ## Overview
 This configuration is set for:
@@ -18,8 +21,8 @@ These values are defined in theProject/config/config.go
 - msgSynsServer: distributed state synchronization and button event propagation
 - elevatorStateGuardian: central owner of elevator state and assigned requests
 - processPairs:  automatic restart for terminal window
-- requestAssigner: hall request assigner, algorithm fetched from <https://github.com/TTK4145/Project-recources/tree/master/elev_algo>
-- networkDriver: peer discovery and broadcast transport, code provided by <https://github.com/TTK4145/driver-go>
+- requestAssigner: hall request assigner, algorithm fetched from [TTK4145](https://github.com/TTK4145/Project-recources/tree/master/elev_algo)
+- networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/driver-go)
 
 ## Prerequisites
 - Go 1.25
@@ -28,15 +31,8 @@ These values are defined in theProject/config/config.go
 
 ## Repositary Layout
 - theProject/: Go module and source code
-- SimElevatorServer: prebuilt simulator, fetched from <https://github.com/TTK4145/Simulator-V2>
-
-## Build
-Build the main application form the Go module root:
-```
-cd theProject
-go build .
-```
-this produces the elevator node executable from theProject/main.go
+- packetLoss/: packet loss script, fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/packet_loss)
+- SimElevatorServer: prebuilt simulator, fetched from [TTK4145](https://github.com/TTK4145/Simulator-V2)
 
 ## Run
 Start one process per elevator
