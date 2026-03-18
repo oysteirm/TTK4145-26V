@@ -58,7 +58,3 @@ Available flags:
 
 ## Configuration
 Key constants are defined in theProject/config/config.go:
-
-## Known Limitations
-
-## Suggested Next Improvements
