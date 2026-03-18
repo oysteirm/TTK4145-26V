@@ -9,11 +9,11 @@ import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	"theProject/processPairs"
+	//"theProject/processPairs"
 )
 
 func main() {
-	processPairs.RunProcessPair()
+	//processPairs.RunProcessPair()
 
 	// Addresses from command inputs
 	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)")
