@@ -15,14 +15,14 @@ These values are defined in theProject/config/config.go
 
 ## Architecture
 **Modules**
-- elevator_IO: communication between elevator hardware and software
+- elevator_IO: communication between elevator hardware and software [TTK4145](https://github.com/TTK4145/driver-go)
 - elevatorServer: local elevator logic and wires the subsystems together
 - fsm: elevator state machine and event handling
 - msgSynsServer: distributed state synchronization and button event propagation
 - elevatorStateGuardian: central owner of elevator state and assigned requests
 - requests: logic for request decisions for a local elevator
 - requestAssigner: hall request assigner, algorithm fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/cost_fns)
-- networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/driver-go)
+- networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/Network-go)
 - processPairs:  automatic restart for terminal window
 
 
