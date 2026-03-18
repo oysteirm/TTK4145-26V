@@ -9,12 +9,11 @@ import (
 	"theProject/elevator_IO"
 	"theProject/messageSync"
 	"theProject/networkDriver/peers"
-	//"theProject/processPairs"
+	"theProject/processPairs"
 )
 
 func main() {
-	//Start Process pairs
-	//processPairs.RunProcessPair()
+	processPairs.RunProcessPair()
 
 	// Addresses from command inputs
 	localID := flag.Int("id", 0, "ID of this elevator (0, 1, 2, ...)")
@@ -35,7 +34,6 @@ func main() {
 	peerTxEnable := make(chan bool)
 	go peers.Transmitter(config.PEER_UPDATE_PORT, strconv.Itoa(*localID), peerTxEnable)
 	go peers.Receiver(config.PEER_UPDATE_PORT, peerUpdateCh)
-
 
 	// elevatorServer <-> messageSync channels
 	elevatorDataToMsgSyncFrom_FSM := make(chan messageSync.ElevatorData_t,16)

@@ -73,10 +73,13 @@ func OnReceivedDataFromMsgSync(
 
 		var pair requests.MotorDirectionBehaviourPair_t = requests.RequestsChooseDirection(elevatorState, assignedRequests)
 
-		elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
-		elevatorState.MotorDirection = pair.MotorDirection
-		
-		guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+		// To avoid stopping between floors
+		if pair.ElevatorBehaviour != elevator_IO.EB_Idle {
+			elevatorState.ElevatorBehaviour = pair.ElevatorBehaviour
+			elevatorState.MotorDirection = pair.MotorDirection
+			
+			guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
+		}
 	}
 
 	switch elevatorState.ElevatorBehaviour {
