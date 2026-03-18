@@ -1,5 +1,7 @@
 package localip
 
+// This code is fetched from https://github.com/TTK4145/Network-go/blob/master/network/localip/localip.go
+
 import (
 	"net"
 	"strings"

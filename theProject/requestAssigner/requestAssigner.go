@@ -1,11 +1,6 @@
 package requestAssigner
 
-//Example terminal_input to test compiled hallRequestAssigner:
-//./tools/hallRequestAssigner-i '{"hallRequests":[[false,false],[true,false],[false,false],[false,true]],"states":{"one":{"behaviour":"moving","floor":2,"direction":"up","cabRequests":[false,false,false,true]},"two":{"behaviour":"idle","floor":0,"direction":"stop","cabRequests":[false,false,false,false]}}}'
-
-
-
-
+// This code is inspired by provided code fetched from https://github.com/TTK4145/Project-resources/tree/master/cost_fns/hall_request_assigner
 
 import (
 	"theProject/config"
@@ -14,6 +9,20 @@ import (
 	"os/exec"
 )
 
+/*
+-----------------------------------
+Functionality: 
+	- Converts internal system data to JSON format expected by the assigner
+	- Executes the provided request assigner 
+	- Parses and returns assigned requests back to the system
+	- The requestAssigner module does not implement assignment logic itself
+	- It acts as a bridge between our Go code and the provided assigner
+	- All communication with the assigner happens through JSON encoding/decoding
+-----------------------------------
+*/
+
+// Local elevator state formatted for the request assigner
+// Note that field names and values must match expected JSON format 
 type RA_LocalElevatorState_t struct {
     Behavior    string      `json:"behaviour"`// "moving", "doorOpen", "idle" (all lowercase)
     Floor       int         `json:"floor"` 
@@ -21,32 +30,31 @@ type RA_LocalElevatorState_t struct {
     CabRequests []bool      `json:"cabRequests"`
 }
 
-
+//System data formatted for the request assigner
 type RA_SystemData_t  struct {
     HallRequests    [][config.N_UP_DOWN]bool               `json:"hallRequests"`
     States          map[string]RA_LocalElevatorState_t     `json:"states"`
 }
 
-//GIVE BETTER NAMES?
 type RA_Output_t map[string][][]bool
-
-
 
 func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
-	//ENCODING SYSTEM
+	//Encoding system data to JSON string
 	input, err := json.Marshal(elevatorSystem)
 	if err != nil {
 		fmt.Println("Marshal error in AssignRequests:", err)
 		return nil
 	}
 
-	//EXECUTING COMPILED "providedRequestAssigner" , fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
+	//Executing "providedRequestAssigner" , fetched from https://github.com/TTK4145/Project-resources/releases/tag/v1.1.3
 	output, err := exec.Command(
 		"./requestAssigner/providedRequestAssigner",
 		"--includeCab",
 		"-i", string(input),
 	).CombinedOutput()
+
+	
 	if err != nil {
 		fmt.Println("Exec error in AssignRequests:", err)
 		fmt.Println("AssignRequests output:", string(output))
@@ -55,7 +63,7 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 		return nil
 	}
 
-	//DECODING STRING
+	//Decoding JSON output into result struct
 	var result RA_Output_t
 	err = json.Unmarshal(output, &result)
 	if err != nil {
@@ -65,5 +73,3 @@ func AssignRequests(elevatorSystem RA_SystemData_t) RA_Output_t {
 
 	return result
 }
-
-

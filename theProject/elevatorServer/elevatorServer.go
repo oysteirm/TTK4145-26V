@@ -2,7 +2,6 @@ package elevatorServer
 
 import (
 	"strconv"
-	"theProject/config"
 	"theProject/elevatorStateGuardian"
 	"theProject/elevator_IO"
 	"theProject/fsm"
@@ -11,80 +10,106 @@ import (
 	"theProject/timer"
 )
 
+/*
+-----------------------------------
+Functionality: 
+	- Responds to the different events of elevator finite state machine (FSM)
+	  (Floor arrival, New data, Obstruction, Door closing)
+	- Receives confirmed system data from message sync and uses this for requests assigning (RA)
+	- Communicates new states of the FSM to the elevatorStateGuardian
+-----------------------------------
+*/
 
 func ElevatorServer(
-	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t,    //channel for sending data to messageSyncServer
-    requestToMsgSync chan<- []elevator_IO.ButtonEvent_t,	//channel for sending done request CC to msg sync
-	systemDataFromMsgSync <-chan messageSync.SystemData_t,		//channel for receiving confirmed system data
-	localID int,												//local ID
-){
+	elevatorDataToMsgSync chan<- messageSync.ElevatorData_t, 	
+	requestToMsgSync chan<- []elevator_IO.ButtonEvent_t, 		
+	systemDataFromMsgSync <-chan messageSync.SystemData_t, 		
+	localID int, ) { 											
 
-    elevator_IO.Init("localhost:15657", config.N_FLOORS)
 	isObstructed := false
+	
+	// Channel used to set and get data stored in the elevatorStateGuardian routine
+	guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t, 32)
 
-    guardianCommands := make(chan elevatorStateGuardian.GuardianCommands_t)
-
-	// Start elevator state server
 	go elevatorStateGuardian.ElevatorStateGuardian(guardianCommands, elevatorDataToMsgSync, requestToMsgSync, localID)
-    
-    drv_floors  := make(chan int)
-    drv_obstr   := make(chan bool)
-    drv_stop    := make(chan bool)    
-    
-    go elevator_IO.PollFloorSensor(drv_floors)
-    go elevator_IO.PollObstructionSwitch(drv_obstr)
-    go elevator_IO.PollStopButton(drv_stop)
 
-    // Init FSM (handle between floors)
+	// Polling on the elevator hardware
+	drv_floors := make(chan int)
+	drv_obstr := make(chan bool)
+	drv_stop := make(chan bool)
+	go elevator_IO.PollFloorSensor(drv_floors)
+	go elevator_IO.PollObstructionSwitch(drv_obstr)
+	go elevator_IO.PollStopButton(drv_stop)
+
 	fsm.OnInitBetweenFloors(guardianCommands, drv_floors)
 
-	
-	// Timers
-	doorTimerStart       := make(chan struct{})
-	doorTimerStop        := make(chan struct{})
-	doorTimerTimeout     := make(chan struct{})
-	isFunctionalStart    := make(chan struct{})
-	isFunctionalStop     := make(chan struct{})
-	isFunctionalTimeout  := make(chan struct{})
+	// Timers for door and detecting physical functionality failure
+	doorTimerStart := make(chan struct{}, 1)
+	doorTimerStop := make(chan struct{}, 1)
+	doorTimerTimeout := make(chan struct{})
+	isFunctionalStart := make(chan struct{}, 1)
+	isFunctionalStop := make(chan struct{}, 1)
+	isFunctionalTimeout := make(chan struct{})
+	go timer.Timers(doorTimerStart, 
+					doorTimerStop, 
+					doorTimerTimeout, 
+					isFunctionalStart, 
+					isFunctionalStop, 
+					isFunctionalTimeout)
 
-	//work in progress
-	go timer.Timers(doorTimerStart, doorTimerStop, doorTimerTimeout, isFunctionalStart, isFunctionalStop, isFunctionalTimeout)
-    
-    for {
+	// Loop reacting on the FSM events
+	for {
 		select {
 
-		// Recieved data from msg sync
 		case newSystemData := <-systemDataFromMsgSync:
 
-			if newSystemData.ElevatorData[localID].Floor == -1{
+			// Not accepting unitialized floor value
+			if newSystemData.ElevatorData[localID].Floor == -1 {
 				break
 			}
-			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
-			assignedRequests := requestsMap[strconv.Itoa(localID)]
 
-			//Store requests, send this and the confirmed system data
 			guardianCommands <- elevatorStateGuardian.SetSystemData_t{SystemData: newSystemData}
-			guardianCommands <- elevatorStateGuardian.SetAssignedRequest_t{AssignedRequests: assignedRequests}
-
 			fsm.LightCabLights(newSystemData.ElevatorData[localID].CabRequests)
 			fsm.LightHallLights(newSystemData.HallRequestData)
 
-			fsm.OnReceivedDataFromMsgSync(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, isObstructed)
+			requestsMap := requestAssigner.AssignRequests(requestAssigner.Generating_RA_SystemData(newSystemData))
+			if requestsMap == nil {
+				break
+			}
 
-		// Floor arrival
+			assignedRequests, exists := requestsMap[strconv.Itoa(localID)]
+			if !exists {
+				break
+			}
+
+			guardianCommands <- elevatorStateGuardian.SetAssignedRequest_t{AssignedRequests: assignedRequests}
+
+			fsm.OnReceivedDataFromMsgSync(	guardianCommands, 
+											doorTimerStart, 
+											doorTimerStop, 
+											isFunctionalStart, 
+											isFunctionalStop)
+
 		case floor := <-drv_floors:
-			fsm.OnFloorArrival(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, floor, isObstructed)
+			fsm.OnFloorArrival(	guardianCommands, 
+								doorTimerStart, 
+								doorTimerStop, 
+								isFunctionalStart, 
+								isFunctionalStop, 
+								floor,
+								isObstructed)
 
-		// Door timeout
 		case <-doorTimerTimeout:
-			fsm.OnDoorTimeout(guardianCommands, doorTimerStart, doorTimerStop, isFunctionalStart, isFunctionalStop, isObstructed)
-			//TODO: fix the double requests issue
+			fsm.OnDoorTimeout(	guardianCommands, 
+								doorTimerStart, 
+								doorTimerStop, 
+								isFunctionalStart, 
+								isFunctionalStop, 
+								isObstructed)
 
-		//isFunctional timeout
 		case <-isFunctionalTimeout:
 			guardianCommands <- elevatorStateGuardian.SetIsFunctional_t{IsFunctional: false}
 
-		// Stop button
 		case stop := <-drv_stop:
 			if stop {
 				elevator_IO.SetStopLamp(true)
@@ -92,8 +117,6 @@ func ElevatorServer(
 				elevator_IO.SetStopLamp(false)
 			}
 
-		// Obstruction, this does not work
-		//maybe fix: add a state, and have this functionallity outside the select case'
 		case obstructed := <-drv_obstr:
 			if obstructed {
 				isObstructed = true
@@ -102,6 +125,6 @@ func ElevatorServer(
 				isObstructed = false
 				guardianCommands <- elevatorStateGuardian.SetIsFunctional_t{IsFunctional: true}
 			}
-		}	    
-	} 
+		}
+	}
 }
