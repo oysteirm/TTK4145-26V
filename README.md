@@ -17,7 +17,7 @@ These values are defined in theProject/config/config.go
 - fsm: elevator state machine and event handling
 - msgSynsServer: distributed state synchronization and button event propagation
 - elevatorStateGuardian: central owner of elevator state and assigned requests
-- processPairs: primary-backup process pair logic
+- processPairs:  automatic restart for terminal window
 - requestAssigner: hall request assigner, algorithm fetched from <https://github.com/TTK4145/Project-recources/tree/master/elev_algo>
 - networkDriver: peer discovery and broadcast transport, code provided by <https://github.com/TTK4145/driver-go>
 
