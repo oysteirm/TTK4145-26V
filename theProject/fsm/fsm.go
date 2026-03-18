@@ -111,8 +111,7 @@ func OnFloorArrival(
 
 	elevatorState := elevatorStateGuardian.GetElevatorData(guardianCommands)
 	assignedRequests := elevatorStateGuardian.GetAssignedRequests(guardianCommands)
-	
-	// Update floor and IsFunctional
+
 	if !isObstructed {
 		elevatorState.IsFunctional = true
 	}
@@ -134,6 +133,7 @@ func OnFloorArrival(
 			elevator_IO.SetDoorOpenLamp(true)
 
 			elevatorState.ElevatorBehaviour = elevator_IO.EB_DoorOpen
+			guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 
 			requestsToClear := requests.RequestsClearOnFloorArrival(elevatorState, assignedRequests)
 			guardianCommands <- elevatorStateGuardian.SetRequestsDone_t{RequestsToClear: requestsToClear}
@@ -143,9 +143,10 @@ func OnFloorArrival(
 			doorTimerStart <- struct{}{}
 
 			isFunctionalStop <- struct{}{}
+		} else {
+			guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 		}
 
-		guardianCommands <- elevatorStateGuardian.SetElevatorData_t{ElevatorData: elevatorState}
 
 		if elevatorState.ElevatorBehaviour == elevator_IO.EB_Moving {
 			// Resetting isFunctional timer

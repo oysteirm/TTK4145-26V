@@ -129,7 +129,7 @@ General idea:
 	- Hall requests may be appended depending on motor direction and event type
 */
 
-// Conservative clearing policy for floor arrival, clearing hall request matching current travel direction and clearing cab requests 
+// Clearing hall request, prefering matching current travel direction, and clearing cab requests 
 func RequestsClearOnFloorArrival(
 	elevatorState messageSync.ElevatorData_t,
 	assignedRequests elevator_IO.AssignedRequests_t) []elevator_IO.ButtonEvent_t {
@@ -141,9 +141,17 @@ func RequestsClearOnFloorArrival(
 
 	case elevator_IO.MD_Up:
 		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+	
+		if !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallUp]{
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+		}
 
 	case elevator_IO.MD_Down:
 		requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallDown, requestsToClear)
+
+		if !assignedRequests[elevatorState.Floor][elevator_IO.BT_HallDown]{
+			requestsToClear = appendRequestsToClearIfExisting(elevatorState, assignedRequests, elevator_IO.BT_HallUp, requestsToClear)
+		}
 
 	case elevator_IO.MD_Stop:
 		fallthrough
