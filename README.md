@@ -11,7 +11,7 @@ The system uses a peer-to-peer architecture with UDP as the network layer.
 Each elevator broadcasts its state to achieve consensus on hall requests.
 When an elevator is disconnected from the other elevators it still functions as a single elevator.
 
-## How to run the physical elevator
+## How to Run the Physical Elevator
 1. Open a terminal in the project folder and run
 ```
 ./elevatorServer
@@ -39,7 +39,7 @@ Available flags:
 2. Run one Go process per elevator with a unique ```-id```
 3. Verify that peers are discovered
 
-## Current configuration
+## Current Configuration
 This configuration is set for:
 - 3 elevators
 - 4 floors
@@ -69,6 +69,6 @@ These values are defined in theProject/config/config.go
 - networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/Network-go)
 - processPairs:  automatic restart for terminal window
 
-## Information flow
+## Information Flow
 
 ![My SVG](informationFlow.svg)
