@@ -1,17 +1,61 @@
 # TTK4145 - Elevator Project:
 
-Distributed elevator control project for Real-time Programming TTK4145 at NTNU.
+Distributed elevator control project for Real-time Programming TTK4145 at NTNU. 
 
 Made by
 [Havan Palo](https://github.com/havanpalo), [Øystein Martinsen](https://github.com/oysteirm) and [Henning Sund](https://github.com/henninsu).
 
+
 ## Overview
+The system uses a peer-to-peer architecture with UDP as the network layer.
+Each elevator broadcasts its state to achieve consensus on hall requests.
+When an elevator is disconnected from the other elevators it still functions as a single elevator.
+
+## How to run the physical elevator
+1. Open a terminal in the project folder and run
+```
+./elevatorServer
+``` 
+Available flags:
+- ```--port``` 15657, 15658 or 15659
+
+after running  
+```
+chmod +x elevatorServer
+```
+once
+
+2. Open another terminal in the same folder and run program per elevator
+
+```
+cd theProject
+go run main.go -id=0
+```
+Available flags:
+- ```-id```: local elevator id
+
+## Startup Sequence
+1. Start the elevator simulator or elevator server for each elevator
+2. Run one Go process per elevator with a unique ```-id```
+3. Verify that peers are discovered
+
+## Current configuration
 This configuration is set for:
 - 3 elevators
 - 4 floors
 - 3 button types: hall up, hall down, cab
 
 These values are defined in theProject/config/config.go
+
+## Prerequisites
+- Go 1.25
+- An elevator simulator
+- or an elevator server that uses TCP endpoints such as localhost:15657
+
+## Repositary Layout
+- theProject/: Go module and source code
+- packetLoss/: packet loss script, fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/packet_loss)
+- SimElevatorServer: prebuilt simulator, fetched from [TTK4145](https://github.com/TTK4145/Simulator-V2)
 
 ## Architecture
 **Modules**
@@ -25,35 +69,6 @@ These values are defined in theProject/config/config.go
 - networkDriver: peer discovery and broadcast transport, code provided by [TTK4145](https://github.com/TTK4145/Network-go)
 - processPairs:  automatic restart for terminal window
 
+## Information flow
 
-## Run
-Start one process per elevator
-
-Example with two elevators:
-
-```
-cd theProject
-go run main.go -id=0
-```
-```
-cd theProject
-go run main.go -id=1
-```
-
-Available flags:
-- ```-id```: local elevator id
-
-## Startup Sequence
-1. Start the elevator simulator or elevator server for each elevator
-2. Run one Go process per elevator with a unique ```-id```
-3. Verify that peers are discovered
-
-## Prerequisites
-- Go 1.25
-- An elevator simulator
-- or an elevator server that uses TCP endpoints such as localhost:15657
-
-## Repositary Layout
-- theProject/: Go module and source code
-- packetLoss/: packet loss script, fetched from [TTK4145](https://github.com/TTK4145/Project-resources/tree/master/packet_loss)
-- SimElevatorServer: prebuilt simulator, fetched from [TTK4145](https://github.com/TTK4145/Simulator-V2)
+![My SVG](informationFlow.svg)
