@@ -72,3 +72,6 @@ These values are defined in theProject/config/config.go
 ## Information Flow
 
 ![My SVG](informationFlow.svg)
+
+## Progress Report
+[View the PDF Document](PDD_14.pdf)
